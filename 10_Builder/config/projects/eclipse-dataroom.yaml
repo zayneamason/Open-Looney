@@ -1,0 +1,11 @@
+# config/projects/eclipse-dataroom.yaml
+# Search chain: what Luna pulls from when this project is active
+search_chain:
+  max_total_tokens: 5000
+  sources:
+    - type: matrix
+      max_tokens: 2000
+    - type: aibrarian
+      collection: dataroom
+      max_tokens: 2500
+      limit: 8

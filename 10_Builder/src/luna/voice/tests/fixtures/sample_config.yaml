@@ -1,0 +1,19 @@
+voice_system:
+  blend_engine_mode: "active"
+  voice_corpus_mode: "active"
+
+  alpha_override: null
+  corpus_tier_override: null
+
+  bypass_confidence_router: false
+  bypass_segment_planner: false
+  bypass_line_sampler: false
+  bypass_fade_controller: false
+
+  line_bank_path: "data/line_bank.json"
+  corpus_path: "data/corpus.json"
+
+  log_alpha: true
+  log_line_selection: true
+  log_injection: false
+  log_shadow_diff: true

@@ -1,0 +1,52 @@
+{
+  "enabled": true,
+  "use_clusters": true,
+  "use_louvain": false,
+  "constellation": {
+    "max_tokens": 3000,
+    "prioritize_clusters": true,
+    "cluster_budget_pct": 0.6
+  },
+  "thresholds": {
+    "drifting": 0.2,
+    "fluid": 0.7,
+    "settled": 0.85,
+    "similarity": 0.82,
+    "auto_activation": 0.8
+  },
+  "weights": {
+    "node": 0.4,
+    "access": 0.3,
+    "edge": 0.2,
+    "age": 0.1
+  },
+  "decay": {
+    "crystallized": 1e-05,
+    "settled": 0.0001,
+    "fluid": 0.0021,
+    "drifting": 0.01
+  },
+  "services": {
+    "clustering_interval_hours": 1,
+    "lockin_update_interval_minutes": 5,
+    "cleanup_interval_hours": 24
+  },
+  "clustering": {
+    "min_cluster_size": 3,
+    "max_cluster_size": 50,
+    "min_keyword_overlap": 0.4,
+    "max_generic_frequency": 100,
+    "merge_similarity_threshold": 0.6
+  },
+  "retrieval": {
+    "max_clusters_per_query": 5,
+    "expand_top_clusters": 2,
+    "include_multi_hop": true,
+    "min_edge_lock_in_for_hop": 0.7
+  },
+  "limits": {
+    "max_nodes_per_cluster": 50,
+    "max_expanded_nodes": 10,
+    "max_total_clusters": 10000
+  }
+}

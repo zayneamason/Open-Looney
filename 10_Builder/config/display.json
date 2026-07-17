@@ -1,0 +1,11 @@
+{
+  "badges": {
+    "route": true,
+    "model": true,
+    "tokens": true,
+    "latency": true,
+    "access_filter": true,
+    "lunascript": true,
+    "show_knowledge_events": true
+  }
+}

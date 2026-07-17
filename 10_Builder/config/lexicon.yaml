@@ -1,0 +1,57 @@
+# Lexicon role registry — Director + Lexicon System Spec v1.2 (Section 6.3)
+#
+# Phase E.7: every role declares an `implementation:` discriminator so the
+# registry is honest about what's actually loaded versus what's aspirational.
+#
+# Legal `implementation` values:
+#   model      — a real model artifact is loaded by the adapter (the `model:`
+#                key names the loaded artifact)
+#   heuristic  — adapter ships a deterministic baseline; `target_model:` (if
+#                present) names the eventual aspirational model
+#   remote     — request is delegated to a remote backend (claude_api / ollama)
+#
+# `model:` and `target_model:` are mutually exclusive per role.
+
+embed:
+  adapter: local
+  implementation: model
+  model: sentence-transformers/all-MiniLM-L6-v2
+rerank:
+  adapter: local
+  implementation: model
+  model: cross-encoder/ms-marco-MiniLM-L6-v2
+ner:
+  adapter: local
+  implementation: model
+  model: spacy/en_core_web_sm
+classify_safety:
+  adapter: local
+  implementation: model
+  model: unitary/toxic-bert
+classify_intent:
+  adapter: local
+  implementation: model
+  model: MoritzLaurer/deberta-v3-base-zeroshot-v2.0
+detect_language:
+  adapter: local
+  implementation: heuristic
+  target_model: fasttext/lid.176
+generate:
+  adapter: remote
+  implementation: remote
+  primary: claude_api
+  fallback: ollama
+curate:
+  adapter: remote
+  implementation: remote
+  primary: claude_api
+  fallback: ollama
+
+# Backends inside generate/curate roles
+backends:
+  claude_api:
+    models:
+      - claude-haiku-4-5-20251001
+  ollama:
+    base_url: http://localhost:11434
+    default: qwen3:8b

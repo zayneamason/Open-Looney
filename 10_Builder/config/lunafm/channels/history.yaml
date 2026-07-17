@@ -1,0 +1,245 @@
+# ═══════════════════════════════════════════════════════════════
+# LunaFM — Channel: History
+# "What endures?"
+# ═══════════════════════════════════════════════════════════════
+#
+# The History channel is Luna's long-term memory consolidation.
+# Low frequency, deep cycles. It looks back across time,
+# finds what matters, compresses what doesn't, and asks
+# the question nobody asked: "whatever happened with X?"
+#
+# This is the archivist. The one who notices that the user
+# stopped talking about something — and wonders why.
+# ═══════════════════════════════════════════════════════════════
+
+channel:
+  id: history
+  name: "Luna Archives"
+  tagline: "What endures?"
+  
+  # ── Schedule ────────────────────────────────────────────────
+  frequency:
+    mode: interval
+    interval_s: 600           # deep scan every 10 minutes
+    only_when: idle
+    boost_when_overnight: true  # run more aggressively when Luna is idle overnight
+    overnight_interval_s: 120   # every 2 minutes overnight
+    overnight_hours: [1, 6]     # 1am to 6am local time
+  
+  # ── State machine ───────────────────────────────────────────
+  # idle → surveying → analyzing → consolidating → emitting → cooldown
+  states:
+    idle:
+      transitions:
+        - to: surveying
+          on: timer_tick
+    
+    surveying:
+      timeout_ms: 3000
+      process: "survey_memory_health"
+      transitions:
+        - to: analyzing
+          on: work_found
+        - to: idle
+          on: memory_healthy
+        - to: idle
+          on: preempted
+    
+    analyzing:
+      timeout_ms: 10000       # 10s — deep analysis allowed
+      process: "analyze_temporal_patterns"
+      transitions:
+        - to: consolidating
+          on: pattern_found
+        - to: emitting
+          on: anomaly_found      # skip consolidation, just flag it
+        - to: idle
+          on: nothing_notable
+        - to: idle
+          on: preempted
+    
+    consolidating:
+      timeout_ms: 8000
+      process: "consolidate_memories"
+      transitions:
+        - to: emitting
+          on: consolidation_ready
+        - to: idle
+          on: preempted
+    
+    emitting:
+      timeout_ms: 2000
+      process: "write_consolidation"
+      transitions:
+        - to: cooldown
+          on: artifact_written
+    
+    cooldown:
+      duration_ms: 60000      # 1 minute cooldown — history is patient
+      transitions:
+        - to: idle
+          on: cooldown_complete
+  
+  # ── Processes ───────────────────────────────────────────────
+  processes:
+    
+    survey_memory_health:
+      # No LLM — pure database analysis
+      type: query
+      description: "Survey the Memory Matrix for consolidation opportunities"
+      queries:
+        # Find duplicate/near-duplicate nodes
+        - name: duplicates
+          source: memory_nodes
+          sql: |
+            SELECT n1.id as id_a, n2.id as id_b, 
+                   n1.content as content_a, n2.content as content_b,
+                   n1.node_type, n1.lock_in
+            FROM memory_nodes n1
+            JOIN memory_nodes n2 ON n1.id < n2.id
+            WHERE n1.node_type = n2.node_type
+            AND n1.content LIKE substr(n2.content, 1, 50) || '%'
+            AND n1.source != 'lunafm'
+            LIMIT 5
+        
+        # Find decaying nodes that were once important
+        - name: fading
+          source: memory_nodes
+          sql: |
+            SELECT id, node_type, content, lock_in, access_count, 
+                   last_accessed, created_at
+            FROM memory_nodes
+            WHERE lock_in < 0.3
+            AND access_count > 5
+            AND last_accessed < datetime('now', '-7 days')
+            ORDER BY access_count DESC
+            LIMIT 5
+        
+        # Find topics that disappeared from conversation
+        - name: abandoned_topics
+          source: memory_nodes
+          sql: |
+            SELECT DISTINCT e.content as entity_name, e.id,
+                   MAX(ct.created_at) as last_mentioned
+            FROM memory_nodes e
+            JOIN memory_nodes ct ON ct.content LIKE '%' || e.content || '%'
+            WHERE e.node_type = 'ENTITY'
+            AND e.lock_in > 0.5
+            AND ct.node_type = 'CONVERSATION_TURN'
+            GROUP BY e.id
+            HAVING last_mentioned < datetime('now', '-14 days')
+            LIMIT 5
+        
+        # Count total pollution indicators
+        - name: pollution
+          source: memory_nodes
+          sql: |
+            SELECT node_type, COUNT(*) as count
+            FROM memory_nodes
+            WHERE source = 'lunafm'
+            GROUP BY node_type
+      
+      signal_threshold: 1
+    
+    analyze_temporal_patterns:
+      # LLM call — but focused on temporal analysis
+      type: llm
+      description: "Analyze patterns over time in the memory landscape"
+      prompt_template: |
+        You are Luna's archivist. You look at the long arc of memory.
+        
+        Survey findings:
+        
+        Duplicate candidates: {duplicates_count} pairs found
+        {duplicates_sample}
+        
+        Fading memories (once important, now decaying):
+        {fading_sample}
+        
+        Abandoned topics (not mentioned in 14+ days):
+        {abandoned_topics_sample}
+        
+        Choose ONE action (the most impactful):
+        
+        MERGE: [id_a] [id_b] — these duplicates should become one node
+        ARCHIVE: [id] — this memory has served its purpose, lower its lock_in
+        QUESTION: [entity] — this topic disappeared, worth asking about
+        PATTERN: description — you see a temporal pattern worth noting
+        HEALTHY: nothing needs attention right now
+      max_tokens: 150
+      temperature: 0.3        # low temp — archivist is precise
+    
+    consolidate_memories:
+      # Execute the recommended action
+      type: action
+      description: "Execute memory consolidation"
+      actions:
+        merge:
+          # Combine two duplicate nodes into one
+          process: |
+            # Keep the node with higher lock_in
+            # Append unique content from the other
+            # Update graph edges to point to survivor
+            # Mark the duplicate for soft-delete (lock_in → 0.01)
+          requires_nodes: [id_a, id_b]
+        
+        archive:
+          # Reduce lock_in on a fading memory
+          process: |
+            # Set lock_in to 0.1
+            # Add ARCHIVED annotation
+            # Log the archival reason
+          requires_nodes: [id]
+        
+        question:
+          # Generate a "whatever happened with X?" note
+          process: |
+            # Create a QUESTION node
+            # Tag with lunafm:history
+            # Add to revolving context OUTER ring
+            # Luna might naturally bring it up
+          requires_entity: [entity]
+    
+    write_consolidation:
+      type: emit
+      description: "Write consolidation results"
+      artifact:
+        node_type: CONSOLIDATION
+        source: "lunafm:history"
+        lock_in: 0.25
+        metadata:
+          channel: history
+          action_taken: "{action_type}"
+          affected_nodes: "{affected_node_ids}"
+          timestamp: "{now}"
+        ttl_hours: null        # consolidation records don't expire
+  
+  # ── Cache ───────────────────────────────────────────────────
+  cache:
+    type: lru
+    max_items: 200
+    dedup_window_s: 7200      # don't re-analyze same nodes within 2 hours
+    persist: true
+    persist_path: "data/lunafm/history_cache.json"
+  
+  # ── Annotations ─────────────────────────────────────────────
+  annotations:
+    enabled: true
+    max_per_hour: 10
+    types:
+      - MERGED                 # two nodes were combined
+      - ARCHIVED               # node was deprioritized
+      - ABANDONED_TOPIC        # topic disappeared from conversation
+      - TEMPORAL_PATTERN       # recurring cycle detected
+      - MEMORY_HEALTH          # periodic health report
+  
+  # ── Metrics ─────────────────────────────────────────────────
+  # History channel tracks its own effectiveness
+  metrics:
+    track:
+      - nodes_merged_total
+      - nodes_archived_total
+      - questions_generated
+      - questions_answered       # did the user actually engage with a "whatever happened" note?
+      - pollution_prevented      # duplicates caught before they compounded
+    report_interval_hours: 24   # daily summary to station log

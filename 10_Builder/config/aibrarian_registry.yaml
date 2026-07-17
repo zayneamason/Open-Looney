@@ -1,0 +1,79 @@
+# Luna AiBrarian Registry
+# =======================
+# Each collection is an independent document database that Luna can search.
+# Adding a new collection = adding a new entry here. No code changes needed.
+#
+# Schema types:
+#   "standard"      — documents + chunks + FTS5 + embeddings (default)
+#   "investigation"  — standard + entities + connections + gaps + claims
+#
+# Path resolution:
+#   Relative paths resolve from Luna project root.
+#   Absolute paths used as-is (e.g., external drives).
+#   If db_path doesn't exist and create_if_missing is true,
+#   AiBrarianEngine creates an empty database with the correct schema.
+
+schema_version: 1
+
+defaults:
+  chunk_size: 500
+  chunk_overlap: 50
+  embedding_model: "local-minilm"
+  embedding_dim: 384
+  schema_type: "standard"
+  grounding_priority: "supplemental"
+
+collections:
+
+  # kinoni_knowledge collection retired in Move 2 (Nexus migration, 2026-05-02).
+  # Satellite files + bridge-created REFERENCE nodes purged in the same change.
+  # The kinoni-ict-hub project workspace is preserved (config/projects/).
+
+  luna_system:
+    name: "Luna System Knowledge"
+    description: "Luna's knowledge about her own interface, features, capabilities, limitations, and how to guide users"
+    db_path: "data/system/aibrarian/luna_system.db"
+    enabled: true
+    read_only: true
+    create_if_missing: false
+    schema_type: "standard"
+    reflection_mode: "precision"
+    tags: ["system", "help", "features", "navigation", "settings", "troubleshooting"]
+    chunk_size: 300
+
+  luna_system_ambassador:
+    name: "Luna System Knowledge (Ambassador)"
+    description: "Ambassador variant — Luna self-knowledge for distribution builds"
+    db_path: "data/system/aibrarian/luna_system_ambassador.db"
+    enabled: false
+    create_if_missing: true
+    schema_type: "standard"
+    reflection_mode: "precision"
+    tags: ["system", "help", "features", "ambassador"]
+    chunk_size: 300
+    chunk_overlap: 50
+    ingestion_pattern: "emergent"
+
+  research_library:
+    name: "Research Library"
+    description: "Academic papers, books, and research documents for deep reference"
+    db_path: "data/local/research_library.db"
+    project_key: "research-library"
+    ingestion_pattern: "utilitarian"
+    enabled: true
+    create_if_missing: true
+    extract_on_ingest: true
+    extraction_model: "claude-sonnet"
+    read_only: false
+    reflection_mode: "reflective"
+    grounding_priority: "primary"
+    tags: ["research", "academic", "papers", "books"]
+    chunk_size: 500
+    chunk_overlap: 75
+
+  # bombay_beach:
+  #   name: "Bombay Beach Biennale Archive"
+  #   db_path: "data/aibrarian/biennale.db"
+  #   enabled: false
+  #   create_if_missing: true
+  #   tags: ["biennale", "art", "luna-witness"]

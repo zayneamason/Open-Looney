@@ -1,0 +1,98 @@
+skills:
+  enabled: true
+  max_execution_ms: 5000
+  fallthrough_on_error: true
+  log_dispatches: true
+  detection:
+    mode: llm-assisted
+    slash_commands: true
+    llm:
+      enabled: true
+      model: local
+      confidence_threshold: 0.7
+      timeout_ms: 500
+  math:
+    enabled: true
+    max_expression_length: 500
+    timeout_ms: 3000
+    sensitivity: loose
+    slash_command: /math
+    extra_triggers:
+    - find the roots
+  logic:
+    enabled: true
+    max_variables: 8
+    kanren_enabled: false
+    sensitivity: strict
+    slash_command: /logic
+    extra_triggers: []
+  formatting:
+    enabled: true
+    max_items: 50
+    sensitivity: strict
+    slash_command: /format
+    extra_triggers: []
+  reading:
+    enabled: true
+    max_file_size_mb: 50
+    max_chars: 50000
+    store_to_memory: true
+    allowed_extensions:
+    - pdf
+    - docx
+    - doc
+    - xlsx
+    - pptx
+    - txt
+    - md
+    sensitivity: strict
+    slash_command: /read
+    extra_triggers: []
+  diagnostic:
+    enabled: true
+    include_metrics: true
+    sensitivity: strict
+    slash_command: /diagnostic
+    extra_triggers: []
+  eden:
+    enabled: false
+    auto_approve: false
+    default_wait: true
+    sensitivity: strict
+    slash_command: /eden
+    extra_triggers: []
+  analytics:
+    enabled: true
+    pandas_enabled: true
+    max_rows_display: 20
+    sensitivity: strict
+    slash_command: /analytics
+    extra_triggers: []
+  arcade:
+    enabled: false
+    sensitivity: strict
+    slash_command: /arcade
+    extra_triggers: []
+  library_research:
+    enabled: true
+    max_results: 3
+    max_excerpt_chars: 500
+    search_type: hybrid
+    sensitivity: strict
+    slash_command: /research
+    extra_triggers: []
+  memory_recall:
+    enabled: true
+    max_results: 4
+    max_excerpt_chars: 400
+    max_tokens: 1200
+    sensitivity: strict
+    slash_command: /recall
+    extra_triggers: []
+  options:
+    enabled: true
+    max_options: 5
+    style: buttons
+    sensitivity: loose
+    slash_command: ''
+    extra_triggers: []

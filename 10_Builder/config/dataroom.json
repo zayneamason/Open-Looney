@@ -1,0 +1,7 @@
+{
+  "sheet_id": "17ldroCspzA9H9Bows6EUwrf1yot9DMEqj_-Ed3VlQtI",
+  "sheet_range": "Master Index!A2:L",
+  "credentials_path": "config/google_credentials.json",
+  "token_path": "config/google_token.json",
+  "drive_root_folder_id": "15BVemrzUUuXyzkZItSIYp3CFlqLjoiGB"
+}

@@ -1,0 +1,21 @@
+{
+  "pages": {
+    "eclissi": true, "studio": true, "hub": true, "kozmo": false,
+    "guardian": true, "observatory": true, "settings": true
+  },
+  "remap": {},
+  "widgets": {
+    "engine": true, "voice": true, "memory": true, "qa": true,
+    "prompt": true, "debug": true, "vk": true, "cache": true,
+    "thought": true, "lunascript": true, "arcade": false
+  },
+  "wizard": {
+    "enabled": true, "providers": ["claude", "groq", "gemini"],
+    "show_voice_step": true, "show_personality_step": true,
+    "default_provider": "groq", "custom_welcome": ""
+  },
+  "settings": {},
+  "debug_mode": true,
+  "has_preloaded_keys": false,
+  "demo_mode": false
+}

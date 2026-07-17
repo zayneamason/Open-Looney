@@ -1,0 +1,145 @@
+# Intergalactic Hub configuration
+#
+# DB path is resolved by intergalactic_hub.ingesters.base.hub_db_path(),
+# which delegates to luna.core.paths.memory_matrix_path(). Do not add a
+# `db:` section here — the resolver is the single source of truth.
+
+embeddings:
+  model: "all-MiniLM-L6-v2"  # 384-dim, matches Phase 0 schema
+  batch_size: 16
+
+drive:
+  enabled: true
+  root_folder_id: "1SNiXsHJu9BomEPxtnK8xnqpDH4f-MfuY"  # Luna_Team
+  poll_interval_seconds: 300  # 5 minutes
+  credentials_path: "config/intergalactic_hub/drive_credentials.json"
+  token_path: "config/intergalactic_hub/drive_token.json"
+  # Mimetypes to ingest; everything else is skipped with metadata-only logging.
+  ingest_mimetypes:
+    - "application/vnd.google-apps.document"
+    - "application/vnd.google-apps.spreadsheet"
+    - "application/pdf"
+    - "text/plain"
+    - "text/markdown"
+    - "text/csv"
+  # Max file size to fully ingest (bytes). Larger files get metadata-only.
+  max_file_size: 10485760  # 10 MB
+
+meetings:
+  enabled: true
+  watch_folder: "~/Recordings"
+  processed_folder: "~/Recordings/_processed"
+  whisper_model: "base.en"  # Options: tiny, base, small, medium, large-v3
+  language: "en"
+  chunk_tokens: 500
+  delete_audio_after_transcription: false  # move to _processed/ by default
+  supported_extensions: [".m4a", ".mp3", ".wav", ".flac", ".ogg"]
+
+logging:
+  level: "INFO"
+  path: "logs/intergalactic_hub.log"
+
+query:
+  w_fts: 0.4
+  w_vec: 0.6
+  rrf_k: 60
+  recency_decay_rate: 0.03   # exp(-0.03 * age_days), ~23-day half-life
+  min_vec_similarity: 0.3
+  default_limit: 20
+  max_limit: 200
+
+mcp_server:
+  port: 8883
+  fallback_port: 8884
+  host: "127.0.0.1"
+  token_path: "~/.config/intergalactic_hub/mcp_token"
+
+calendar:
+  enabled: true
+  credentials_path: "config/intergalactic_hub/drive_credentials.json"
+  token_path: "config/intergalactic_hub/drive_token.json"
+  poll_interval_seconds: 60
+  calendar_ids:
+    - "primary"
+    - "f8258c6fd250ab34dbd6c752a1bb382203846fbffaf39cc85009009e79db37d2@group.calendar.google.com"
+  initial_window_days: 30
+  forward_window_days: 60
+  # Skip events matching these patterns (case-insensitive regex on event title)
+  skip_patterns:
+    - "declined"
+    - "^OOO"
+
+trello:
+  enabled: true
+  credentials_path: "~/.config/intergalactic_hub/trello_credentials.json"
+  # Board IDs to track. Find yours via: GET https://api.trello.com/1/members/me/boards
+  board_ids:
+    - "69e8a3bde686e58ca7b59b0a"  # LUNA-TRACKER
+  initial_history_days: 30
+  reconcile_interval_seconds: 3600
+  webhook:
+    host: "127.0.0.1"
+    port: 8885
+    # Set this to your Tailscale Funnel URL after running:
+    #   tailscale funnel --bg --https=443 --set-path=/trello/webhook 8885
+    public_callback_url: "https://raleigh-beans-episodes-aus.trycloudflare.com/trello/webhook"
+
+discord:
+  enabled: true
+  credentials_path: "config/intergalactic_hub/discord_credentials.json"
+  servers:
+    - id: "1496452405850669078"
+      name: "INTERGALACTIC-HUB"
+      channels:
+        - "1496452407759208580"
+      write_policy:
+        default: "dry_run"
+        channels:
+          "1496452407759208580": "auto"
+  dm_allowlist:
+    - "370825424747626496"
+  initial_history_days: 7
+  ignore_bots: true
+  ignore_self: true
+  reconcile_interval_seconds: 1800
+
+write_safety:
+  enabled: true
+  global_default: "dry_run"
+  confirmation_ttl_seconds: 600
+  rate_limits:
+    default:
+      per_hour: 10
+      per_day: 100
+    per_tool:
+      post_to_discord_channel:
+        per_hour: 20
+        per_day: 200
+      send_discord_dm:
+        per_hour: 3
+        per_day: 10
+  attribution:
+    default_footer: "\n-- via Luna"
+    per_tool:
+      send_discord_dm: "\n(This is an automated message from Luna.)"
+  policies:
+    per_tool:
+      react_to_discord_message:
+        default: "auto"
+      delete_discord_message:
+        default: "confirm"
+
+luna_integration:
+  enabled: true
+  hub_timeout_ms: 2000
+  hub_fallback: "memory_only"
+  budget_splits:
+    minimal:
+      memory_matrix: 0.67
+      hub: 0.33
+    balanced:
+      memory_matrix: 0.66
+      hub: 0.34
+    rich:
+      memory_matrix: 0.67
+      hub: 0.33

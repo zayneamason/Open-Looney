@@ -1,0 +1,14 @@
+# Director pivot mode — System Spec v1.2 Section 5
+#
+# Phase A default: legacy + empty allowlist. No endpoint is implicitly
+# activated by mode. Rollback is one line: set mode back to legacy.
+#
+# 2026-05-02: stepping up to `shadow` for /message + /persona/stream so
+# Lexicon classify_intent telemetry runs alongside legacy routing without
+# overriding decisions. After observing disagreements, individual endpoints
+# can be promoted to `active` (route override) one at a time.
+
+mode: shadow
+endpoints:
+  - "/message"
+  - "/persona/stream"

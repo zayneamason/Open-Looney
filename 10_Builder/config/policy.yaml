@@ -1,0 +1,149 @@
+# Luna memory policy starter config (Phase 0 scaffolding)
+# Source: Docs/RCW/SPEC_Luna_Memory_Policy_v0.2.md (Section 9 schema)
+
+policy:
+  version: 1.0.0
+  effective: 2026-04-28
+  owner: ""
+  profile: companion_luna
+
+# Rule 1 — Admission
+rule_1_admission:
+  doors:
+    USER_TURN:
+      default_ring: INNER
+      lock_in_by_kind:
+        CONVERSATION: 0.45
+    MEMORY_MATRIX:
+      default_ring_by_kind:
+        IDENTITY: CORE
+        FACT: INNER
+        CAUSAL: MIDDLE
+        PATTERN: MIDDLE
+        REFLECTION: MIDDLE
+        MEMORY: MIDDLE
+        OBSERVATION: OUTER
+      lock_in_by_kind:
+        FACT: 0.85
+        CAUSAL: 0.75
+        PATTERN: 0.75
+        REFLECTION: 0.65
+        MEMORY: 0.60
+        OBSERVATION: 0.30
+    NEXUS:
+      default_ring: MIDDLE
+      relevance_gate: 0.5
+
+# Rule 2 — Decay (clauses 2.1-2.3)
+rule_2_decay:
+  decay_floor: 0.85
+  lock_in_protection: 0.13
+  permanent_kinds: [IDENTITY]
+  age_guard_turns: 2
+
+# Rule 2.4 — Tiered Budget
+budget:
+  total: 8000
+  target_pressure: 0.95
+  rings:
+    CORE: { min: 0, max: 200, target_pct: 2.5, permanent: true }
+    INNER: { min: 0, max: 3500, target_pct: 44 }
+    MIDDLE: { min: 500, max: 3000, target_pct: 37.5 }
+    OUTER: { min: 0, max: 1300, target_pct: 16 }
+
+# Rule 3 — Tier Transitions
+rule_3_transitions:
+  demote_threshold: 0.30
+  promote_threshold: 0.80
+  promotion_jump_min: 0.50
+
+# Rule 4 — Eviction
+rule_4_eviction:
+  starvation_floor_enforcement: per_ring
+  ring_protection: via_score
+
+# Rule 5 — Deduplication
+rule_5_dedup:
+  exact_hash_first: true
+  cosine_pass_enabled: false
+  cosine_threshold: 0.85
+  variants_field: variants
+  refresh_relevance_to_max: true
+  merge_throttle_per_tick: 8
+
+# Score function (Phase 0 default confirmed: linear)
+score:
+  engine: linear
+  version: 1.0
+  constants:
+    linear:
+      w_lock: 0.40
+      w_relev: 0.40
+      w_cite: 0.05
+      w_age: 0.10
+      cite_cap: 20
+      age_cap: 50
+      ring_bonus: { CORE: 1.0, INNER: 0.3, MIDDLE: 0.0, OUTER: -0.3 }
+    multiplicative:
+      age_tau: 30
+      cite_factor: 0.15
+      eps: 0.05
+      ring_mult: { CORE: 5.0, INNER: 1.5, MIDDLE: 1.0, OUTER: 0.6 }
+
+# Existing compatibility field preserved
+assembly_order:
+  - { position: 1.0, layer: identity, ring: CORE }
+  - { position: 1.5, layer: grounding, ring: INNER }
+  - { position: 1.75, layer: constraints, ring: INNER }
+  - { position: 2.0, layer: study_context, ring: MIDDLE }
+  - { position: 4.0, layer: memory_nexus, ring: MIDDLE }
+  - { position: 4.5, layer: background, ring: OUTER }
+  - { position: 5.0, layer: consciousness, ring: INNER }
+  - { position: 6.0, layer: voice, ring: INNER }
+  - { position: 99, layer: conversation, ring: INNER }
+
+# Phase 0 compatibility blocks for existing ring_config consumers
+ingest:
+  min_useful_score: 0.25
+  floor_score: 0.35
+  relevant_threshold: 0.5
+
+rebalance:
+  tick_interval_ms: 500
+  age_guard_turns: 2
+  demotion_threshold: 0.3
+  promotion_threshold: 0.8
+  decay_factor: 0.95
+
+sources:
+  middle:
+    max_single_source_percent: 60
+    allowed: [MEMORY, LIBRARIAN, TOOL]
+  outer:
+    allowed: [SCRIBE, DEMOTED, BREAKTHROUGH]
+
+# Capability triggers — preserved verbatim from rings.yaml so the façade
+# returns the same value to existing consumers (luna_mcp/tools/state.py).
+capabilities:
+  dataroom:
+    trigger_app_contexts: [dataroom]
+    trigger_keywords:
+      - investor
+      - data room
+      - dataroom
+      - financials
+      - legal docs
+      - partnerships
+      - go-to-market
+      - market analysis
+      - competitive landscape
+    trigger_entities:
+      - Company Overview
+      - Financials
+      - Legal
+      - Product
+      - "Market & Competition"
+      - Team
+      - Go-to-Market
+      - "Partnerships & Impact"
+      - "Risk & Mitigation"

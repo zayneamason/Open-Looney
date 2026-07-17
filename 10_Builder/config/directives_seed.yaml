@@ -1,0 +1,51 @@
+# Luna Directive & Skill Seeds
+# =============================
+# Bootstrap definitions loaded on first run or --reseed-directives flag.
+# After loading, these live in SQLite and are managed there.
+# This file is the git-safe backup and the human-editable starting point.
+#
+# Flow: YAML seeds -> SQLite runtime -> Observatory for inspection
+# Same pattern as: projects.yaml -> engine.set_active_project() -> Nexus UI
+
+schema_version: 1
+
+seed_directives:
+
+  - id: dir-session-orient
+    title: "Session Orientation"
+    objective: "Surface parked threads and open tasks at session start"
+    trigger_type: session_start
+    trigger_config: {}
+    action: "surface_parked_threads"
+    trust_tier: auto
+    authored_by: system
+    approved_by: system
+    cooldown_minutes: null
+    priority: high
+
+  - id: dir-guardian-context
+    title: "Guardian Context Switch"
+    objective: "Narrow focus when Guardian project topics arise"
+    trigger_type: keyword
+    trigger_config:
+      match: "guardian"
+    action: "set_aperture:NARROW"
+    trust_tier: confirm
+    authored_by: system
+    approved_by: system
+    cooldown_minutes: 30
+    priority: medium
+
+seed_skills:
+
+  - id: skill-guardian-prep
+    title: "Guardian Demo Prep"
+    objective: "Prepare context for Guardian project demonstration"
+    steps:
+      - "set_aperture:NARROW"
+      - "memory_sweep:guardian demo status"
+      - "surface_entity:Guardian"
+      - "surface_parked_threads"
+    tags: ["guardian", "demo"]
+    authored_by: system
+    priority: medium

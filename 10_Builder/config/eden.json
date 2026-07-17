@@ -1,0 +1,18 @@
+{
+  "api_base": "https://api.eden.art",
+  "default_agent_id": null,
+  "poll_interval_seconds": 3.0,
+  "poll_max_attempts": 60,
+  "default_manna_budget": 100.0,
+  "default_turn_budget": 50,
+  "timeout_seconds": 30.0,
+  "max_retries": 3,
+  "policy": {
+    "enabled": false,
+    "auto_approve": ["eden_health", "eden_list_agents"],
+    "require_approval": ["eden_create_image", "eden_create_video", "eden_chat"],
+    "max_generations_per_session": 20,
+    "max_chats_per_session": 50,
+    "audit_to_memory": true
+  }
+}

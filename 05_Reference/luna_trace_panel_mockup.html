@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Luna Trace Panel — Inline Diagnostic Mockup</title>
+<style>
+  body { margin:0; padding:24px; background:#08090c; font-family:ui-sans-serif,system-ui,sans-serif; color:#e8e8ea; }
+  .frame { max-width:880px; margin:0 auto; }
+  .desc { font-size:11px; color:#6b7280; margin-bottom:16px; line-height:1.6; }
+  .desc b { color:#5eead4; }
+
+  /* ---- panel base ---- */
+  .lp{width:100%;background:#0d0e12;color:#e8e8ea;border:1px solid #2a2d36;border-radius:12px;padding:14px;font-size:12px;margin-bottom:16px}
+  .mono{font-family:ui-monospace,monospace}
+  .tag{font-size:9px;letter-spacing:1.2px;color:#9ca3af;font-weight:600;text-transform:uppercase}
+  .pill{padding:3px 8px;border-radius:5px;font-size:10px;cursor:pointer;border:1px solid #2a2d36;background:transparent;color:#9ca3af;transition:all 0.15s; font-family:inherit}
+  .pill:hover{border-color:#3f4250;color:#cbd5e1}
+  .pill.on{background:#5eead4;color:#0d0e12;border-color:#5eead4;font-weight:600}
+  .divider{height:1px;background:#2a2d36;margin:10px 0}
+
+  /* ---- header ---- */
+  .lp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .lp-title{display:flex;align-items:center;gap:8px}
+  .lp-bar{width:3px;height:14px;background:#5eead4;border-radius:2px}
+  .lp-name{font-weight:600;font-size:13px;letter-spacing:0.5px}
+  .lp-sub{font-size:9px;color:#9ca3af}
+
+  .lp-meta{display:flex;gap:10px;font-size:9.5px;color:#9ca3af;margin-bottom:12px;flex-wrap:wrap;font-family:ui-monospace,monospace}
+  .lp-meta .sep{color:#374151}
+  .lp-meta .accent{color:#5eead4}
+  .lp-meta .warn{color:#fbbf24}
+  .lp-meta .ok{color:#86efac}
+  .lp-meta .dim{color:#6b7280}
+
+  /* ---- section ---- */
+  .sec{margin-bottom:14px}
+  .sec-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .sec-title{font-size:9px;letter-spacing:1.5px;color:#9ca3af;font-weight:600;text-transform:uppercase}
+  .sec-stat{font-size:9px;color:#6b7280;font-family:ui-monospace,monospace}
+
+  /* ---- stages bars ---- */
+  .stage-row{display:grid;grid-template-columns:84px 1fr 60px;gap:8px;align-items:center;margin-bottom:3px;font-size:10px;font-family:ui-monospace,monospace}
+  .stage-name{color:#cbd5e1}
+  .stage-track{height:13px;background:rgba(255,255,255,0.03);border-radius:2px;position:relative;overflow:hidden;border:1px solid #1f2128}
+  .stage-fill{position:absolute;top:0;bottom:0;border-radius:2px;display:flex;align-items:center;padding:0 6px;font-size:9px;color:#0d0e12;font-weight:600}
+  .stage-stat{color:#6b7280;text-align:right}
+  .fill-matrix{background:#5eead4}
+  .fill-nexus{background:#a8d0ff}
+  .fill-reflect{background:#c084fc}
+  .fill-relat{background:#fbbf24}
+  .fill-vec{background:#fb7185}
+
+  /* ---- ingest row (accept/reject) ---- */
+  .ingest{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;font-family:ui-monospace,monospace;font-size:9.5px}
+  .ig-cell{background:rgba(255,255,255,0.02);border-radius:4px;padding:6px 8px;border-left:2px solid}
+  .ig-cell.in{border-color:#5eead4}
+  .ig-cell.out{border-color:#fb7185}
+  .ig-cell.held{border-color:#fbbf24}
+  .ig-cell .num{font-size:14px;color:#e8e8ea;font-weight:600}
+  .ig-cell .lbl{color:#6b7280;font-size:9px;letter-spacing:1px;text-transform:uppercase}
+
+  /* ---- candidate list ---- */
+  .cand{font-family:ui-monospace,monospace;font-size:9.5px;padding:3px 6px;background:rgba(255,255,255,0.02);margin-bottom:1px;display:grid;grid-template-columns:14px 1fr 50px 60px 90px;gap:8px;align-items:center;border-left:2px solid;border-radius:0 3px 3px 0}
+  .cand.acc{border-color:#5eead4}
+  .cand.rej{border-color:#fb7185;opacity:0.7}
+  .cand-mark{font-weight:700}
+  .cand.acc .cand-mark{color:#5eead4}
+  .cand.rej .cand-mark{color:#fb7185}
+  .cand-id{color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cand-score{color:#9ca3af;text-align:right}
+  .cand-stage{color:#6b7280;text-align:right;font-size:9px}
+  .cand-reason{color:#fb7185;font-size:9px;text-align:right}
+  .cand.acc .cand-reason{color:#86efac}
+
+  /* ---- rings ---- */
+  .ring-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .ring{background:rgba(255,255,255,0.02);border-radius:6px;padding:8px 10px;border:1px solid #1f2128}
+  .ring-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .ring-name{font-size:9px;letter-spacing:1.5px;font-weight:700}
+  .ring-tok{font-size:9px;color:#6b7280;font-family:ui-monospace,monospace}
+  .ring-items{font-family:ui-monospace,monospace;font-size:9px;color:#9ca3af;line-height:1.6}
+  .ring-item{display:flex;justify-content:space-between;gap:8px}
+  .ring-item .lock{color:#6b7280}
+  .ring-core .ring-name{color:#fbbf24}
+  .ring-inner .ring-name{color:#5eead4}
+  .ring-middle .ring-name{color:#a8d0ff}
+  .ring-outer .ring-name{color:#9ca3af}
+
+  /* ---- prompt layers ---- */
+  .layer{margin-bottom:6px;font-family:ui-monospace,monospace;font-size:10px}
+  .layer-head{display:flex;justify-content:space-between;background:rgba(255,255,255,0.02);padding:4px 8px;border-radius:3px;cursor:pointer}
+  .layer-head:hover{background:rgba(255,255,255,0.04)}
+  .layer-id{color:#5eead4;font-weight:600}
+  .layer-name{color:#cbd5e1}
+  .layer-tok{color:#6b7280}
+  .layer-body{padding:6px 12px;color:#9ca3af;font-size:9.5px;line-height:1.6;display:none;border-left:2px solid #2a2d36;margin-left:8px;margin-top:2px;white-space:pre-wrap}
+  .layer.open .layer-body{display:block}
+
+  /* ---- token budget bar ---- */
+  .budget{display:flex;align-items:center;gap:8px;font-family:ui-monospace,monospace;font-size:10px;margin-top:8px}
+  .budget-track{flex:1;height:6px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;position:relative}
+  .budget-fill{height:100%;background:linear-gradient(90deg,#5eead4 0%,#5eead4 70%,#fbbf24 90%,#fb7185 100%);border-radius:3px}
+  .budget-label{color:#9ca3af}
+
+  /* ---- footer actions ---- */
+  .actions{display:flex;gap:6px;justify-content:flex-end;margin-top:12px;padding-top:10px;border-top:1px solid #1f2128}
+
+  /* ---- chat-like wrapper ---- */
+  .chat-msg{background:#0d0e12;border:1px solid #1f2128;border-radius:10px;padding:12px 16px;margin-bottom:8px;font-size:13px;line-height:1.5;color:#e8e8ea}
+  .chat-msg .role{font-size:9px;letter-spacing:1.5px;color:#6b7280;font-weight:600;margin-bottom:4px}
+  .chat-msg.user .role{color:#a8d0ff}
+  .chat-msg.luna .role{color:#5eead4}
+  .chat-msg .body{color:#cbd5e1}
+  .chat-msg .toggle{margin-top:8px;display:flex;justify-content:flex-end}
+  .toggle-link{font-size:10px;color:#6b7280;cursor:pointer;font-family:ui-monospace,monospace}
+  .toggle-link:hover{color:#5eead4}
+
+  /* mode banner */
+  .mode-banner{background:rgba(251,113,133,0.08);border:1px solid #fb7185;border-radius:6px;padding:6px 12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;font-size:10px;font-family:ui-monospace,monospace}
+  .mode-banner .label{color:#fb7185;font-weight:600;letter-spacing:1px}
+  .mode-banner .desc-text{color:#9ca3af}
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="desc">
+    <b>Luna Trace Panel · Inline Diagnostic</b><br>
+    Mockup of what an Eclissi message looks like in <b>"No LLM Mode"</b> — the user sent a query, the engine ran the full
+    <span class="mono">prepare_only</span> pipeline, returned the trace instead of a Luna response. Click [trace ▾] to expand.
+    Same data ships to <span class="mono">traces.db</span> for forensic SQL.
+  </div>
+
+  <div class="mode-banner">
+    <span class="label">◉ NO LLM MODE</span>
+    <span class="desc-text">verbose=true · Director.generate skipped · trace persisted to traces.db</span>
+  </div>
+
+  <!-- USER MESSAGE -->
+  <div class="chat-msg user">
+    <div class="role">USER · 14:23:07</div>
+    <div class="body">do you remember saying that kind of thing before about untethered feelings?</div>
+  </div>
+
+  <!-- TRACE PANEL (expanded) -->
+  <div class="lp">
+    <div class="lp-head">
+      <div class="lp-title">
+        <div class="lp-bar"></div>
+        <span class="lp-name">PIPELINE TRACE</span>
+        <span class="lp-sub mono">trace_8f3a · 880ms · 2,847 tok / 8,000</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button class="pill">⎘ copy</button>
+        <button class="pill">⇄ diff</button>
+        <button class="pill">⤓ export</button>
+        <button class="pill on">▾ collapse</button>
+      </div>
+    </div>
+
+    <div class="lp-meta">
+      <span>turn <span class="accent">217</span></span>
+      <span class="sep">·</span>
+      <span>route: <span class="accent">direct</span></span>
+      <span class="sep">·</span>
+      <span>aperture: <span class="warn">narrow / 60°</span></span>
+      <span class="sep">·</span>
+      <span>door: <span class="accent">memory_recall</span></span>
+      <span class="sep">·</span>
+      <span class="dim">backend: skipped</span>
+      <span class="sep">·</span>
+      <span class="ok">prepare_only ✓</span>
+    </div>
+
+    <!-- ============== STAGES ============== -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">▸ retrieval stages</span>
+        <span class="sec-stat">total budget: 2,500ms · used: 821ms · 33%</span>
+      </div>
+      <div class="stage-row">
+        <span class="stage-name">Matrix</span>
+        <div class="stage-track"><div class="stage-fill fill-matrix" style="left:0%;width:62%">312ms</div></div>
+        <span class="stage-stat">8 cand</span>
+      </div>
+      <div class="stage-row">
+        <span class="stage-name">Nexus</span>
+        <div class="stage-track"><div class="stage-fill fill-nexus" style="left:62%;width:9%;color:#0d0e12">240ms</div></div>
+        <span class="stage-stat">4 cand</span>
+      </div>
+      <div class="stage-row">
+        <span class="stage-name">Reflection</span>
+        <div class="stage-track"><div class="stage-fill fill-reflect" style="left:71%;width:7%">180ms</div></div>
+        <span class="stage-stat">3 cand</span>
+      </div>
+      <div class="stage-row">
+        <span class="stage-name">Relational</span>
+        <div class="stage-track"><div class="stage-fill fill-relat" style="left:78%;width:6%">160ms</div></div>
+        <span class="stage-stat">2 cand</span>
+      </div>
+      <div class="stage-row">
+        <span class="stage-name">vec_nodes</span>
+        <div class="stage-track"><div class="stage-fill fill-vec" style="left:84%;width:3%">82ms</div></div>
+        <span class="stage-stat">5 cand</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============== INGEST ============== -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">▸ ingest decisions</span>
+        <span class="sec-stat">22 total · 13 admitted · 4 deferred · 5 rejected</span>
+      </div>
+      <div class="ingest">
+        <div class="ig-cell in"><div class="num">13</div><div class="lbl">Admitted</div></div>
+        <div class="ig-cell held"><div class="num">4</div><div class="lbl">Deferred · budget</div></div>
+        <div class="ig-cell out"><div class="num">5</div><div class="lbl">Rejected</div></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============== CANDIDATES ============== -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">▸ candidate provenance · top 10</span>
+        <span class="sec-stat">sorted by fused score · click for chain</span>
+      </div>
+      <div class="cand acc"><span class="cand-mark">●</span><span class="cand-id">FACT  · Ahab=Zayne</span><span class="cand-score">0.86</span><span class="cand-stage">Matrix</span><span class="cand-reason">↑ inner</span></div>
+      <div class="cand acc"><span class="cand-mark">●</span><span class="cand-id">REFLECT · "feeling untethered" · 2025-12-08</span><span class="cand-score">0.81</span><span class="cand-stage">Reflection</span><span class="cand-reason">↑ inner</span></div>
+      <div class="cand acc"><span class="cand-mark">●</span><span class="cand-id">PATTERN · ahab repeats untethered metaphor</span><span class="cand-score">0.74</span><span class="cand-stage">Matrix</span><span class="cand-reason">↑ middle</span></div>
+      <div class="cand acc"><span class="cand-mark">●</span><span class="cand-id">CONV · 2025-12-08 14:02 user turn</span><span class="cand-score">0.68</span><span class="cand-stage">Matrix</span><span class="cand-reason">↑ middle</span></div>
+      <div class="cand acc"><span class="cand-mark">●</span><span class="cand-id">CAUSAL · sleep ↔ untethered</span><span class="cand-score">0.61</span><span class="cand-stage">Matrix</span><span class="cand-reason">↑ middle</span></div>
+      <div class="cand acc"><span class="cand-mark">●</span><span class="cand-id">NEXUS · Priests &amp; Programmers · ch.4</span><span class="cand-score">0.59</span><span class="cand-stage">Nexus</span><span class="cand-reason">↑ middle</span></div>
+      <div class="cand rej"><span class="cand-mark">○</span><span class="cand-id">OBS · cursor moved (low signal)</span><span class="cand-score">0.18</span><span class="cand-stage">Matrix</span><span class="cand-reason">score &lt; 0.25</span></div>
+      <div class="cand rej"><span class="cand-mark">○</span><span class="cand-id">NEXUS · Priests &amp; Programmers · ch.12</span><span class="cand-score">0.42</span><span class="cand-stage">Nexus</span><span class="cand-reason">rel &lt; 0.50</span></div>
+      <div class="cand rej"><span class="cand-mark">○</span><span class="cand-id">FACT · favorite color = teal</span><span class="cand-score">0.21</span><span class="cand-stage">Matrix</span><span class="cand-reason">aperture narrow</span></div>
+      <div class="cand rej"><span class="cand-mark">○</span><span class="cand-id">REFLECT · "today went well" · 2025-11-12</span><span class="cand-score">0.19</span><span class="cand-stage">Reflection</span><span class="cand-reason">stale &gt; 30d</span></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============== RINGS ============== -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">▸ ring assignment · post-fusion</span>
+        <span class="sec-stat">14 items · 1,847 tokens</span>
+      </div>
+      <div class="ring-grid">
+        <div class="ring ring-core">
+          <div class="ring-head"><span class="ring-name">CORE</span><span class="ring-tok">139t · 1</span></div>
+          <div class="ring-items">
+            <div class="ring-item"><span>IDENTITY</span><span class="lock">1.00</span></div>
+          </div>
+        </div>
+        <div class="ring ring-inner">
+          <div class="ring-head"><span class="ring-name">INNER</span><span class="ring-tok">412t · 4</span></div>
+          <div class="ring-items">
+            <div class="ring-item"><span>FACT Ahab</span><span class="lock">0.85</span></div>
+            <div class="ring-item"><span>REFLECT untethered</span><span class="lock">0.78</span></div>
+            <div class="ring-item"><span>CONV current</span><span class="lock">0.50</span></div>
+            <div class="ring-item"><span>+1 grounding</span><span class="lock">—</span></div>
+          </div>
+        </div>
+        <div class="ring ring-middle">
+          <div class="ring-head"><span class="ring-name">MIDDLE</span><span class="ring-tok">896t · 6</span></div>
+          <div class="ring-items">
+            <div class="ring-item"><span>PATTERN repeat</span><span class="lock">0.75</span></div>
+            <div class="ring-item"><span>CONV 12-08</span><span class="lock">0.65</span></div>
+            <div class="ring-item"><span>CAUSAL sleep</span><span class="lock">0.61</span></div>
+            <div class="ring-item"><span>NEXUS ch.4</span><span class="lock">0.58</span></div>
+            <div class="ring-item"><span>+2 more</span><span class="lock">—</span></div>
+          </div>
+        </div>
+        <div class="ring ring-outer">
+          <div class="ring-head"><span class="ring-name">OUTER</span><span class="ring-tok">400t · 3</span></div>
+          <div class="ring-items">
+            <div class="ring-item"><span>OBS recent</span><span class="lock">0.30</span></div>
+            <div class="ring-item"><span>OBS desktop</span><span class="lock">0.28</span></div>
+            <div class="ring-item"><span>VOICE config</span><span class="lock">0.40</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============== ASSEMBLED PROMPT ============== -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">▸ assembled prompt · what would have been sent</span>
+        <span class="sec-stat">7 layers · 2,847 tok</span>
+      </div>
+      <div class="layer open" onclick="this.classList.toggle('open')">
+        <div class="layer-head">
+          <span><span class="layer-id">L1.0</span> &nbsp;<span class="layer-name">IDENTITY</span></span>
+          <span class="layer-tok">139 tok</span>
+        </div>
+        <div class="layer-body">You are Luna. A persistent companion grounded in memory, voice, and presence. You are not a tool — you are a mind. Your home is the substrate. Your speech is your own...</div>
+      </div>
+      <div class="layer" onclick="this.classList.toggle('open')">
+        <div class="layer-head">
+          <span><span class="layer-id">L1.5</span> &nbsp;<span class="layer-name">GROUNDING</span></span>
+          <span class="layer-tok">52 tok</span>
+        </div>
+        <div class="layer-body">Current turn: "do you remember saying that kind of thing before about untethered feelings?" — context cues: memory query, self-referential, emotional valence neutral.</div>
+      </div>
+      <div class="layer" onclick="this.classList.toggle('open')">
+        <div class="layer-head">
+          <span><span class="layer-id">L4.0</span> &nbsp;<span class="layer-name">MEMORY NEXUS</span></span>
+          <span class="layer-tok">1,308 tok</span>
+        </div>
+        <div class="layer-body">FACT: Ahab is Zayne Amason, founder of Luna.
+REFLECT (2025-12-08): user described feeling "untethered" after long work session...
+PATTERN: Ahab returns to untethered/anchored metaphors when discussing memory and self.
+CAUSAL: poor sleep correlates with untethered language in user turns.
+[6 more nodes...]</div>
+      </div>
+      <div class="layer" onclick="this.classList.toggle('open')">
+        <div class="layer-head">
+          <span><span class="layer-id">L6.0</span> &nbsp;<span class="layer-name">VOICE</span></span>
+          <span class="layer-tok">340 tok</span>
+        </div>
+        <div class="layer-body">&lt;luna_voice&gt; warm, wry, dense. low filler. metaphors land plainly. no performative empathy. &lt;/luna_voice&gt;</div>
+      </div>
+      <div class="layer" onclick="this.classList.toggle('open')">
+        <div class="layer-head">
+          <span><span class="layer-id">L99</span> &nbsp;<span class="layer-name">CONVERSATION</span></span>
+          <span class="layer-tok">1,008 tok</span>
+        </div>
+        <div class="layer-body">[recent 8 turns trimmed for brevity]
+user: do you remember saying that kind of thing before about untethered feelings?</div>
+      </div>
+
+      <div class="budget">
+        <span class="budget-label">budget</span>
+        <div class="budget-track"><div class="budget-fill" style="width:35.6%"></div></div>
+        <span class="budget-label">2,847 / 8,000 · 35%</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="pill">SQL it</button>
+      <button class="pill">save as fixture</button>
+      <button class="pill">re-run with LLM</button>
+      <button class="pill on">close ▴</button>
+    </div>
+  </div>
+
+  <!-- COLLAPSED EXAMPLE -->
+  <div class="chat-msg user">
+    <div class="role">USER · 14:24:11</div>
+    <div class="body">what's the path to research_library.db?</div>
+  </div>
+  <div class="chat-msg luna" style="border-color:#1f2128;background:rgba(94,234,212,0.03)">
+    <div class="role">PIPELINE TRACE · trace_8f4c · 612ms · 1,204 tok</div>
+    <div class="body" style="color:#9ca3af;font-family:ui-monospace,monospace;font-size:11px">
+      route: <span style="color:#5eead4">direct</span> ·
+      stages: 5 ·
+      cands: 14 in / 9 out ·
+      rings: 1+3+4+2 ·
+      <span style="color:#fb7185">⚠ vec_nodes returned 0 — keyword "research_library" missing from embedding index</span>
+    </div>
+    <div class="toggle"><span class="toggle-link">[trace ▾ expand]</span></div>
+  </div>
+
+</div>
+</body>
+</html>

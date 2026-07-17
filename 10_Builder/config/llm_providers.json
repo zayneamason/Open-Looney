@@ -1,0 +1,58 @@
+{
+  "current_provider": "claude",
+  "default_provider": "claude",
+  "providers": {
+    "ollama": {
+      "enabled": false,
+      "base_url": "http://localhost:11434",
+      "default_model": "qwen3.5:9b",
+      "models": [
+        "qwen3.5:9b",
+        "qwen3:30b-a3b",
+        "qwen3-coder:30b",
+        "qwen3:8b",
+        "qwen2.5vl:7b"
+      ],
+      "model_roles": {
+        "general": "qwen3.5:9b",
+        "code": "qwen3-coder:30b",
+        "router": "qwen3:8b",
+        "vision": "qwen2.5vl:7b",
+        "fast": "qwen3.5:9b",
+        "reasoning": "qwen3:30b-a3b"
+      }
+    },
+    "claude": {
+      "enabled": true,
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "default_model": "claude-haiku-4-5-20251001",
+      "models": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-4-6",
+        "claude-3-5-sonnet-20241022",
+        "claude-3-haiku-20240307"
+      ]
+    },
+    "groq": {
+      "enabled": false,
+      "api_key_env": "GROQ_API_KEY",
+      "default_model": "llama-3.3-70b-versatile",
+      "models": [
+        "llama-3.3-70b-versatile",
+        "llama-3.3-70b-specdec",
+        "llama3-70b-8192",
+        "mixtral-8x7b-32768"
+      ]
+    },
+    "gemini": {
+      "enabled": false,
+      "api_key_env": "GOOGLE_API_KEY",
+      "default_model": "gemini-2.0-flash",
+      "models": [
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-pro"
+      ]
+    }
+  }
+}

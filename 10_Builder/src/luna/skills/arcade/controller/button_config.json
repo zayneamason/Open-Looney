@@ -1,0 +1,53 @@
+{
+  "serial": {
+    "baud": 115200,
+    "port_auto": true,
+    "port_override": null
+  },
+  "lcd": {
+    "on_connect": {"icon": "luna"},
+    "on_profile_switch": "show_profile_name"
+  },
+  "active_profile": "arcade",
+  "profiles": {
+    "arcade": {
+      "description": "Standard arcade controls",
+      "buttons": {
+        "fire":  {"action": "key:space",  "lcd_label": "FIRE"},
+        "left":  {"action": "key:left",   "lcd_label": null},
+        "right": {"action": "key:right",  "lcd_label": null},
+        "up":    {"action": "key:up",     "lcd_label": null},
+        "down":  {"action": "key:down",   "lcd_label": null},
+        "sw1":   {"action": "key:return", "lcd_label": "ACTION"},
+        "sw2":   {"action": "profile:menu", "lcd_label": "MENU"}
+      },
+      "lcd_idle": {"text": "FIRE|Press to shoot"}
+    },
+    "menu": {
+      "description": "Game selection menu",
+      "buttons": {
+        "fire":  {"action": "luna:/arcade",       "lcd_label": "PLAY"},
+        "left":  {"action": "luna:/arcade list",   "lcd_label": null},
+        "right": {"action": "luna:/arcade stop",   "lcd_label": null},
+        "up":    {"action": "key:up",              "lcd_label": null},
+        "down":  {"action": "key:down",            "lcd_label": null},
+        "sw1":   {"action": "luna:/arcade",        "lcd_label": "LAUNCH"},
+        "sw2":   {"action": "profile:arcade",      "lcd_label": "BACK"}
+      },
+      "lcd_idle": {"icon": "menu"}
+    },
+    "luna": {
+      "description": "Luna assistant controls",
+      "buttons": {
+        "fire":  {"action": "luna:hey luna",           "lcd_label": "TALK"},
+        "left":  {"action": "luna:what can you do?",   "lcd_label": null},
+        "right": {"action": "luna:tell me a joke",     "lcd_label": null},
+        "up":    {"action": "key:up",                  "lcd_label": null},
+        "down":  {"action": "key:down",                "lcd_label": null},
+        "sw1":   {"action": "luna:play a game",        "lcd_label": "ARCADE"},
+        "sw2":   {"action": "profile:arcade",          "lcd_label": "BACK"}
+      },
+      "lcd_idle": {"icon": "luna"}
+    }
+  }
+}

@@ -1,0 +1,40 @@
+# Luna Project Registry
+# ======================
+# Defines workspaces Luna can activate.
+# Each project maps to a per-project search chain
+# at config/projects/{slug}.yaml
+
+schema_version: 1
+
+projects:
+
+  kinoni-ict-hub:
+    name: "Kinoni ICT Hub"
+    description: "Community knowledge stewardship — Rotary Club of Kinoni, Uganda"
+    ingestion_pattern: ceremonial    # emergent | ceremonial | utilitarian
+    aperture_default: BALANCED       # TUNNEL | NARROW | BALANCED | WIDE | OPEN
+    collections: []
+      # kinoni_knowledge collection retired in Move 2 (Nexus migration, 2026-05-02).
+      # Workspace + study_context retained; satellite data removed.
+    icon: "◈"
+    accent: "F97316"                 # orange — guardian color
+
+  eclipse-dataroom:
+    name: "Project Eclipse"
+    description: "Investor-facing documents and fundraising materials"
+    ingestion_pattern: utilitarian
+    aperture_default: NARROW
+    collections:
+      - dataroom
+    icon: "◆"
+    accent: "60A5FA"
+
+  # --- TEMPLATE FOR NEW PROJECTS ---
+  # my-project:
+  #   name: "My Project"
+  #   description: "What this workspace is for"
+  #   ingestion_pattern: emergent    # Luna's own work
+  #   aperture_default: BALANCED
+  #   collections: []
+  #   icon: "◇"
+  #   accent: "A78BFA"

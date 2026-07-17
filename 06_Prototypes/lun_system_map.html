@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>.lun system map</title>
+<style>
+:root {
+  --bg: #FAF8F2;
+  --text-primary: #2C2C2A;
+  --text-secondary: #5F5E5A;
+  --rule: rgba(0,0,0,0.15);
+  --teal-bg: #E1F5EE;
+  --teal-stroke: #0F6E56;
+  --teal-text: #085041;
+  --purple-bg: #EEEDFE;
+  --purple-stroke: #534AB7;
+  --purple-text: #3C3489;
+  --gray-bg: #F1EFE8;
+  --gray-stroke: #888780;
+  --gray-text: #2C2C2A;
+  --red-text: #791F1F;
+  --red-stroke: #A32D2D;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1A1A19;
+    --text-primary: #E8E6DE;
+    --text-secondary: #B4B2A9;
+    --rule: rgba(255,255,255,0.2);
+    --teal-bg: #085041;
+    --teal-stroke: #5DCAA5;
+    --teal-text: #9FE1CB;
+    --purple-bg: #3C3489;
+    --purple-stroke: #AFA9EC;
+    --purple-text: #CECBF6;
+    --gray-bg: #444441;
+    --gray-stroke: #B4B2A9;
+    --gray-text: #E8E6DE;
+    --red-text: #F09595;
+    --red-stroke: #E24B4A;
+  }
+}
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 auto;
+  padding: 40px 24px;
+  max-width: 820px;
+}
+h1 {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0 0 32px;
+}
+.meta {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 0.5px solid var(--rule);
+}
+.meta p { margin: 0 0 12px; }
+.meta code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  padding: 1px 4px;
+  background: rgba(128,128,128,0.12);
+  border-radius: 3px;
+}
+svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px 0;
+}
+.box-gray { fill: var(--gray-bg); stroke: var(--gray-stroke); }
+.box-teal { fill: var(--teal-bg); stroke: var(--teal-stroke); }
+.box-purple { fill: var(--purple-bg); stroke: var(--purple-stroke); }
+.t-primary { fill: var(--text-primary); font-family: inherit; font-size: 14px; font-weight: 500; }
+.t-secondary { fill: var(--text-secondary); font-family: inherit; font-size: 12px; }
+.t-teal { fill: var(--teal-text); font-family: inherit; font-size: 14px; font-weight: 500; }
+.t-teal-sub { fill: var(--teal-text); font-family: inherit; font-size: 12px; }
+.t-purple { fill: var(--purple-text); font-family: inherit; font-size: 14px; font-weight: 500; }
+.t-purple-sub { fill: var(--purple-text); font-family: inherit; font-size: 12px; }
+.t-gray { fill: var(--gray-text); font-family: inherit; font-size: 14px; font-weight: 500; }
+.t-gray-sub { fill: var(--gray-text); font-family: inherit; font-size: 12px; }
+.t-red { fill: var(--red-text); font-family: inherit; font-size: 12px; }
+.arrow { stroke: var(--text-secondary); fill: none; stroke-width: 1; }
+.arrow-broken { stroke: var(--red-stroke); fill: none; stroke-width: 1; stroke-dasharray: 4 3; }
+</style>
+</head>
+<body>
+<h1>.lun system map</h1>
+<p class="subtitle">Where the .lun files sit in Luna's architecture, and how data flows in and out.</p>
+
+<svg viewBox="0 0 680 490" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="diagram-title diagram-desc">
+<title id="diagram-title">System map: where the .lun files sit in Luna's architecture</title>
+<desc id="diagram-desc">Two .lun files form Luna's storage layer. cartridge.lun receives portable knowledge from the builder, fed by source documents. memory_matrix.lun receives runtime data from user chat and external service ingestion through the Intergalactic Hub. Nexus reads registered cartridges and feeds the Luna engine; the engine reads matrix.lun (and writes back), and emits responses through Eclissi. Promotion of cartridge claims into matrix tables is currently broken.</desc>
+
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+
+<rect x="60" y="30" width="240" height="50" rx="6" stroke-width="0.5" class="box-gray"/>
+<text x="180" y="48" text-anchor="middle" dominant-baseline="central" class="t-gray">Source documents</text>
+<text x="180" y="66" text-anchor="middle" dominant-baseline="central" class="t-gray-sub">PDF, markdown</text>
+
+<rect x="380" y="30" width="240" height="50" rx="6" stroke-width="0.5" class="box-gray"/>
+<text x="500" y="48" text-anchor="middle" dominant-baseline="central" class="t-gray">Live inputs</text>
+<text x="500" y="66" text-anchor="middle" dominant-baseline="central" class="t-gray-sub">User chat, external services</text>
+
+<line x1="180" y1="80" x2="180" y2="143" class="arrow" marker-end="url(#arrow)"/>
+<text x="187" y="113" dominant-baseline="central" class="t-secondary">via Builder</text>
+<line x1="500" y1="80" x2="500" y2="143" class="arrow" marker-end="url(#arrow)"/>
+<text x="507" y="113" dominant-baseline="central" class="t-secondary">via engine + IH</text>
+
+<rect x="60" y="150" width="240" height="130" rx="14" stroke-width="0.5" class="box-teal"/>
+<text x="180" y="185" text-anchor="middle" dominant-baseline="central" class="t-teal">cartridge.lun</text>
+<text x="180" y="215" text-anchor="middle" dominant-baseline="central" class="t-teal-sub">Portable knowledge</text>
+<text x="180" y="245" text-anchor="middle" dominant-baseline="central" class="t-teal-sub">application_id: LUNC</text>
+
+<rect x="380" y="150" width="240" height="130" rx="14" stroke-width="0.5" class="box-purple"/>
+<text x="500" y="185" text-anchor="middle" dominant-baseline="central" class="t-purple">memory_matrix.lun</text>
+<text x="500" y="215" text-anchor="middle" dominant-baseline="central" class="t-purple-sub">Runtime substrate</text>
+<text x="500" y="245" text-anchor="middle" dominant-baseline="central" class="t-purple-sub">application_id: LUNM</text>
+
+<line x1="300" y1="215" x2="378" y2="215" class="arrow-broken" marker-end="url(#arrow)"/>
+<text x="339" y="203" text-anchor="middle" dominant-baseline="central" class="t-red">promote ✗</text>
+
+<line x1="180" y1="280" x2="180" y2="320" class="arrow" marker-end="url(#arrow)"/>
+<line x1="500" y1="280" x2="400" y2="320" class="arrow" marker-end="url(#arrow)"/>
+
+<rect x="60" y="325" width="180" height="60" rx="6" stroke-width="0.5" class="box-gray"/>
+<text x="150" y="346" text-anchor="middle" dominant-baseline="central" class="t-gray">Nexus</text>
+<text x="150" y="368" text-anchor="middle" dominant-baseline="central" class="t-gray-sub">Cartridge registry</text>
+
+<rect x="270" y="325" width="180" height="60" rx="6" stroke-width="0.5" class="box-gray"/>
+<text x="360" y="346" text-anchor="middle" dominant-baseline="central" class="t-gray">Luna engine</text>
+<text x="360" y="368" text-anchor="middle" dominant-baseline="central" class="t-gray-sub">PromptAssembler, Scribe</text>
+
+<rect x="480" y="325" width="140" height="60" rx="6" stroke-width="0.5" class="box-gray"/>
+<text x="550" y="346" text-anchor="middle" dominant-baseline="central" class="t-gray">Eclissi</text>
+<text x="550" y="368" text-anchor="middle" dominant-baseline="central" class="t-gray-sub">Chat UI</text>
+
+<line x1="240" y1="355" x2="268" y2="355" class="arrow" marker-end="url(#arrow)"/>
+<line x1="450" y1="355" x2="478" y2="355" class="arrow" marker-end="url(#arrow)"/>
+
+<line x1="550" y1="385" x2="550" y2="423" class="arrow" marker-end="url(#arrow)"/>
+<text x="550" y="442" text-anchor="middle" dominant-baseline="central" class="t-secondary">Response to user</text>
+
+<text x="340" y="475" text-anchor="middle" dominant-baseline="central" class="t-secondary">Teal: cartridge family · Purple: matrix family · Red dashed: broken promotion</text>
+</svg>
+
+<div class="meta">
+<p><strong>Notes.</strong> The <code>matrix → Luna engine</code> arrow shows the read direction; the engine also writes back to matrix (new memory nodes, conversation turns, scribe extractions) — bidirectional in practice, shown one-way here for visual clarity.</p>
+<p>The promotion edge (<code>cartridge → matrix</code>) is currently broken per the codex 2026-05-10 audit. <code>_promote_used_nodes</code> in <code>src/luna/engine.py:3425</code> passes <code>nexus/&lt;key&gt;</code> to <code>_get_conn</code> in <code>aibrarian_engine.py:2425</code>, which expects bare <code>&lt;key&gt;</code>. Result: <code>nexus_nodes = 0</code> in the live runtime DB despite cartridges being registered.</p>
+<p>"Live inputs" collapses two flows: user conversation turns (routed through Luna engine, written to <code>matrix.conversation_turns</code>) and external service ingestion (Drive, Calendar, Trello, Discord, Meetings, routed through the Intergalactic Hub, written to <code>matrix.ih_events</code>).</p>
+<p><strong>Generated:</strong> 2026-05-10 · <strong>Cartridge format spec:</strong> <code>03_Format_Spec/LUN-FORMAT_v0.1.md</code> · <strong>Application_id contract:</strong> <code>01_Specs/accepted/SPEC-006_v02-hygiene-bundle.md</code> · <strong>Application_id decision rationale:</strong> <code>08_Journal/2026-05-10.md</code></p>
+</div>
+</body>
+</html>

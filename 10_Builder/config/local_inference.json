@@ -1,0 +1,20 @@
+{
+  "model": {
+    "model_id": "Qwen/Qwen2.5-3B-Instruct",
+    "use_4bit": true,
+    "cache_prompt": true,
+    "adapter_path": "models/luna_lora_mlx"
+  },
+  "generation": {
+    "max_tokens": 513,
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "repetition_penalty": 1.1
+  },
+  "performance": {
+    "hot_path_timeout_ms": 200
+  },
+  "routing": {
+    "complexity_threshold": 0.35
+  }
+}

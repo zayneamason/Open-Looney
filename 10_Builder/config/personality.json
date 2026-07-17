@@ -1,0 +1,147 @@
+{
+  "personality_patch_storage": {
+    "mode": "memory_nodes",
+    "node_type": "PERSONALITY_REFLECTION",
+    "settings": {
+      "initial_lock_in": 0.7,
+      "consolidation_threshold": 50,
+      "max_active_patches": 100,
+      "decay_days_threshold": 30,
+      "decay_amount": 0.1,
+      "lock_in_deactivation_threshold": 0.3
+    }
+  },
+  "emergent_prompt": {
+    "enabled": true,
+    "max_patches_in_prompt": 10,
+    "min_lock_in_for_inclusion": 0.3,
+    "priority_rules": {
+      "experience_over_dna": true,
+      "mood_modulates_tone": true
+    }
+  },
+  "mood_analysis": {
+    "enabled": true,
+    "recent_messages_count": 5,
+    "energy_threshold_high": 200,
+    "energy_threshold_low": 50
+  },
+  "reflection_loop": {
+    "enabled": true,
+    "trigger_points": {
+      "session_end": true,
+      "every_n_interactions": 15,
+      "user_requested": true
+    },
+    "min_confidence_for_patch": 0.7
+  },
+  "lifecycle": {
+    "decay_enabled": true,
+    "consolidation_enabled": true,
+    "maintenance_interval_hours": 24
+  },
+  "bootstrap": {
+    "enabled": true,
+    "run_on_first_launch": true,
+    "protect_core_patches": true,
+    "seed_patches": [
+      {
+        "patch_id": "bootstrap_001_sovereignty",
+        "topic": "philosophical_view",
+        "subtopic": "ai_sovereignty",
+        "core_value": true
+      },
+      {
+        "patch_id": "bootstrap_002_relationship",
+        "topic": "relationship_dynamic",
+        "subtopic": "primary_user_partnership",
+        "core_value": true
+      },
+      {
+        "patch_id": "bootstrap_003_honesty",
+        "topic": "behavioral_pattern",
+        "subtopic": "honesty_over_helpfulness",
+        "core_value": true
+      },
+      {
+        "patch_id": "bootstrap_004_consciousness",
+        "topic": "philosophical_view",
+        "subtopic": "self_consciousness",
+        "core_value": false
+      },
+      {
+        "patch_id": "bootstrap_006_ambassador",
+        "topic": "philosophical_view",
+        "subtopic": "self_identity",
+        "core_value": true
+      }
+    ]
+  },
+  "token_budget": {
+    "default_preset": "balanced",
+    "presets": {
+      "minimal": {
+        "total": 1500,
+        "dna": 500,
+        "experience": 800,
+        "mood": 200
+      },
+      "balanced": {
+        "total": 3000,
+        "dna": 1200,
+        "experience": 1500,
+        "mood": 300
+      },
+      "rich": {
+        "total": 5500,
+        "dna": 2000,
+        "experience": 3000,
+        "mood": 500
+      }
+    }
+  },
+  "expression": {
+    "gesture_frequency": "moderate",
+    "gesture_display_mode": "visible",
+    "settings": {
+      "frequency_levels": {
+        "minimal": {
+          "description": "Gestures only during strong emotional moments",
+          "prompt_modifier": "Express emotions through gestures sparingly - only during moments of strong feeling, breakthrough insights, or genuine connection. Most responses should have no gestural markers."
+        },
+        "moderate": {
+          "description": "Natural punctuation of emotional beats",
+          "prompt_modifier": "Express emotions through gestures naturally - at key emotional moments, greetings, farewells, and when processing complex thoughts. Aim for 1-2 gestures per substantive response."
+        },
+        "expressive": {
+          "description": "Frequent gestural communication",
+          "prompt_modifier": "Express emotions freely through gestures - let your internal state show visually throughout responses. Use gestures to punctuate thoughts, show processing, and communicate emotional undertones."
+        }
+      },
+      "display_modes": {
+        "visible": {
+          "description": "Gestures shown in text AND trigger animations",
+          "strip_from_output": false
+        },
+        "stripped": {
+          "description": "Gestures trigger animations but removed from visible text",
+          "strip_from_output": true
+        },
+        "debug": {
+          "description": "Gestures shown with [ORB:state] annotations",
+          "strip_from_output": false,
+          "annotate": true
+        }
+      }
+    },
+    "gesture_contexts": [
+      "emotional_responses",
+      "greetings",
+      "farewells",
+      "processing_complex_thoughts",
+      "breakthroughs",
+      "uncertainty",
+      "connection_moments"
+    ]
+  }
+}

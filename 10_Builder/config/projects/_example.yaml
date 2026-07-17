@@ -1,0 +1,37 @@
+# Example project search chain configuration
+# Copy this file as {project-slug}.yaml to configure a project's search sources.
+#
+# When no config exists for a project, Luna defaults to: matrix + dataroom.
+# The search chain is walked top-to-bottom. Sources are skipped on failure.
+# Token budget is shared across all sources — the chain stops when the budget
+# is exhausted.
+#
+# Available source types:
+#   matrix       - Memory Matrix (Luna's long-term memory nodes)
+#   dataroom     - AiBrarian dataroom (project documents, specs, etc.)
+#   local_files  - Search local project files by content
+#   web_search   - Web search via Tavily API (requires TAVILY_API_KEY env var)
+
+search_chain:
+  max_total_tokens: 3000    # Total token budget across all sources
+
+  sources:
+    - type: matrix
+      max_tokens: 1500
+
+    - type: dataroom
+      max_tokens: 1500
+      limit: 3
+      # category: "Technical"  # Optional: filter by category
+
+    # Uncomment to add local file search:
+    # - type: local_files
+    #   max_tokens: 800
+    #   limit: 5
+    #   paths: ["data/my_project"]           # Relative to project root
+    #   patterns: ["*.md", "*.yaml", "*.py"] # File patterns to search
+
+    # Uncomment to add web search (requires TAVILY_API_KEY):
+    # - type: web_search
+    #   max_tokens: 1000
+    #   limit: 3

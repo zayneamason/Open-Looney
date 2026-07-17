@@ -1,0 +1,73 @@
+{
+  "services": {
+    "backend": {
+      "port": 8000,
+      "enabled": true,
+      "host": "0.0.0.0",
+      "debug": false
+    },
+    "frontend": {
+      "port": 5173,
+      "enabled": true
+    },
+    "observatory": {
+      "port": 8100,
+      "enabled": false,
+      "start_production": false
+    },
+    "tunnel": {
+      "enabled": false,
+      "patch_apps_script": true
+    }
+  },
+  "profiles": {
+    "default": {
+      "services": {
+        "backend": {
+          "enabled": true
+        },
+        "frontend": {
+          "enabled": true
+        },
+        "observatory": {
+          "enabled": false
+        },
+        "tunnel": {
+          "enabled": false
+        }
+      }
+    },
+    "full": {
+      "services": {
+        "backend": {
+          "enabled": true
+        },
+        "frontend": {
+          "enabled": true
+        },
+        "observatory": {
+          "enabled": true
+        },
+        "tunnel": {
+          "enabled": true
+        }
+      }
+    },
+    "api-only": {
+      "services": {
+        "backend": {
+          "enabled": true
+        },
+        "frontend": {
+          "enabled": false
+        },
+        "observatory": {
+          "enabled": false
+        },
+        "tunnel": {
+          "enabled": false
+        }
+      }
+    }
+  }
+}

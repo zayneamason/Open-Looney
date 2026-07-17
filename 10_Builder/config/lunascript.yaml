@@ -1,0 +1,53 @@
+# LunaScript — Cognitive Signature System Configuration
+# See: Docs/LunaScript/HANDOFF_LUNASCRIPT_COGNITIVE_SIGNATURE.md
+
+lunascript:
+  enabled: true
+  
+  # Evolution parameters
+  decay_halflife: 100        # Delegations before old data halves in influence
+  epsilon: 0.15              # Exploration rate (how much Luna experiments)
+  epsilon_decay: 0.995       # Per-iteration decay
+  epsilon_floor: 0.02        # Never stop exploring entirely
+  
+  # Veto parameters  
+  veto_sigma: 2.0            # Standard deviations for structural veto
+  max_retries: 1             # Retry limit on veto failure
+  
+  # Calibration
+  calibration_interval_sessions: 50  # Re-calibrate baselines every N sessions
+  min_corpus_size: 50                # Minimum responses before calibration runs
+  
+  # Feature toggles (can disable individual features)
+  features:
+    opening_reaction: true
+    closing_question: true
+    contraction_rate: true
+    question_density: true
+    avg_word_length: true
+    exploratory_ratio: true
+    emoji_density: true
+    list_usage: true
+    slang_ratio: true
+    filler_ratio: true
+    we_ratio: true
+    first_person_ratio: true
+    conditional_ratio: true
+    tangent_markers: true
+    hedge_ratio: true
+    sentence_length_variance: true
+    emphasis_density: true
+    passive_ratio: true
+    you_ratio: true
+    formal_vocab_ratio: true
+    avg_sentence_length: true
+    
+  # Forbidden phrases (auto-veto if detected in delegated response)
+  forbidden_phrases:
+    - "I'd be happy to"
+    - "Certainly!"
+    - "As an AI"
+    - "I don't have personal"
+    - "Let me help you with"
+    - "I appreciate you"
+    - "That's a great question"

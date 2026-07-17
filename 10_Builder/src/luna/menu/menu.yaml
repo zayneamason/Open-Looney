@@ -1,0 +1,59 @@
+version: "1.0"
+tasks:
+  - id: deep_research
+    name: "deep research"
+    description: "Multi-source research with citations. Web + AIbrarian + Matrix."
+    latency_tier: high
+    dm: general
+    trigger_signals: ["research", "find sources", "look into", "what's the current state of"]
+    tools: [web_search, aibrarian_search, memory_matrix_search]
+    exit_condition: "sources_cited >= 3 and summary_written"
+    context_slots: [user_query, active_entities, related_matrix_nodes]
+    returns: summary_with_citations
+    timeout_s: 120
+
+  - id: extract_session
+    name: "extract session"
+    description: "Ben classifies all turns. FACT/DECISION/PROBLEM/ACTION/OPINION."
+    latency_tier: medium
+    dm: ben
+    trigger_signals: ["what did we decide", "extract", "what came out of this", "session summary"]
+    tools: [luna_record_turn, aibrarian_ingest, memory_matrix_add_node]
+    exit_condition: "all_unclassified_turns == 0"
+    context_slots: [session_id, unclassified_turns]
+    returns: classified_node_ids
+    timeout_s: 60
+
+  - id: file_entities
+    name: "file entities"
+    description: "The Dude links loose entities into the graph."
+    latency_tier: medium
+    dm: dude
+    trigger_signals: ["who is connected", "link", "relationship", "graph"]
+    tools: [memory_matrix_add_node, memory_matrix_add_edge, memory_matrix_search]
+    exit_condition: "orphan_entity_count == 0 or max_hops_satisfied"
+    context_slots: [target_entities, existing_edges]
+    returns: edge_report
+    timeout_s: 45
+
+  - id: current_time
+    name: "current time"
+    description: "Native: returns the current time string."
+    latency_tier: near_zero
+    dm: null
+    trigger_signals: ["what time", "current time"]
+    tools: []
+    exit_condition: "answered"
+    context_slots: []
+    returns: time_string
+
+  - id: simple_recall
+    name: "simple recall"
+    description: "Native: trivial recall paths handled by the existing engine."
+    latency_tier: near_zero
+    dm: null
+    trigger_signals: []
+    tools: []
+    exit_condition: "answered"
+    context_slots: []
+    returns: recall_result

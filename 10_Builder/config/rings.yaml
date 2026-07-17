@@ -1,0 +1,91 @@
+# Luna ring contract — runtime parameters
+#
+# Architecture lives in Docs/bible/. This file holds the knobs. Tune here,
+# not in code. Changes take effect on engine restart.
+
+budget:
+  total: 8000
+  rings:
+    # Per-ring budget reference — documentation only; assembler manages allocation
+    # by priority and token counting, not hard per-ring caps.
+    #
+    # CORE: identity kernel. Never evicted. Placed first in prompt.
+    core:   { max: 200,   min: 0,   percent: 2.5  }
+    # INNER: conversation + grounding + voice. Capped to prevent crowding out
+    # retrieved knowledge (was 99.8% pre-1.5a).
+    inner:  { max: 3500,  min: 0,   percent: 44   }
+    # MIDDLE: retrieved knowledge. Largest ring — retrieval is the point.
+    # Minimum guarantees that if retrieval fires at all, some budget survives
+    # (prevents starvation from oversized INNER content).
+    middle: { max: 3000,  min: 500, percent: 37.5 }
+    # OUTER: scribe, demoted, breakthrough. Placed in attention dead zone.
+    # First to evict, best-effort only.
+    outer:  { max: 1300,  min: 0,   percent: 16   }
+
+ingest:
+  # min_useful_score: candidates below this are dropped at ingest (Phase 1.5f).
+  # Without this gate, the floor laundered 141 irrelevant candidates into the
+  # ring as "relevant enough" (see Docs/TRACE_MCP_Payload_Flood_Findings.md).
+  min_useful_score: 0.25
+
+  # floor_score: candidates at or above min but below floor are promoted to
+  # floor to protect them from demotion on the next rebalance tick (1.5a).
+  floor_score: 0.35
+
+  # relevant_threshold: single source of truth shared between grounding
+  # relevant_count and the assembler emit gate (Phase 1.5f). If this value
+  # diverges between consumers, the flood bug returns.
+  relevant_threshold: 0.5
+
+sources:
+  middle:
+    max_single_source_percent: 60   # no TOC-style starvation
+    allowed: [MEMORY, LIBRARIAN, TOOL]
+  outer:
+    allowed: [SCRIBE, DEMOTED, BREAKTHROUGH]
+
+# Prompt assembly layer order (documentation — assembler hardcodes this logic).
+# Position values are sortable; floats allowed for insertion without renumbering.
+# Design follows "lost in the middle" research: high-value content at beginning
+# (identity, retrieved knowledge) and end (conversation).
+assembly_order:
+  - { position: 1.0,  layer: identity,       ring: CORE   }
+  - { position: 1.5,  layer: grounding,      ring: INNER  }
+  - { position: 1.75, layer: constraints,    ring: INNER  }
+  - { position: 2.0,  layer: study_context,  ring: MIDDLE }
+  - { position: 4.0,  layer: memory_nexus,   ring: MIDDLE }
+  - { position: 4.5,  layer: background,     ring: OUTER  }
+  - { position: 5.0,  layer: consciousness,  ring: INNER  }
+  - { position: 6.0,  layer: voice,          ring: INNER  }
+  - { position: 99,   layer: conversation,   ring: INNER  }
+
+rebalance:
+  tick_interval_ms: 500
+  age_guard_turns: 2       # items younger than N turns exempt from demotion (1.5a)
+  demotion_threshold: 0.3  # relevance below which items are demoted to next ring
+  promotion_threshold: 0.8 # relevance at which items are promoted to inner ring
+  decay_factor: 0.95       # relevance decay multiplier per cognitive tick
+
+capabilities:
+  dataroom:
+    trigger_app_contexts: [dataroom]
+    trigger_keywords:
+      - investor
+      - data room
+      - dataroom
+      - financials
+      - legal docs
+      - partnerships
+      - go-to-market
+      - market analysis
+      - competitive landscape
+    trigger_entities:
+      - Company Overview
+      - Financials
+      - Legal
+      - Product
+      - "Market & Competition"
+      - Team
+      - Go-to-Market
+      - "Partnerships & Impact"
+      - "Risk & Mitigation"

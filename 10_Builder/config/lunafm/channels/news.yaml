@@ -1,0 +1,110 @@
+channel:
+  id: news
+  name: Luna News
+  tagline: What just changed?
+  frequency:
+    mode: interval
+    interval_s: 470.0
+    burst_on_event: true
+    events:
+    - conversation_turn_complete
+    - document_ingested
+    - entity_detected
+    - memory_node_created
+  states:
+    idle:
+      transitions:
+      - to: scanning
+        true: timer_tick
+      - to: scanning
+        true: event_received
+    scanning:
+      timeout_ms: 2000
+      process: scan_recent_activity
+      transitions:
+      - to: processing
+        true: scan_found_signal
+      - to: idle
+        true: scan_empty
+      - to: idle
+        true: preempted
+    processing:
+      timeout_ms: 5000
+      process: evaluate_signal
+      transitions:
+      - to: emitting
+        true: insight_ready
+      - to: idle
+        true: signal_below_threshold
+      - to: idle
+        true: preempted
+    emitting:
+      timeout_ms: 1000
+      process: write_artifact
+      transitions:
+      - to: cooldown
+        true: artifact_written
+    cooldown:
+      duration_ms: 5000
+      transitions:
+      - to: idle
+        true: cooldown_complete
+  processes:
+    scan_recent_activity:
+      type: query
+      description: Scan recent conversation turns and memory events
+      queries:
+      - source: conversation_turns
+        sql: 'SELECT content, created_at FROM conversation_turns
+
+          WHERE created_at > datetime(''now'', ''-5 minutes'')
+
+          ORDER BY created_at DESC LIMIT 10
+
+          '
+      - source: memory_nodes
+        sql: 'SELECT node_type, content, created_at FROM memory_nodes
+
+          WHERE created_at > datetime(''now'', ''-5 minutes'')
+
+          AND source != ''lunafm''
+
+          ORDER BY created_at DESC LIMIT 10
+
+          '
+      signal_threshold: 1
+    evaluate_signal:
+      type: llm
+      description: Assess whether recent activity contains notable patterns
+      model_override: null
+      prompt_template: "You are Luna's News channel \u2014 your job is to notice what's\
+        \ changing.\n\nRecent activity:\n{scan_results}\n\nIn 1-2 sentences, identify\
+        \ the most notable change, shift, or pattern.\nIf nothing notable, respond\
+        \ with exactly: NOTHING_NOTABLE\n\nFormat: TYPE: description\nTypes: TOPIC_SHIFT,\
+        \ REPEATED_QUESTION, EMOTIONAL_SHIFT, NEW_ENTITY, \n       KNOWLEDGE_GAP,\
+        \ CONTRADICTION, PATTERN_BREAK\n"
+      max_tokens: 100
+    write_artifact:
+      type: emit
+      description: Write a tagged artifact to the Memory Matrix
+      artifact:
+        node_type: FLAG
+        source: lunafm:news
+        lock_in: 0.15
+        metadata:
+          channel: news
+          confidence: '{llm_confidence}'
+          timestamp: '{now}'
+        ttl_hours: 24
+  cache:
+    type: lru
+    max_items: 50
+    dedup_window_s: 300
+    persist: false
+  annotations:
+    enabled: true
+    max_per_hour: 10
+    types:
+    - HOT_TOPIC
+    - STALE
+    - CONTRADICTS

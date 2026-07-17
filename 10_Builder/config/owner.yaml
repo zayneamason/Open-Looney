@@ -1,0 +1,11 @@
+# Luna Engine — Owner Identity
+# ============================
+# Identifies who owns this engine instance.
+# Leave all fields empty for a clean factory install.
+# Populated during onboarding or manually by the owner.
+
+owner:
+  entity_id: "ahab"
+  display_name: "Ahab"
+  aliases: ["Zayne", "Zayne Mason"]
+  admin_contacts: ["Ahab", "Tarcila"]

@@ -1,0 +1,5 @@
+chain:
+- claude
+- local
+per_provider_timeout_ms: 30000
+max_retries_per_provider: 1

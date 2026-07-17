@@ -1,0 +1,31 @@
+channel:
+  id: entertainment
+  name: Luna Late Night
+  tagline: The unexpected connection
+  frequency:
+    mode: interval
+    interval_s: 920.0
+    only_when: idle
+  states:
+    idle:
+      transitions:
+      - to: sampling
+        true: timer_tick
+    sampling:
+      timeout_ms: 2000
+      process: sample_nodes
+    associating:
+      timeout_ms: 20000
+      process: find_connection
+    evaluating:
+      timeout_ms: 3000
+      process: assess_novelty
+    emitting:
+      timeout_ms: 2000
+      process: write_synthesis
+    cooldown:
+      duration_ms: 30000
+  cache:
+    type: lru
+    max_items: 100
+    dedup_window_s: 3600

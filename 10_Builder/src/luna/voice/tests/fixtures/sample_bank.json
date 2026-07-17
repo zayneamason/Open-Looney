@@ -1,0 +1,92 @@
+{
+  "version": "test",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "lines": [
+    {
+      "id": "t_grnd_001",
+      "text": "test grounding opener",
+      "cost": 4,
+      "tier": "GROUNDING",
+      "context_tags": ["cold_start", "honest"],
+      "emotional_register": "warm",
+      "segment_type": "opener",
+      "source": null
+    },
+    {
+      "id": "t_grnd_002",
+      "text": "test grounding bridge",
+      "cost": 3,
+      "tier": "GROUNDING",
+      "context_tags": ["cold_start"],
+      "emotional_register": "direct",
+      "segment_type": "bridge",
+      "source": null
+    },
+    {
+      "id": "t_grnd_003",
+      "text": "test grounding closer",
+      "cost": 3,
+      "tier": "GROUNDING",
+      "context_tags": ["cold_start"],
+      "emotional_register": "warm",
+      "segment_type": "closer",
+      "source": null
+    },
+    {
+      "id": "t_eng_001",
+      "text": "test engaging opener",
+      "cost": 3,
+      "tier": "ENGAGING",
+      "context_tags": ["emotional", "warm"],
+      "emotional_register": "warm",
+      "segment_type": "opener",
+      "source": null
+    },
+    {
+      "id": "t_eng_002",
+      "text": "test engaging bridge",
+      "cost": 2,
+      "tier": "ENGAGING",
+      "context_tags": ["follow_up"],
+      "emotional_register": "warm",
+      "segment_type": "bridge",
+      "source": null
+    },
+    {
+      "id": "t_eng_003",
+      "text": "test engaging closer",
+      "cost": 3,
+      "tier": "ENGAGING",
+      "context_tags": ["follow_up"],
+      "emotional_register": "direct",
+      "segment_type": "closer",
+      "source": null
+    },
+    {
+      "id": "t_flow_001",
+      "text": "test flowing opener",
+      "cost": 3,
+      "tier": "FLOWING",
+      "context_tags": ["follow_up", "confident"],
+      "emotional_register": "direct",
+      "segment_type": "opener",
+      "source": null
+    },
+    {
+      "id": "t_flow_002",
+      "text": "test flowing reaction",
+      "cost": 2,
+      "tier": "FLOWING",
+      "context_tags": ["follow_up", "casual"],
+      "emotional_register": "warm",
+      "segment_type": "reaction",
+      "source": null
+    }
+  ],
+  "anti_patterns": [
+    { "phrase": "certainly", "reason": "butler energy", "severity": 3 },
+    { "phrase": "I'd be happy to", "reason": "service desk energy", "severity": 3 },
+    { "phrase": "absolutely", "reason": "sycophant energy", "severity": 2 },
+    { "phrase": "Great choice!", "reason": "waiter energy", "severity": 1 }
+  ]
+}
