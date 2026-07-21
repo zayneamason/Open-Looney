@@ -20,6 +20,9 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 `06_Prototypes/ReaderPrototype/SPEC.md`, `04_Audits/AUDIT_2026-05-22_meditations-v03.md`,
 and `01_Specs/accepted/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21).
 
+Session handoff 2026-07-21: `02_Handoffs/HANDOFF_2026-07-21_spec-008-accepted-spec-009-010-drafted.md`
+(SPEC-008 accepted; SPEC-009/010 drafted; next step is resolving their open questions).
+
 Research intake added 2026-07-21:
 `/Users/zayneamason/_HeyLuna_BETA/Research/Looney_GeminiConversation_001.md`.
 
