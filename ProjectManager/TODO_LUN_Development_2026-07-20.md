@@ -18,7 +18,7 @@ audit, and runtime-matrix follow-up in this repo.
 
 Current source of truth at creation: `08_Journal/2026-05-24.md`,
 `06_Prototypes/ReaderPrototype/SPEC.md`, `04_Audits/AUDIT_2026-05-22_meditations-v03.md`,
-and `01_Specs/active/SPEC-008_lunm-family-foundation.md`.
+and `01_Specs/accepted/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21).
 
 Research intake added 2026-07-21:
 `/Users/zayneamason/_HeyLuna_BETA/Research/Looney_GeminiConversation_001.md`.
@@ -38,16 +38,17 @@ Research intake added 2026-07-21:
 
 ## LUNM Runtime Matrix Specs
 
-- [ ] Resolve SPEC-008 Q1: choose `profile_config` or a dedicated `lunm_header` table as the LUNM human-readable identity mechanism.
-- [ ] Resolve SPEC-008 Q2: decide required LUNM header keys (`lunm.format_version`, `lunm.profile_ulid`, `lunm.created_at`, likely `lunm.engine_version`; defer or accept `lunm.schema_fingerprint`).
-- [ ] Resolve SPEC-008 Q3: decide whether `nexus_refs` cross-family verification is a production `MUST` with an unsafe test carve-out.
-- [ ] Resolve SPEC-008 Q4: decide LUNM `user_version` bump policy, likely stricter than LUNC and limited to contract-affecting changes.
-- [ ] Resolve SPEC-008 Q5: ask the engine implementer what happened to `ih_events` and confirm the core-table boundary before acceptance.
-- [ ] Promote `SPEC-008` from `active` to `accepted` once Q1-Q5 are resolved, preserving question bodies with dated resolution lines.
-- [ ] After acceptance, update `03_Format_Spec/LUN-FORMAT_v0.1.md`, `LUN-FORMAT_v0.2.md`, and `LUN-FORMAT_v0.3.md` references to point at SPEC-008 for LUNM.
-- [ ] Move SPEC-008 to `implemented` once Q1's mechanism is built into the engine.
-- [ ] Draft SPEC-009 for full LUNM table DDL ratification after a fresh audit of `schema.sql` plus the `_migrate_*` helpers.
-- [ ] Draft SPEC-010 for LUNM migration discipline: idempotency rules, legal in-place changes, and `user_version` bump rules.
+- [x] Resolve SPEC-008 Q1: `profile_config`, under a reserved `lunm.*` namespace. Its stated rationale was falsified against the live engine — the table is absent from `schema.sql`, holds 0 rows in every live matrix, and is deletable over HTTP — so three engine preconditions ride along.
+- [x] Resolve SPEC-008 Q2: four keys — `lunm.format_version`, **`lunm.matrix_ulid`** (renamed from `profile_ulid` and re-scoped to the file; the genesis hook fires per file, and no profile ULID exists in the engine), `lunm.created_at`, `lunm.engine_version` (declared placeholder). `lunm.schema_fingerprint` deferred to SPEC-009, defined over live `sqlite_master`.
+- [x] Resolve SPEC-008 Q3: `MUST`, unqualified — already shipped and test-covered in `promote_to_nexus()`. The unsafe carve-out was dropped (zero precedent repo-wide, one production caller); the umbrella MUST scoped to production paths, `SHOULD` for maintenance tooling.
+- [x] Resolve SPEC-008 Q4: contract-affecting changes only — but *not* "stricter than LUNC"; LUNC already practices this. Policy (a) had been nominally in force and was violated 25 consecutive times. Label/integer lockstep dropped to avoid colliding LUNM v0.2 with LUNC v0.3.
+- [x] Resolve SPEC-008 Q5: no implementer needed — the premise was false. `ih_events` is live in the production matrix, DDL owned by `intergalactic_hub/storage/db.py`, dating to 2026-04-21, three weeks *before* the journal that called it unbuilt. `sessions` promoted into the core; the boundary restated intensionally (`schema.sql` declares 47 tables, the live matrix holds 89).
+- [x] Promote `SPEC-008` from `active` to `accepted` (2026-07-21). Question bodies preserved; section renamed to `Resolved questions` per SPEC-004/SPEC-007 house style.
+- [ ] Update `03_Format_Spec/LUN-FORMAT_v0.1.md`, `LUN-FORMAT_v0.2.md`, and `LUN-FORMAT_v0.3.md` references to point at SPEC-008 for LUNM. **Timing corrected:** SPEC-008 § Dependencies puts this at `implemented/`, not at acceptance — this line previously said "after acceptance". All three carry the deferral verbatim at line 4.
+- [ ] Move SPEC-008 to `implemented` once the four engine changes in § Behavioral changes land: relocate `profile_config` DDL into `schema.sql` (it currently rides the only fail-silent migration path); reserve the `lunm.` prefix on `PUT`/`DELETE /api/profile/config`; add `_seed_lunm_header()`; close the IH matrix-creation gap, where `intergalactic_hub/storage/db.py` can create the file without stamping `application_id`.
+- [ ] Build the § 4.4 identity check: a satellite records the master's `lunm.matrix_ulid` at promotion and compares on re-open, refusing only when the key is present and different. Highest-value follow-up SPEC-008 generates — cross-profile conflation is otherwise undetectable.
+- [ ] Draft SPEC-009 for full LUNM table DDL ratification. **Scope enlarged by SPEC-008's resolutions:** `schema.sql` declares 47 tables while the live matrix holds 89, so the audit must first inventory the 6+ DDL owners outside `luna/substrate/`. Inherits from Q5 — audit ad-hoc `conversation_turns` writers before ratifying any `sessions` FK; dispose of the vestigial `consciousness_snapshots`; reconcile the v0.3 spec's `nexus_refs` description against the engine's master-pointer-only behaviour for sealed cartridges.
+- [ ] Draft SPEC-010 for LUNM migration discipline: idempotency rules and legal in-place changes. **Narrowed:** Q4's bump *triggers* are settled in SPEC-008 § 4.1; SPEC-010 carries the *mechanics* — chiefly that a bump needs an explicit migration branch and must never edit the `user_version` literal, which would fork production matrices at the old value with no detector.
 
 ## Looney Data Research Intake
 
