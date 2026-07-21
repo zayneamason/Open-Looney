@@ -18,3 +18,5 @@ gen/
 **/gen/
 10_Builder/.env
 10_Builder/config/intergalactic_hub/drive_credentials.json
+.claude-flow/
+**/.claude-flow/
