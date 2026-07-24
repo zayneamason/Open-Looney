@@ -1,10 +1,10 @@
 # SPEC-009: LUNM schema ownership and the table manifest
 
-**Status:** accepted (2026-07-23; Q1–Q5 resolved; Engine implements the manifest + § 4.4 conformance test later)
+**Status:** implemented (2026-07-24; Luna Engine PR #157 merge `dd5c3060`)
 **Severity:** high
 **Author:** Ahab (with Claude)
 **Created:** 2026-07-21
-**Last updated:** 2026-07-23
+**Last updated:** 2026-07-24 (Engine manifest + § 4.4 conformance landed; moved to implemented/)
 **Affects format version:** LUNM v0.1 (no `user_version` bump — see § Migration path)
 
 ---
@@ -23,7 +23,7 @@ All counts taken 2026-07-21 against Luna Engine HEAD `2ed07b0` and the live matr
 - **DDL loaded by filesystem path, outside the package.** The live matrix contains `ambassador_protocol` and `ambassador_audit_log`. Neither has a `CREATE TABLE` anywhere in `src/luna/`: `_migrate_ambassador_tables()` resolves `project_root() / "migrations" / "004_ambassador_protocol.sql"` (`database.py:1233`) and `executescript`s the file it finds. Any audit that greps the substrate package misses these tables entirely — as this spec's own first draft did.
 - **Second DDL location; 002 superseded, 003 dead.** The engine root holds `migrations/`, six numbered `.sql` files. Only two are referenced by any loader today: `001_entity_system.sql` and `006_turn_type.sql`. **`002_conversation_history.sql` has zero loaders**, but the live matrix carries its objects (`sessions`, `compression_queue`, `extraction_queue`, `conversation_turns.tier`) and the same DDL now lives in `schema.sql` — historically applied, then absorbed. **`003_access_bridge.sql` has zero loaders** and its tables (`access_bridge`, `permission_log`) are **absent** from the live matrix — dead source-tree DDL, never loaded here. Q5 disposes of both.
 - **Nine tables carry no family prefix**: `clusters`, `entities`, `projects`, `protocols`, `quests`, `roles`, `sessions`, `tasks`, `threads`. Prefix is therefore a real convention (17 `ih_`, 11 `memory_`, 7 `task_`, 6 `lunascript_`, 4 `entity_`) but an unreliable one, and cannot serve as an identification mechanism.
-- **The gap has already produced a defect in a shipped spec.** [SPEC-008](../accepted/SPEC-008_lunm-family-foundation.md) § 4.3 originally enumerated ~31 out-of-scope tables against a believed total of ~36. Both numbers were wrong, the enumeration was incomplete on the day it was written, and its Q5 resolution had to delete the list and restate the boundary intensionally. SPEC-008's `lunm.schema_fingerprint` key (Q2) was deferred to this spec for the same reason: a hash of `schema.sql` fingerprints roughly half the file.
+- **The gap has already produced a defect in a shipped spec.** [SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) § 4.3 originally enumerated ~31 out-of-scope tables against a believed total of ~36. Both numbers were wrong, the enumeration was incomplete on the day it was written, and its Q5 resolution had to delete the list and restate the boundary intensionally. SPEC-008's `lunm.schema_fingerprint` key (Q2) was deferred to this spec for the same reason: a hash of `schema.sql` fingerprints roughly half the file.
 
 ## Root cause analysis
 
@@ -57,7 +57,7 @@ Each manifest entry MUST carry exactly one classification:
 
 | Classification | Meaning | Examples |
 | --- | --- | --- |
-| `format-invariant` | A LUNM file is not a LUNM file without it. The eight tables of [SPEC-008](../accepted/SPEC-008_lunm-family-foundation.md) § 4.3, and only those, until amended. | `memory_nodes`, `nexus_registry`, `profile_config` |
+| `format-invariant` | A LUNM file is not a LUNM file without it. The eight tables of [SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) § 4.3, and only those, until amended. | `memory_nodes`, `nexus_registry`, `profile_config` |
 | `engine-extension` | Present in every normal install; carries no LUNM guarantee. A reader MUST NOT assume it. | `quests`, `tasks`, `topology_clusters` |
 | `conditional` | Present only when its subsystem is loaded. Absence is not a defect. | the `ih_*` family, gated on the Hub preload path |
 | `vestigial` | Declared but unused, scheduled for removal. Absence in a future version is not a breaking change. | `consciousness_snapshots` — zero readers or writers repo-wide, zero rows |
@@ -93,7 +93,7 @@ No change to any read or write path. Three additions (all Engine work after acce
 
 ### Migration path
 
-Forward-compatible; no `user_version` bump. Per [SPEC-008](../accepted/SPEC-008_lunm-family-foundation.md) § 4.1's ratified bump triggers, declaring ownership changes no table, no contract, and nothing a reader can observe. Every existing matrix is conformant the moment the manifest describes it accurately — that is the manifest's job, not the file's.
+Forward-compatible; no `user_version` bump. Per [SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) § 4.1's ratified bump triggers, declaring ownership changes no table, no contract, and nothing a reader can observe. Every existing matrix is conformant the moment the manifest describes it accurately — that is the manifest's job, not the file's.
 
 ### Prefix convention
 
@@ -167,19 +167,17 @@ Each Q below was resolved ahead of the `active → accepted` promotion. Question
 
 **Upstream (must be accepted):**
 
-- **[SPEC-008](../accepted/SPEC-008_lunm-family-foundation.md)** (accepted 2026-07-21) — supplies the `format-invariant` set that SPEC-009's classification scheme takes as fixed, and the intensional boundary rule that SPEC-009 makes checkable. SPEC-009 is the direct consequence of SPEC-008's Q5 resolution.
+- **[SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md)** (implemented 2026-07-24) — supplies the `format-invariant` set that SPEC-009's classification scheme takes as fixed, and the intensional boundary rule that SPEC-009 makes checkable. SPEC-009 is the direct consequence of SPEC-008's Q5 resolution.
 
 **Downstream:**
 
-- **[SPEC-010](SPEC-010_lunm-migration-discipline.md)** — LUNM migration discipline. Its tiered fail-loud rule keys off SPEC-009's classification: a migration touching a `format-invariant` table may not fail silently. SPEC-010 cannot be implemented before SPEC-009's classification exists (manifest authored in Engine).
+- **[SPEC-010](../accepted/SPEC-010_lunm-migration-discipline.md)** — LUNM migration discipline. Its tiered fail-loud rule keys off SPEC-009's classification: a migration touching a `format-invariant` table may not fail silently. Engine implementation unblocked now that this manifest exists.
 - **SPEC-011+ (future)** — per-family DDL ratification, one spec per owner, against the map SPEC-009 produces.
 - **SPEC-008 Q2** — `lunm.schema_fingerprint` was deferred here. SPEC-009 specifies its shape; the key itself lands as a SPEC-008 amendment.
 
 ## Implementation notes
 
-(Filled in when status moves to `implemented`.)
-
-- Commit/PR reference:
-- Implementation date:
-- Deviations from spec:
-- Follow-up issues created:
+- Commit/PR reference: Luna Engine PR [#157](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/157) merge `dd5c3060` (`feat/spec-009-lunm-table-manifest`). Artifacts: `src/luna/substrate/lunm_table_manifest.toml`, `src/luna/substrate/lunm_manifest.py`, `tests/unit/test_lunm_table_manifest.py`. Dated mirror: [`04_Audits/AUDIT_2026-07-24_lunm-table-manifest.toml`](../../04_Audits/AUDIT_2026-07-24_lunm-table-manifest.toml).
+- Implementation date: 2026-07-24
+- Deviations from spec: `ambassador_*` remain path-loaded from `migrations/004_ambassador_protocol.sql`; ownership is statically listed in the manifest (`ddl = "migrations/004_…"`) rather than folding CREATE into a Python module constant this PR. `lunm.schema_fingerprint` key not stamped yet (shape specified; key is a SPEC-008 amendment follow-up). Optional development-boot conformance hook not wired — CI unit test is the gate.
+- Follow-up issues created: SPEC-010 Engine plan (integrity report, then fail-loud `format-invariant` migrations, then the rest).

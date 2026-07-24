@@ -1,0 +1,531 @@
+# AUDIT snapshot 2026-07-24 — mirror of Luna Engine
+# src/luna/substrate/lunm_table_manifest.toml at merge dd5c3060 (PR #157).
+# Source of truth remains in the Engine repo; this file is the dated .lun archive.
+#
+# SPEC-009: LUNM table ownership manifest
+# Static artifact — do not derive from sqlite_master at runtime as the primary source.
+# Classifications: format-invariant | engine-extension | conditional | vestigial
+# Virtual-table parents only; FTS5/vec0 shadows are derived by the conformance checker.
+
+format_version = 1
+spec = "SPEC-009"
+notes = "LUNM matrix table ownership. Cartridge/collection DDL (aibrarian_schema, cartridge/*) is out of scope."
+
+# ---------------------------------------------------------------------------
+# Format invariants (SPEC-008 §4.3) — only these eight until SPEC-008 amends.
+# ---------------------------------------------------------------------------
+
+[[tables]]
+name = "memory_nodes"
+owner = "luna.substrate"
+classification = "format-invariant"
+ddl = "schema.sql"
+
+[[tables]]
+name = "graph_edges"
+owner = "luna.substrate"
+classification = "format-invariant"
+ddl = "schema.sql"
+
+[[tables]]
+name = "conversation_turns"
+owner = "luna.substrate"
+classification = "format-invariant"
+ddl = "schema.sql"
+
+[[tables]]
+name = "sessions"
+owner = "luna.substrate"
+classification = "format-invariant"
+ddl = "schema.sql"
+
+[[tables]]
+name = "nexus_nodes"
+owner = "luna.substrate"
+classification = "format-invariant"
+ddl = "schema.sql"
+
+[[tables]]
+name = "nexus_edges"
+owner = "luna.substrate"
+classification = "format-invariant"
+ddl = "schema.sql"
+
+[[tables]]
+name = "nexus_registry"
+owner = "luna.substrate"
+classification = "format-invariant"
+ddl = "schema.sql"
+
+[[tables]]
+name = "profile_config"
+owner = "luna.substrate"
+classification = "format-invariant"
+ddl = "schema.sql"
+
+# ---------------------------------------------------------------------------
+# Vestigial
+# ---------------------------------------------------------------------------
+
+[[tables]]
+name = "consciousness_snapshots"
+owner = "luna.substrate"
+classification = "vestigial"
+ddl = "schema.sql"
+notes = "Zero readers/writers; persistence moved to ~/.luna/snapshot.yaml"
+
+# ---------------------------------------------------------------------------
+# Engine extensions — present on a normal MemoryDatabase.connect() install
+# ---------------------------------------------------------------------------
+
+[[tables]]
+name = "compression_queue"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "extraction_queue"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "history_embeddings"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "operating_model_summaries"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "jepa_traces"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "entities"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+notes = "LUNM entity family; cartridge aibrarian_schema.entities is a different table"
+
+[[tables]]
+name = "entity_relationships"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "entity_mentions"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "entity_versions"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "entity_relationship_evidence"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "tuning_sessions"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "tuning_iterations"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "collection_lock_in"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "collection_annotations"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "quests"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "quest_targets"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "quest_journal"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "protocols"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "roles"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "tasks"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "task_dependencies"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "task_runs"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "thread_events"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "theme_trajectory_vectors"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "threads"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "thread_tasks"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "thread_topics"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "task_entities"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "task_subjects"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "task_keywords"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "task_files"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "task_memory_links"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "projects"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "project_goals"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "open_questions"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "topology_clusters"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "topology_cluster_threads"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "game_states"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+
+[[tables]]
+name = "memory_nodes_fts"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "schema.sql"
+kind = "fts5"
+notes = "Virtual parent; FTS5 shadows derived by checker"
+
+[[tables]]
+name = "turn_traces"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "database.py:_migrate_turn_traces_table"
+
+[[tables]]
+name = "sandbox_configs"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "database.py:_migrate_sandbox_configs_table"
+
+[[tables]]
+name = "lunascript_state"
+owner = "luna.lunascript"
+classification = "engine-extension"
+ddl = "lunascript/schema.py"
+
+[[tables]]
+name = "lunascript_patterns"
+owner = "luna.lunascript"
+classification = "engine-extension"
+ddl = "lunascript/schema.py"
+
+[[tables]]
+name = "lunascript_baselines"
+owner = "luna.lunascript"
+classification = "engine-extension"
+ddl = "lunascript/schema.py"
+
+[[tables]]
+name = "lunascript_feedback"
+owner = "luna.lunascript"
+classification = "engine-extension"
+ddl = "lunascript/schema.py"
+
+[[tables]]
+name = "lunascript_correlations"
+owner = "luna.lunascript"
+classification = "engine-extension"
+ddl = "lunascript/schema.py"
+
+[[tables]]
+name = "lunascript_delegation_log"
+owner = "luna.lunascript"
+classification = "engine-extension"
+ddl = "lunascript/schema.py"
+
+[[tables]]
+name = "ambassador_protocol"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "migrations/004_ambassador_protocol.sql"
+notes = "Path-loaded by _migrate_ambassador_tables(); statically listed here for SPEC-009 Rule 2"
+
+[[tables]]
+name = "ambassador_audit_log"
+owner = "luna.substrate"
+classification = "engine-extension"
+ddl = "migrations/004_ambassador_protocol.sql"
+notes = "Path-loaded by _migrate_ambassador_tables(); statically listed here for SPEC-009 Rule 2"
+
+# ---------------------------------------------------------------------------
+# Conditional — present only when the owning subsystem loads
+# ---------------------------------------------------------------------------
+
+[[tables]]
+name = "ih_entities"
+owner = "intergalactic_hub.storage"
+classification = "conditional"
+ddl = "intergalactic_hub/storage/db.py"
+
+[[tables]]
+name = "ih_events"
+owner = "intergalactic_hub.storage"
+classification = "conditional"
+ddl = "intergalactic_hub/storage/db.py"
+
+[[tables]]
+name = "ih_event_entities"
+owner = "intergalactic_hub.storage"
+classification = "conditional"
+ddl = "intergalactic_hub/storage/db.py"
+
+[[tables]]
+name = "ih_ingestion_state"
+owner = "intergalactic_hub.storage"
+classification = "conditional"
+ddl = "intergalactic_hub/storage/db.py"
+
+[[tables]]
+name = "ih_action_log"
+owner = "intergalactic_hub.storage"
+classification = "conditional"
+ddl = "intergalactic_hub/storage/db.py"
+
+[[tables]]
+name = "ih_pending_actions"
+owner = "intergalactic_hub.storage"
+classification = "conditional"
+ddl = "intergalactic_hub/storage/db.py"
+
+[[tables]]
+name = "ih_rate_limit_counters"
+owner = "intergalactic_hub.storage"
+classification = "conditional"
+ddl = "intergalactic_hub/storage/db.py"
+
+[[tables]]
+name = "ih_events_fts"
+owner = "intergalactic_hub.storage"
+classification = "conditional"
+ddl = "intergalactic_hub/storage/db.py"
+kind = "fts5"
+
+[[tables]]
+name = "ih_events_vec"
+owner = "intergalactic_hub.storage"
+classification = "conditional"
+ddl = "intergalactic_hub/storage/db.py"
+kind = "vec0"
+notes = "Created only when sqlite-vec is loadable"
+
+[[tables]]
+name = "clusters"
+owner = "luna.memory.cluster_manager"
+classification = "conditional"
+ddl = "memory/cluster_manager.py"
+
+[[tables]]
+name = "cluster_members"
+owner = "luna.memory.cluster_manager"
+classification = "conditional"
+ddl = "memory/cluster_manager.py"
+
+[[tables]]
+name = "cluster_edges"
+owner = "luna.memory.cluster_manager"
+classification = "conditional"
+ddl = "memory/cluster_manager.py"
+
+[[tables]]
+name = "assets"
+owner = "luna.substrate.assets"
+classification = "conditional"
+ddl = "substrate/assets.py"
+
+[[tables]]
+name = "inbound_images"
+owner = "luna.substrate.images"
+classification = "conditional"
+ddl = "substrate/images.py"
+
+[[tables]]
+name = "chunk_embeddings_fallback"
+owner = "luna.substrate.vec_fallback"
+classification = "conditional"
+ddl = "substrate/vec_fallback.py"
+
+[[tables]]
+name = "spectral_coordinates"
+owner = "luna.lunafm.spectral"
+classification = "conditional"
+ddl = "lunafm/spectral.py"
+
+[[tables]]
+name = "qa_events"
+owner = "luna.qa"
+classification = "conditional"
+ddl = "qa/database.py"
+notes = "QA subsystem; may use a disconnected DB in some installs"
+
+[[tables]]
+name = "qa_assertions"
+owner = "luna.qa"
+classification = "conditional"
+ddl = "qa/database.py"
+
+[[tables]]
+name = "qa_assertion_results"
+owner = "luna.qa"
+classification = "conditional"
+ddl = "qa/database.py"
+
+[[tables]]
+name = "qa_bugs"
+owner = "luna.qa"
+classification = "conditional"
+ddl = "qa/database.py"
+
+[[tables]]
+name = "qa_reports"
+owner = "luna.qa"
+classification = "conditional"
+ddl = "qa/database.py"
+
+# ---------------------------------------------------------------------------
+# Superseded / dead source-tree DDL (not live owners)
+# ---------------------------------------------------------------------------
+
+[[superseded]]
+path = "migrations/001_entity_system.sql"
+status = "superseded"
+notes = "Historical applied DDL for LUNM entity family; absorbed into schema.sql. Not a second owner."
+
+[[superseded]]
+path = "migrations/002_conversation_history.sql"
+status = "superseded"
+notes = "Historically applied; sessions/compression_queue/extraction_queue DDL now in schema.sql. Zero loaders."
+
+[[superseded]]
+path = "migrations/003_access_bridge.sql"
+status = "deleted"
+notes = "Dead source-tree DDL (access_bridge/permission_log never present on live matrix). File removed under SPEC-009."

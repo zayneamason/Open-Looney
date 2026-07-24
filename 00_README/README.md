@@ -40,8 +40,10 @@ identify which family a file belongs to without opening the schema.
 **This research project focuses on the cartridge family**, with LUNM
 format law now under active specs. The runtime matrix family foundation is
 [SPEC-008](../01_Specs/implemented/SPEC-008_lunm-family-foundation.md)
-(**implemented** 2026-07-24; Engine PR #156); ownership/manifest is SPEC-009 and migration
-discipline is SPEC-010 (both **accepted** 2026-07-23).
+(**implemented** 2026-07-24; Engine PR #156); ownership/manifest is
+[SPEC-009](../01_Specs/implemented/SPEC-009_lunm-schema-ownership.md)
+(**implemented** 2026-07-24; Engine PR #157) and migration
+discipline is SPEC-010 (**accepted** 2026-07-23).
 See `08_Journal/2026-05-10.md` for the application_id decision,
 and `01_Specs/implemented/SPEC-006_v02-hygiene-bundle.md` for the contract
 that establishes both family values.
@@ -169,15 +171,17 @@ the Luna engine repo. Historical format doc: `03_Format_Spec/LUN-FORMAT_v0.2.md`
 `03_Format_Spec/LUN-FORMAT_v0.1.md` for full historical documentation.
 
 **LUNM (runtime matrix)** — family foundation is SPEC-008 (**implemented** 2026-07-24;
-Engine PR #156); schema ownership/manifest is SPEC-009 and migration discipline is
-SPEC-010 (both **accepted** 2026-07-23). LUN-FORMAT_v0.* LUNM lines now point at SPEC-008.
+Engine PR #156); schema ownership/manifest is SPEC-009 (**implemented** 2026-07-24;
+Engine PR #157); migration discipline is SPEC-010 (**accepted** 2026-07-23).
+LUN-FORMAT_v0.* LUNM lines point at SPEC-008; ownership artifact is
+[`04_Audits/AUDIT_2026-07-24_lunm-table-manifest.toml`](../04_Audits/AUDIT_2026-07-24_lunm-table-manifest.toml).
 
 ---
 
 ## Open concerns (as of 2026-07-24)
 
-1. **SPEC-009 / SPEC-010 accepted** — Engine still owes the table manifest,
-   conformance test, and migration fail-loud rollout.
+1. **SPEC-010 accepted** — Engine still owes the integrity report and fail-loud
+   migration rollout (tiered by SPEC-009 classifications).
 2. **Governance arc (LUNC)** — SPEC-005 + payload schemas remain accepted;
    engine ledger write path for ambassador upgrades continues separately.
 3. **Single confidence axis** — SPEC-003 produced raw signals; SPEC-004

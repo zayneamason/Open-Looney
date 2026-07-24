@@ -241,4 +241,4 @@ No spec must change as a prerequisite for SPEC-008 to be accepted. SPEC-006's li
   - Satellite §4.4 binding uses cartridge/satellite `meta` key `lunm.bound_matrix_ulid` (narrow identity write). Sealed LUNC still does **not** write `nexus_refs`.
   - Block B post-seed asserts are soft-log (SHOULD), not hard-raise on connect.
   - `lunm.engine_version` remains the declared placeholder (`luna.__version__` = `"2.0.0"`).
-- **Follow-up issues created:** SPEC-009 (schema ownership / manifest) and SPEC-010 (fail-loud migration discipline) are accepted and await Engine implementation. Format-spec LUNM deferral lines repointed to this SPEC on the same day.
+- **Follow-up issues created:** SPEC-009 (schema ownership / manifest) is **implemented** 2026-07-24 (Engine PR #157). SPEC-010 (fail-loud migration discipline) remains accepted and awaits Engine implementation. Format-spec LUNM deferral lines repointed to this SPEC on 2026-07-24.

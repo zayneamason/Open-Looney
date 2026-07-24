@@ -18,7 +18,8 @@ audit, and runtime-matrix follow-up in this repo.
 
 Current source of truth at creation: `08_Journal/2026-05-24.md`,
 `06_Prototypes/ReaderPrototype/SPEC.md`, `04_Audits/AUDIT_2026-05-22_meditations-v03.md`,
-and `01_Specs/accepted/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21).
+and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
+Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
 
 Session handoff 2026-07-23: `02_Handoffs/HANDOFF_2026-07-23_spec-009-010-accepted.md`
 (SPEC-009/010 accepted; human defaults for migrations 002/003 + LUNM entity owner locked).
@@ -86,3 +87,5 @@ Research intake added 2026-07-21:
 - [x] Decide the fate of `migrations/002_conversation_history.sql` and `003_access_bridge.sql` — **002 historical/superseded** (live matrix has objects; DDL in `schema.sql`); **003 dead**, schedule Engine delete (`access_bridge` / `permission_log` absent). Recorded in SPEC-009 Q5.
 - [x] Resolve the `entities` ownership split — **not a LUNM split**: owner is `luna.substrate` / `schema.sql` for the LUNM entity family; `aibrarian_schema.entities` is cartridge-only (name collision). Recorded in SPEC-009 §4.1 + Q5.
 - [x] Promote SPEC-009 and SPEC-010 `active → accepted` (2026-07-23). Handoff: `02_Handoffs/HANDOFF_2026-07-23_spec-009-010-accepted.md`.
+- [x] Engine SPEC-009 landings (2026-07-24): PR [#157](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/157) merge `dd5c3060` — `lunm_table_manifest.toml`, §4.4 CI conformance, delete `migrations/003`. Snapshot: `04_Audits/AUDIT_2026-07-24_lunm-table-manifest.toml`. SPEC-009 → `implemented/`.
+- [ ] Engine SPEC-010: integrity report first, then fail-loud `format-invariant` migrations, then remaining tiers.
