@@ -14,6 +14,29 @@ tags:
 Reverse-chronological. Every entry states what changed and why the bump was that
 size. Policy: `WIKI_VERSIONING.md`.
 
+## [v0.5.0] - 2026-07-24
+
+Pass: P4 — SPEC-012 accepted
+Type: minor
+
+Changes:
+
+- `01_Specs/accepted/SPEC-012_lunm-entity-unification.md` — promoted
+  `active → accepted` after Engine read-only audit. Locked Q1–Q6: canonical
+  key `entities.id`; no `graph_node_id` bridge; quarantine DDL frozen;
+  N-way coalesce quarantine-only unless allowlist; flag set; DTO owners;
+  unknown-default probe corpus. Open questions → Resolved questions.
+- `ProjectManager/TODO_LUN_Development_2026-07-20.md` — acceptance item checked.
+- `WIKI_HOME.md` regenerated — SPEC-012 in accepted index; active count 0.
+
+Rationale: a spec advanced lifecycle state, which `WIKI_VERSIONING.md` §2
+names as a MINOR trigger.
+
+Verified:
+
+- `python3 scripts/wiki_home.py`
+- `python3 scripts/wiki_check.py`
+
 ## [v0.4.0] - 2026-07-24
 
 Pass: P3 — `lun-format-family` breakdown

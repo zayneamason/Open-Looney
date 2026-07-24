@@ -1,11 +1,11 @@
 # SPEC-012: LUNM entity unification
 
-**Status:** active
+**Status:** accepted
 **Severity:** critical
 **Author:** Ahab (with Codex)
 **Created:** 2026-07-24
 **Last updated:** 2026-07-24
-**Affects format version:** LUNM v0.1 (no `user_version` bump unless a later accepted change modifies the SPEC-008 core identity/header/readability contract)
+**Affects format version:** LUNM v0.1 (no `user_version` bump — entity family is engine-extension; additive columns/tables do not change LUNM `user_version` per SPEC-008 Q4 / this spec §4.3)
 
 ---
 
@@ -20,7 +20,7 @@ Luna's entity layer currently behaves as several adjacent identity systems rathe
 - [SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) defines LUNM as Luna's runtime matrix family, discriminated by `PRAGMA application_id = 0x4C554E4D`, mutated in place, and versioned by contract-affecting changes only.
 - [SPEC-010](../implemented/SPEC-010_lunm-migration-discipline.md) governs in-place LUNM migration behaviour. Entity migrations inherit the engine-extension failure and logging rules.
 - The Looney-WIKI LUNM breakdown records the current live evidence shape: LUNM `entities` is distinct from cartridge/collection `aibrarian_schema.entities` and from Intergalactic Hub `ih_entities`.
-- The architecture review that prompted this spec identified split identity across thread rosters, graph `ENTITY` nodes, and the LUNM entity family. This spec treats that review as design input, not as line-cited Engine authority until the Luna Engine repo is re-audited for acceptance.
+- Acceptance audit (2026-07-24) against Luna Engine `schema.sql` and live `memory_matrix.lun` (read-only): `entities.id` TEXT PK; live counts **37** entities / **326** ENTITY memory nodes / **0** id overlap; name match N→1 (avg 1.59, max 3).
 
 ## Root cause analysis
 
@@ -36,18 +36,14 @@ The defect is not that LUNM lacks an entity table. The defect is that identity c
 
 ### 4.1 Architecture rule: one canonical LUNM entity key
 
-The canonical entity identity is the row key of the LUNM `entities` table. Acceptance MUST verify the live Luna Engine DDL before naming the exact column:
-
-- if the live table uses an existing slug primary key, that slug key is canonical;
-- if the live table already exposes `entities.id`, `entities.id` is canonical;
-- SPEC-012 MUST NOT invent a new identity column while an existing durable row key can serve.
+The canonical entity identity is **`entities.id`** (TEXT slug primary key in Engine `schema.sql`). SPEC-012 does not invent a new identity column.
 
 Every other entity-bearing layer is a projection:
 
 | Layer | Post-SPEC-012 role |
 | --- | --- |
 | LUNM `entities` row | Source of truth for typed identity, aliases, profile state, facts, and relationship endpoints |
-| `memory_nodes` where `node_type = 'ENTITY'` | Graph projection keyed to the canonical entity key |
+| `memory_nodes` where `node_type = 'ENTITY'` | Graph projection with `memory_nodes.id == entities.id` |
 | `graph_edges` involving entities | Graph projection over canonical entity ids, never a second identity namespace |
 | Thread roster | `entity_ids` plus a denormalized display-name cache for chips |
 | Observatory entity UI/API | DTOs hydrated from canonical entity ids |
@@ -63,25 +59,55 @@ LUNC cartridge entities remain import/export material: document-level extraction
 
 ### 4.3 Schema changes
 
-Exact DDL is blocked on the acceptance audit of the live Luna Engine schema. The allowed shape is additive only unless a later accepted amendment proves a contract-affecting change is required.
+The allowed shape is additive only. **No `entities.graph_node_id` bridge column** — live N→1 name matches and zero id overlap make rewrite+quarantine the correct path; a single bridge column cannot represent N candidates.
 
-Expected Engine-side additive changes:
+No LUNM `user_version` bump: the entity family is engine-extension; additive columns/tables do not change `user_version` (SPEC-008 Q4).
+
+`unknown` MUST become a valid entity type in the Engine model. Today's `entities.entity_type` has no CHECK constraint, so the DB accepts `unknown` without ALTER.
+
+Accepted quarantine DDL (Engine `schema.sql` is sole DDL authority; `database.py` applies via schema-owned text, not a pasted second CREATE):
 
 ```sql
--- Temporary bridge only if needed for migration from graph-local ENTITY ids.
-ALTER TABLE entities ADD COLUMN graph_node_id TEXT;
-
--- Quarantine for ambiguous coalesces. Exact columns are accepted-time DDL.
-CREATE TABLE IF NOT EXISTS entity_identity_quarantine (...);
+CREATE TABLE IF NOT EXISTS entity_identity_quarantine (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reason TEXT NOT NULL,
+        -- 'ambiguous_name_match' | 'id_collision' | 'orphan_graph_node'
+        -- | 'unmatched_entity_row' | 'manual'
+    survivor_entity_id TEXT,
+    loser_node_id TEXT,
+    loser_entity_id TEXT,
+    display_name TEXT NOT NULL,
+    evidence_json TEXT,
+    status TEXT NOT NULL DEFAULT 'open',
+        -- 'open' | 'resolved_merge' | 'resolved_drop' | 'resolved_keep'
+    coalesce_run_id TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    resolved_at TEXT,
+    resolved_by TEXT,
+    resolution_notes TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_eiq_status ON entity_identity_quarantine(status);
+CREATE INDEX IF NOT EXISTS idx_eiq_survivor ON entity_identity_quarantine(survivor_entity_id);
+CREATE INDEX IF NOT EXISTS idx_eiq_loser_node ON entity_identity_quarantine(loser_node_id);
+CREATE INDEX IF NOT EXISTS idx_eiq_run ON entity_identity_quarantine(coalesce_run_id);
 ```
 
-`unknown` MUST become a valid entity type in the Engine model and, if the table uses a `CHECK` constraint, in the table constraint. Because the entity family is an engine-extension family, additive entity columns/tables do not by themselves change LUNM `user_version`.
+**Retention:** `open` kept until operator resolves. Purge `resolved_*` older than 90 days. No FKs (survive deletes for audit).
+
+**Coalesce identity rules:**
+
+| Match | Action |
+| --- | --- |
+| 0 ENTITY stubs for an `entities` row | Insert projection node `id = entities.id` |
+| Exactly 1 name/alias match | Rewire `graph_edges` to canonical id; archive/delete stub |
+| N-way (ambiguous) | **Quarantine-only** — do not auto-pick a survivor. Rank candidates (access/degree/age) in `evidence_json` for review only. Merge only when an allowlist explicitly names the survivor |
+| Orphan ENTITY stubs | Quarantine `orphan_graph_node`; do not auto-mint people |
 
 ### 4.4 Behavioral changes
 
 Implementation MUST proceed in this order:
 
-1. **Canonical identity.** Route all entity create/resolve/merge/retype paths through the LUNM entity row key. Coalesce graph `ENTITY` nodes to that same key or bridge them temporarily under a feature flag.
+1. **Canonical identity.** Route all entity create/resolve/merge/retype paths through `entities.id`. Coalesce graph `ENTITY` nodes to that same key under a feature flag (no bridge column).
 2. **Unknown default.** Replace person-default behaviour with `unknown` as the only safe default. Durable `person` type requires positive evidence.
 3. **Prompt diet.** Split always-on identity context from turn-scoped relationship context. Always-on context is limited to Luna self-voice and bounded canonical user facts. Relationship facts enter the prompt only when the current turn resolved relevant entity ids or an explicit flag enables key-relationship injection.
 4. **Mentions and salience.** Replace raw mention-count ranking with resolver-backed salience. Span-aware mentions may land later but must use the same canonical entity key.
@@ -117,7 +143,7 @@ type ThreadRosterDTO = {
 };
 ```
 
-Graph visualization APIs may keep graph-edge vocabulary such as `from_id` / `to_id` for memory graph edges. Entity relationship APIs MUST NOT expose a second relationship vocabulary such as `from_entity` in one route and `from_id` in another after the DTO flag graduates.
+**DTO owners:** `src/luna/entities/dto.py` (contract); `src/luna/services/observatory/routes.py` + `src/luna_mcp/observatory/tools.py` (HTTP/payload); `frontend/src/observatory/views/EntitiesView.jsx` + `ThreadsView.jsx` (+ `api.js` / `store.js`). Graph visualization APIs may keep `from_id` / `to_id` for memory graph edges. Entity relationship APIs MUST NOT dual-vocab after the DTO flag graduates.
 
 ### Migration path
 
@@ -128,29 +154,26 @@ Required operator flow for destructive or coalescing entity migration:
 1. stop Luna backend;
 2. copy `memory_matrix.lun` and any `-wal` / `-shm` siblings;
 3. run dry-run coalesce and produce survivor, duplicate, dangling-edge, thread-roster, and quarantine counts;
-4. apply only a bounded allowlist;
+4. apply only a bounded allowlist (required for any N-way survivor);
 5. verify with SQLite opened in read-only mode;
 6. restart backend and run a live smoke;
 7. rollback by restoring the backup and removing any feature flag that enabled the new path.
 
 Forward compatibility is additive: old Engine readers may ignore new columns/tables but must not be expected to preserve unified projections if they continue writing legacy ids. The canonical-id feature flag must remain reversible until live coalesce has been proven.
 
+**Schema authority:** Engine `schema.sql` owns entity-family DDL. `database.py` migrates by applying schema-owned CREATE text (e.g. `schema_apply.apply_create_if_missing`); it MUST NOT paste an independent CREATE body (threads-style dual-declaration drift). SPEC-009 Rule 2 authority for the new table is Engine `src/luna/substrate/lunm_table_manifest.toml`; dated `04_Audits/` TOML files are mirrors only.
+
 ## Validation rules
 
-Acceptance MUST include a Luna Engine audit that answers:
+Acceptance audit recorded:
 
 ```python
-canonical_key = inspect_entities_primary_key(live_engine_schema)
-assert canonical_key in ("id", "name", "slug", "entity_id")  # exact accepted value is recorded
-assert all_entity_write_paths_resolve_through_lifecycle_boundary()
-assert no_new_path_creates_graph_local_entity_identity()
-assert unknown_is_safe_default()
-assert prompt_identity_layer_excludes_unscoped_relationship_dump()
-assert observatory_entity_routes_emit_canonical_dto()
-assert maintenance_apply_scripts_have_live_lock_guard()
+canonical_key = "id"  # entities.id TEXT PRIMARY KEY
+assert no_graph_node_id_bridge_column()
+assert quarantine_ddl_frozen()  # see §4.3
 ```
 
-Engine implementation MUST include unit tests for canonical coalescing, unknown-default typing, prompt diet, DTO hydration, and maintenance live-lock refusal. Live-matrix migration tests must run against a copy, never the active profile file.
+Engine implementation MUST include unit tests for canonical coalescing, unknown-default typing, prompt diet, DTO hydration, and maintenance live-lock refusal. Live-matrix migration tests must run against a copy, never the active profile file. N-way matches MUST NOT auto-select a survivor without an allowlist entry.
 
 ## Governance implications
 
@@ -167,17 +190,35 @@ Engine implementation MUST include unit tests for canonical coalescing, unknown-
 - **Canonical key = graph `ENTITY` node id.** Rejected. Graph nodes are projections over memory topology; making them authoritative preserves the current UUID-vs-profile split.
 - **Keep thread string rosters as source of truth.** Rejected. Display strings are caches, not identity.
 - **Graduate NER typing alone.** Rejected. NER can be one evidence source, but unknown-default policy is the durable safety rule.
+- **Temporary `entities.graph_node_id` bridge.** Rejected at acceptance — N→1 collisions make a single bridge column insufficient; quarantine + allowlisted coalesce instead.
 
-## Open questions
+## Resolved questions
 
-These block `active → accepted`:
+Each Q below was resolved ahead of the `active → accepted` promotion. Question bodies are preserved; each `**Resolution (2026-07-24):**` records what was picked.
 
 1. **What is the exact canonical key in the live Engine DDL?** Verify whether the LUNM `entities` row key is `id`, `name`, slug, or another column. The accepted spec must name the exact key and update §4.1 / DTO text if needed.
+
+   **Resolution (2026-07-24):** Canonical key is `entities.id` (TEXT PRIMARY KEY, slug). Confirmed in Engine `schema.sql` and live `PRAGMA table_info(entities)`.
+
 2. **Is a temporary `entities.graph_node_id` bridge required?** If the live graph can be coalesced without a bridge, omit the column and use a quarantine-only migration.
+
+   **Resolution (2026-07-24):** **No bridge column.** Live audit: 37 entities, 326 ENTITY nodes, 0 id overlap; name match is N→1. Coalesce rewires unambiguous 1:1 matches; N-way is quarantine-only unless allowlist names survivor.
+
 3. **What exact DDL does `entity_identity_quarantine` need?** Acceptance must define columns, indexes, and retention policy if the table is kept.
+
+   **Resolution (2026-07-24):** DDL frozen in §4.3. Retention: purge `resolved_*` older than 90 days; no FKs.
+
 4. **What is the first feature flag set and default?** Recommended: `LUNA_ENTITY_CANONICAL_ID=0`, `LUNA_ENTITY_UNKNOWN_DEFAULT=0→1`, `LUNA_IDENTITY_PROMPT_DIET=0→1`, `LUNA_ENTITY_SALIENCE_RANK=0`, `LUNA_OBS_ENTITY_DTO=0`.
+
+   **Resolution (2026-07-24):** Adopt the recommended set and defaults exactly.
+
 5. **Which Engine routes/components own the final Observatory DTO?** Verify current route names and frontend consumers before acceptance.
+
+   **Resolution (2026-07-24):** Contract `src/luna/entities/dto.py`; HTTP `observatory/routes.py` + MCP `tool_observatory_entities`; UI `EntitiesView.jsx` / `ThreadsView.jsx` (+ api/store). Graph viz retains memory-edge vocabulary.
+
 6. **What live-matrix probe corpus proves unknown-default typing?** Acceptance must name the tool/model/acronym/person cases that prevent harmful `person` mints.
+
+   **Resolution (2026-07-24):** Probe corpus classes — must stay `unknown` (no person mint): models/tools (Claude Haiku, Whisper STT, GPT-4, MLX, FTS5, OpenAI, SQLite), acronyms/junk (API, STT, Slide 2, The Problem, years, calendar), concepts (generative AI, robotics), ambiguous bare names without context (Tesla, Maya, Edison). May become `person` with evidence: Ahab, Mrs. Chen (+ sentence evidence); full-name person context (Nikola Tesla). Places/projects typed only when evidence supports `place`/`project`, else `unknown`.
 
 ## Dependencies
 
@@ -190,9 +231,8 @@ These block `active → accepted`:
 
 **Downstream:**
 
-- Luna Engine read-only audit for exact entity DDL and write paths.
-- Engine WP0 implementation plan for canonical identity coalescing.
-- Follow-up accepted amendments or sibling specs for span-aware mentions and first-class `entity_facts` if those exceed this spec's active-scope DDL.
+- Engine WP0+ implementation (canonical identity, unknown default, prompt diet, salience, Observatory DTO, maintenance live-lock).
+- Follow-up accepted amendments or sibling specs for span-aware mentions and first-class `entity_facts` if those exceed this spec's accepted-scope DDL.
 
 ## Implementation notes
 

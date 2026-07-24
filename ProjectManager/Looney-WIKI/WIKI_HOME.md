@@ -30,11 +30,11 @@ Two layers, two different trust models:
 ## Current Status
 
 <!-- AUTOGEN:STATUS START -->
-**Current version:** `v0.4.0`
+**Current version:** `v0.5.0`
 
 | Specs (implemented) | Specs (accepted) | Specs (active) | Specs (rejected) | Format specs | Audits | Breakdowns |
 |---|---|---|---|---|---|---|
-| 12 | 0 | 1 | 0 | 3 | 5 | 2 |
+| 12 | 1 | 0 | 0 | 3 | 5 | 2 |
 <!-- AUTOGEN:STATUS END -->
 
 Policy and promotion criteria: [`WIKI_VERSIONING.md`](WIKI_VERSIONING.md).
@@ -71,7 +71,7 @@ Pass execution and gates: [`WIKI_PASS_TRACKER.md`](WIKI_PASS_TRACKER.md).
 | SPEC-009 | LUNM schema ownership and the table manifest | implemented | [SPEC-009_lunm-schema-ownership.md](../../01_Specs/implemented/SPEC-009_lunm-schema-ownership.md) |
 | SPEC-010 | LUNM migration discipline | implemented | [SPEC-010_lunm-migration-discipline.md](../../01_Specs/implemented/SPEC-010_lunm-migration-discipline.md) |
 | SPEC-011 | LUNM format-invariant DDL ratification | implemented | [SPEC-011_lunm-format-invariant-ddl.md](../../01_Specs/implemented/SPEC-011_lunm-format-invariant-ddl.md) |
-| SPEC-012 | LUNM entity unification | active | [SPEC-012_lunm-entity-unification.md](../../01_Specs/active/SPEC-012_lunm-entity-unification.md) |
+| SPEC-012 | LUNM entity unification | accepted | [SPEC-012_lunm-entity-unification.md](../../01_Specs/accepted/SPEC-012_lunm-entity-unification.md) |
 <!-- AUTOGEN:SPEC_INDEX END -->
 
 ## Format Specs

@@ -28,7 +28,7 @@ Wiki version baseline:
 
 Wiki current version:
 
-- `v0.4.0`
+- `v0.5.0`
 
 Wiki target version:
 
@@ -43,6 +43,7 @@ Wiki target version:
 | P1 | Looney-WIKI: a real wiki home | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.2.0]` |
 | P2 | SPEC-012: LUNM entity unification | Codex | done | pass | `02_Handoffs/HANDOFF_2026-07-24_spec-012-entity-unification-drafted.md` |
 | P3 | `lun-format-family` breakdown | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.4.0]` |
+| P4 | SPEC-012 accepted | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.5.0]`; `02_Handoffs/HANDOFF_2026-07-24_spec-012-accepted.md` |
 
 ## Gate Rule
 
@@ -233,3 +234,11 @@ number in §6 is a cross-check against another number in the same file
 `sqlite_sequence` lists only `doc_nodes` and `annotation_ledger`, confirming
 the rowid-removal migration completed), not a bare count asserted on its
 own.
+
+### P4 — SPEC-012 accepted
+
+Promoted SPEC-012 `active → accepted` after the Luna Engine read-only audit
+locked Q1–Q6. Canonical key is `entities.id`; no `graph_node_id` bridge;
+quarantine DDL frozen; N-way coalesce is quarantine-only unless an allowlist
+names the survivor. Wiki bump `v0.4.0 → v0.5.0` (MINOR — lifecycle advance).
+Engine WP0+ implementation is the next ledger item.
