@@ -28,7 +28,7 @@ Wiki version baseline:
 
 Wiki current version:
 
-- `v0.1.0`
+- `v0.2.0`
 
 Wiki target version:
 
@@ -40,6 +40,7 @@ Wiki target version:
 | Pass | Name | Owner | Status | Gate | Evidence |
 |---|---|---|---|---|---|
 | P0 | Baseline — control plane and drift verifier | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.1.0]` |
+| P1 | Looney-WIKI: a real wiki home | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.2.0]` |
 
 ## Gate Rule
 
@@ -94,3 +95,56 @@ Follow-ups recorded, not done in P0:
   cites `01_Specs/accepted/SPEC-011_…`, which does not exist.
 - P1 backlog: the five specs lacking a commit/PR citation
   (`WIKI_VERSIONING.md` §4).
+
+### P1 — Looney-WIKI: a real wiki home
+
+Asked "where is the actual wiki documentation?", the honest answer was
+nowhere — P0 built governance, not content. This pass builds the navigation
+and content layer: a real `WIKI_HOME.md` with a generated, diff-checked
+index; a taxonomy and glossary; and the first authored subsystem breakdown
+(LUNM), reusing this repo's own live-verification discipline rather than
+prose review.
+
+The design was reviewed once before implementation and two of four findings
+changed real behavior, not just wording:
+
+- The move of the three P0 control-plane files into `Looney-WIKI/` was
+  planned as "content unchanged." It wasn't: `WIKI_VERSIONING.md` explicitly
+  argued against having a `WIKI_HOME.md` — exactly the file this pass adds —
+  and its one relative link broke at the new directory depth. Both required
+  rewriting `WIKI_VERSIONING.md`'s §1 reasoning, not just moving bytes.
+  Verified live: an uncommitted `git mv` target has no `git log` entry, so
+  check 7 correctly skips rather than silently reading a fresh rename as
+  clean — that skip is by design, not a bug, and the move commit's baseline
+  resolves cleanly right after.
+- The LUNM breakdown's evidence was drafted from "verified earlier this
+  session" — not a citable source for a wiki page. Split into durable
+  citations (SPEC-006/008/009, no fresh query needed) and a dated,
+  reproducible evidence appendix for the two findings that existed only in a
+  prior transcript. Both were re-run fresh at authoring time; row counts
+  moved slightly between the original session and this one (`memory_nodes`
+  624→626, `graph_edges` 2517→2538), confirming the matrix is genuinely live
+  and that "point-in-time" framing in the doc is load-bearing, not
+  decorative. The `threads` DDL source citation had also drifted: its line
+  number in `database.py` moved between the original finding and this pass's
+  re-verification, in one Engine repo under active development on the same
+  calendar day.
+
+Two items P0's pass log flagged as P1 backlog remain open — checked, not
+fixed: `LUN-FORMAT_v0.1.md:260` and `SPEC-008:244` still describe SPEC-006 /
+SPEC-010 as living in `accepted/`. Out of this pass's scope (the wiki-home
+build), not silently dropped — next pass.
+
+Not done, deferred with reasoning:
+
+- Tree-to-README coverage check — `SPEC-007` and `SPEC-011` both have zero
+  README references, `SPEC-007` never has had any; would fire against an
+  invariant the README never held.
+- Backtick-path resolution in check 3 — ten unresolvable backticked paths in
+  the README alone.
+- Extending check 2 to `03_Format_Spec/**` / `01_Specs/**` — 13+ historical
+  `(accepted)` references under date qualifiers need a framing heuristic a
+  simple check doesn't have; the two live ones are the editorial-sweep item
+  above instead.
+- `scripts/wiki_bump.py`, pre-commit hook — same reasoning as P0: earn the
+  automation after the manual rhythm proves out.

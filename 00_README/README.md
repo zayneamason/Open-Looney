@@ -7,6 +7,8 @@ into a governed, living knowledge substrate.
 **Owner:** Ahab (Zayne Mason)
 **Parent project:** Luna Engine
 
+Full documentation index: [`ProjectManager/Looney-WIKI/WIKI_HOME.md`](../ProjectManager/Looney-WIKI/WIKI_HOME.md).
+
 ---
 
 ## Purpose
@@ -53,7 +55,7 @@ that establishes both family values.
 ## Folder structure
 
 ```
-00_README/           This file, project conventions, glossary
+00_README/           This file, project conventions, glossary pointer
 01_Specs/            Format and behavior specifications
   active/              In-progress specs under discussion
   accepted/            Specs ready for implementation
@@ -69,14 +71,20 @@ that establishes both family values.
 09_Sample_Sources/   Source materials (PDFs, text) used to build sample cartridges
 10_Builder/          STALE — historical Engine snapshot; NON-AUTHORITY (see STALE.md)
 ProjectManager/      Canonical working ledger (TODO_LUN_Development_*.md) and
-                     the wiki control plane (WIKI_VERSIONING, WIKI_CHANGELOG,
-                     WIKI_PASS_TRACKER)
-scripts/             Repo tooling (wiki_check.py — documentation drift verifier)
+                     the wiki home
+  Looney-WIKI/         Wiki home — WIKI_HOME.md is the nav hub; see below
+scripts/             Repo tooling (wiki_check.py drift verifier, wiki_home.py
+                     index generator)
 ```
 
-This README is the wiki nav hub. Its claims about spec lifecycle state are
-checked mechanically against the tree by `scripts/wiki_check.py`; the versioning
-policy lives in `ProjectManager/WIKI_VERSIONING.md`.
+This is the top-level project README — conventions, folder structure, spec
+lifecycle. The wiki nav hub is
+[`ProjectManager/Looney-WIKI/WIKI_HOME.md`](../ProjectManager/Looney-WIKI/WIKI_HOME.md);
+canonical definitions live in
+[`ProjectManager/Looney-WIKI/GLOSSARY.md`](../ProjectManager/Looney-WIKI/GLOSSARY.md).
+This README's claims about spec lifecycle state are still checked mechanically
+against the tree by `scripts/wiki_check.py`; the versioning policy lives in
+`ProjectManager/Looney-WIKI/WIKI_VERSIONING.md`.
 
 ---
 
@@ -231,19 +239,8 @@ Carried-forward historical items (not v0.3 blockers):
 
 ## Glossary
 
-- **Cartridge** — a `.lun` file in the cartridge family; a portable knowledge unit
-- **Family** — a set of related `.lun` files sharing a schema and `application_id`. Currently: cartridge (`'LUNC'`) and runtime matrix (`'LUNM'`)
-- **application_id** — 4-byte SQLite header field that identifies the file format family. Set as a required contract per SPEC-006
-- **Node** — an entry in `doc_nodes`; document, section, paragraph, or sentence
-- **Extraction** — an LLM-generated summary, claim, or entity
-- **Anchor** — a row in `claim_sources` linking a claim to a source node
-- **Orphan claim** — a claim with no anchor row
-- **Imprint** — the process of a claim entering the Memory Matrix with weight
-- **The Wall** — the boundary between a cartridge's local data and the
-  shared Memory Matrix
-- **Annotation** — an event recorded against a cartridge by an actor
-  (ambassador, elder, oracle)
-- **Ledger** — the append-only log of annotation events within a cartridge
-- **Contract** — a declared rule about who can do what with a cartridge
-- **Spectral signature** — a compact representation of a cartridge's
-  knowledge used for cross-community matching
+Canonical definitions live in
+[`ProjectManager/Looney-WIKI/GLOSSARY.md`](../ProjectManager/Looney-WIKI/GLOSSARY.md)
+— cartridge-family terms (Cartridge, Family, application_id, Node,
+Extraction, Anchor, Orphan claim, Imprint, The Wall, Annotation, Ledger,
+Contract, Spectral signature) and runtime-matrix terms.

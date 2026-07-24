@@ -14,6 +14,91 @@ tags:
 Reverse-chronological. Every entry states what changed and why the bump was that
 size. Policy: `WIKI_VERSIONING.md`.
 
+## [v0.2.0] - 2026-07-24
+
+Pass: P1 — Looney-WIKI: a real wiki home
+Type: minor
+
+Changes:
+
+- **Moved the P0 control plane** into `ProjectManager/Looney-WIKI/`:
+  `WIKI_VERSIONING.md`, `WIKI_CHANGELOG.md` (this file),
+  `WIKI_PASS_TRACKER.md`. This is a content migration, not a mechanical
+  move — `WIKI_VERSIONING.md`'s §1 rationale for "no separate `WIKI_HOME.md`"
+  is rewritten (it described exactly the file this pass adds), and its one
+  relative link is corrected for the new directory depth.
+- `project_organization.json` — bumped to version 3. `wiki.control_plane`
+  gains a `home` key; `nav_hub` renamed to `readme` (still governed, still
+  watched by check 2, no longer the nav hub); `wiki.governed` repoints
+  `ProjectManager/WIKI_*.md` to `ProjectManager/Looney-WIKI/**`.
+- `scripts/wiki_lib.py` (new) — shared parsing/config helpers extracted from
+  `wiki_check.py`, so the verifier and the new generator read the same facts
+  through one implementation rather than two that could drift apart.
+- `scripts/wiki_home.py` (new) — generator. `build_blocks(config)` renders
+  five index blocks (current-version status, specs, format specs, audits,
+  authored breakdowns) from the live tree; the CLI writes them between
+  `<!-- AUTOGEN:NAME START/END -->` sentinels in `WIKI_HOME.md`. Static
+  content outside the sentinels is never touched.
+- `ProjectManager/Looney-WIKI/WIKI_HOME.md` (new) — the real wiki nav hub.
+  Generated index over 12 specs, 3 format specs, 5 audits, 1 breakdown, plus
+  hand-authored reading paths.
+- **Check 8** (new, `wiki_check.py`) — diffs `WIKI_HOME.md`'s committed
+  AUTOGEN blocks against a fresh regeneration. Covers exactly the four
+  indexed classes (specs, format specs, audits, breakdowns); everything else
+  governed is still caught by check 7, not duplicated here.
+- `ProjectManager/Looney-WIKI/TAXONOMY.md` (new) — every classification
+  vocabulary already live in the repo (doc kind, spec lifecycle, `.lun`
+  family, LUNM table classification), stated once.
+- `ProjectManager/Looney-WIKI/GLOSSARY.md` (new) — canonical definitions.
+  The prior `00_README/README.md` glossary (13 cartridge-family terms) moved
+  here verbatim, plus six LUNM terms.
+- `ProjectManager/Looney-WIKI/sections/lunm-runtime-matrix.md` (new) — the
+  first authored breakdown and the template every future one follows:
+  definition → classification → what's stored vs. not → per-item detail →
+  citations. Durable facts cite SPEC-006/008/009; two findings that existed
+  only in a prior session's transcript (the `lunm.created_at`
+  seed-time-vs-birth-time gap, and a live `threads` table DDL drift between
+  `schema.sql` and `database.py`) were re-run fresh and captured as a dated,
+  reproducible evidence appendix rather than carried over as an unlogged
+  claim.
+- `00_README/README.md` — points at the new wiki home and glossary; the
+  13-term glossary section collapses to a pointer (two glossaries is the
+  drift class this system exists to kill); folder-structure block updated;
+  no longer described as "the wiki nav hub" — it is the top-level project
+  README.
+- `ProjectManager/TODO_LUN_Development_2026-07-20.md:110` — corrected a
+  stale `01_Specs/accepted/SPEC-011_...` path to `implemented/`, the same
+  drift class as the P0 README fix, found in the file the user had open
+  when this pass began.
+
+Rationale for MINOR bump:
+
+- Entirely additive structure — a new wiki home, taxonomy, glossary, one
+  breakdown, and a new verifier check — plus a verifier gate-semantics
+  change (check 8), which `WIKI_VERSIONING.md` §2 names as a MINOR trigger.
+  No contract meaning changed: no spec's lifecycle state changed, no format
+  spec changed, no `format-invariant` classification changed.
+
+Verification performed:
+
+- Move-then-migrate ordering, verified against real git behavior: an
+  uncommitted `git mv` target has no `git log` entry, so check 7 correctly
+  printed "no bump baseline yet" and skipped rather than misreporting clean;
+  after committing the move, check 7 resolved with zero findings.
+- Generator dry run against the tree before `WIKI_HOME.md`'s first commit:
+  12 implemented specs (0 accepted/active/rejected), 3 format specs,
+  5 audits, 0 breakdowns — matched by hand.
+- Check 8 negative test: hand-corrupted the committed `STATUS` block
+  (`v0.1.0` → `v9.9.9`); check 8 fired naming that block; regenerated;
+  confirmed clean.
+- Check 8 positive test: added the LUNM breakdown, regenerated, confirmed
+  `BREAKDOWN_INDEX` picked it up with zero manual index editing.
+- Full suite (checks 1–8) clean at the closing commit; `--strict` exits 0
+  for the same reason.
+
+Validated against: (pending — see the P1 pass-tracker row for the closing
+commit SHA once sealed)
+
 ## [v0.1.0] - 2026-07-24
 
 Pass: P0 — baseline

@@ -17,19 +17,24 @@ the system clock, so any today-vs-file-date check would fire spuriously.
 from __future__ import annotations
 
 import argparse
-import fnmatch
-import json
 import re
-import subprocess
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-CONFIG_FILE = ROOT / "project_organization.json"
+from wiki_home import build_blocks, extract_block
+from wiki_lib import (
+    ROOT,
+    SPEC_ID_RE,
+    current_versions,
+    governed_markdown,
+    header_status,
+    matches_governed,
+    read,
+    rel,
+    spec_actual_states,
+    git,
+    load_config,
+)
 
-SEMVER_RE = re.compile(r"v(\d+)\.(\d+)\.(\d+)")
-SPEC_ID_RE = re.compile(r"SPEC-(\d{3})")
-STATUS_HEADER_RE = re.compile(r"^\*\*Status:\*\*\s*(.+)$", re.MULTILINE)
 MD_LINK_RE = re.compile(r"\[[^\]\n]*\]\(([^)\n]+)\)")
 FENCE_RE = re.compile(r"^\s*```")
 INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
@@ -53,67 +58,6 @@ class Finding:
         return f"{self.path}:{self.line}" if self.line else self.path
 
 
-# ---------------------------------------------------------------- helpers
-
-
-def load_config() -> dict:
-    with CONFIG_FILE.open(encoding="utf-8") as handle:
-        return json.load(handle)
-
-
-def read(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
-
-
-def git(*args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args], cwd=ROOT, capture_output=True, text=True, check=False
-    )
-    return proc.stdout if proc.returncode == 0 else ""
-
-
-def rel(path: Path) -> str:
-    return path.relative_to(ROOT).as_posix()
-
-
-def matches_governed(path: str, globs: list[str]) -> bool:
-    for glob in globs:
-        # fnmatch treats ** as a single *, so translate directory globs by prefix.
-        if glob.endswith("/**"):
-            if path.startswith(glob[:-2]):
-                return True
-        elif fnmatch.fnmatch(path, glob):
-            return True
-    return False
-
-
-def governed_markdown(globs: list[str]) -> list[Path]:
-    out = []
-    for path in sorted(ROOT.rglob("*.md")):
-        if ".git" in path.parts:
-            continue
-        if matches_governed(rel(path), globs):
-            out.append(path)
-    return out
-
-
-def header_status(text: str) -> tuple[str, int] | None:
-    """First **Status:** above the first `---` rule, with its 1-indexed line.
-
-    Scoping to the header block matters: SPEC-002_portable-ids.md carries
-    further **Status:** lines deep in its body that describe phases of work,
-    not the spec's lifecycle state.
-    """
-    lines = text.splitlines()
-    for idx, line in enumerate(lines):
-        if line.strip() == "---":
-            break
-        match = STATUS_HEADER_RE.match(line)
-        if match:
-            return match.group(1).strip(), idx + 1
-    return None
-
-
 def strip_for_claims(text: str) -> str:
     """Blank fenced code, drop inline code and link targets; keep line numbers."""
     lines = text.splitlines()
@@ -129,16 +73,6 @@ def strip_for_claims(text: str) -> str:
     joined = INLINE_CODE_RE.sub("", joined)
     joined = LINK_TARGET_RE.sub("]", joined)
     return joined
-
-
-def spec_actual_states(spec_glob: str) -> dict[str, set[str]]:
-    """SPEC number -> set of lifecycle folders holding a file with that number."""
-    states: dict[str, set[str]] = {}
-    for path in sorted(ROOT.glob(spec_glob)):
-        match = SPEC_ID_RE.search(path.name)
-        if match:
-            states.setdefault(match.group(1), set()).add(path.parent.name)
-    return states
 
 
 # ---------------------------------------------------------------- checks
@@ -171,7 +105,7 @@ def check_1_spec_status_vs_folder(config: dict) -> list[Finding]:
 
 
 def check_2_readme_claims(config: dict) -> list[Finding]:
-    """Lifecycle claims about a SPEC in the nav hub must match the tree.
+    """Lifecycle claims about a SPEC in the top-level README must match the tree.
 
     Matching is bold-insensitive on purpose. The README states claims three
     ways: `SPEC-010 (**accepted** ...)`, `**SPEC-010 accepted**` as one bold
@@ -240,9 +174,9 @@ def check_3_link_integrity(config: dict) -> list[Finding]:
             try:
                 resolved.relative_to(ROOT)
             except ValueError:
-                # Escapes the repo. Do not stat it: three such links point into
-                # a sibling engine tree absent from any clone, so resolving them
-                # would make this check machine-dependent.
+                # Escapes the repo. Do not stat it: links pointing into a
+                # sibling engine tree are absent from any clone, so resolving
+                # them would make this check machine-dependent.
                 findings.append(Finding(
                     EXTERNAL, rel(path), line,
                     f"target escapes the repo root: {target}", gating=False,
@@ -256,37 +190,9 @@ def check_3_link_integrity(config: dict) -> list[Finding]:
     return findings
 
 
-def _current_versions(config: dict) -> dict[str, tuple[str, str | None]]:
-    """Label -> (path, version string or None) for each control-plane file."""
-    plane = config["wiki"]["control_plane"]
-    out: dict[str, tuple[str, str | None]] = {}
-
-    versioning = ROOT / plane["versioning"]
-    if versioning.exists():
-        match = SEMVER_RE.search(read(versioning))
-        out["versioning"] = (plane["versioning"], match.group(0) if match else None)
-
-    tracker = ROOT / plane["pass_tracker"]
-    if tracker.exists():
-        # Anchor to the field. A whole-file first-semver scan returns the
-        # baseline, which is listed above the current version.
-        text = read(tracker)
-        field = re.search(
-            r"Wiki current version:\s*\n\s*\n?\s*-\s*`?(v\d+\.\d+\.\d+)`?", text
-        )
-        out["pass_tracker"] = (plane["pass_tracker"], field.group(1) if field else None)
-
-    changelog = ROOT / plane["changelog"]
-    if changelog.exists():
-        match = re.search(r"^##\s*\[(v\d+\.\d+\.\d+)\]", read(changelog), re.MULTILINE)
-        out["changelog"] = (plane["changelog"], match.group(1) if match else None)
-
-    return out
-
-
 def check_4_version_agreement(config: dict) -> list[Finding]:
-    """All three control-plane files must name the same current version."""
-    versions = _current_versions(config)
+    """All control-plane files must name the same current version."""
+    versions = current_versions(config)
     findings = []
     for label, (path, value) in versions.items():
         if value is None:
@@ -404,6 +310,11 @@ def check_7_unbumped(config: dict) -> list[Finding]:
         if line.strip():
             changed.add(line.strip())
     # Committed history alone cannot see the state a pass is actually closed in.
+    # Note: git collapses a wholly-untracked directory to one line ending in
+    # "/" rather than listing its files - matches_governed() still matches
+    # that path against a "**" glob, so the finding fires at directory
+    # granularity until the first `git add`. Harmless: it still flags that
+    # something under there needs a bump, just not which file.
     for line in git("status", "--porcelain").splitlines():
         if len(line) > 3:
             changed.add(line[3:].strip().split(" -> ")[-1])
@@ -420,6 +331,37 @@ def check_7_unbumped(config: dict) -> list[Finding]:
     return findings
 
 
+def check_8_wiki_home_fresh(config: dict) -> list[Finding]:
+    """WIKI_HOME.md's generated blocks must match a fresh regeneration.
+
+    Covers exactly the four indexed classes (specs, format specs, audits,
+    breakdowns) - not the whole governed corpus. Everything else governed is
+    caught by check 7 instead: two different guarantees, not one duplicated.
+    """
+    plane = config["wiki"]["control_plane"]
+    home = ROOT / plane["home"]
+    if not home.exists():
+        return [Finding("8 wiki home freshness", plane["home"], None,
+                        "wiki home file is missing")]
+
+    committed = read(home)
+    fresh_blocks = build_blocks(config)
+    findings = []
+    for name, fresh in fresh_blocks.items():
+        current = extract_block(committed, name)
+        if current is None:
+            findings.append(Finding(
+                "8 wiki home freshness", rel(home), None,
+                f"missing AUTOGEN:{name} sentinels",
+            ))
+        elif current.strip() != fresh.strip():
+            findings.append(Finding(
+                "8 wiki home freshness", rel(home), None,
+                f"{name} block is stale - run scripts/wiki_home.py",
+            ))
+    return findings
+
+
 CHECKS = [
     check_1_spec_status_vs_folder,
     check_2_readme_claims,
@@ -428,6 +370,7 @@ CHECKS = [
     check_5_changelog_completeness,
     check_6_pass_table,
     check_7_unbumped,
+    check_8_wiki_home_fresh,
 ]
 
 

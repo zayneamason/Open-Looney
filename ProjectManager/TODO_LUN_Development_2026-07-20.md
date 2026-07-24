@@ -107,5 +107,5 @@ Research intake added 2026-07-21:
 
 - [x] Draft SPEC-011 (2026-07-24) — *LUNM format-invariant DDL ratification* for the eight SPEC-008 core tables only (`luna.substrate` / `schema.sql`). Evidence: `04_Audits/AUDIT_2026-07-24_lunm-fi-pragma-table-info.md` (live ≡ schema column names). Handoff: `02_Handoffs/HANDOFF_2026-07-24_spec-010-soak-spec-011-drafted.md`.
 - [x] Resolve SPEC-011 Q1–Q4 (2026-07-24): Q1 convention-only sessions FK; Q2 amendment-first additive FI columns; Q3 `name\tsql` SHA-256 incl. Appendix A indexes; Q4 always pin Engine SHA. Handoff: `02_Handoffs/HANDOFF_2026-07-24_spec-011-accepted.md`.
-- [x] Promote SPEC-011 `active → accepted` (2026-07-24). File: `01_Specs/accepted/SPEC-011_lunm-format-invariant-ddl.md`.
+- [x] Promote SPEC-011 `active → accepted` (2026-07-24). File: `01_Specs/implemented/SPEC-011_lunm-format-invariant-ddl.md` (later promoted `accepted → implemented`; path corrected 2026-07-24, was stale as `accepted/`).
 - [x] Engine SPEC-011 conformance (2026-07-24): PR [#159](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/159) merge `629679b5` — `tests/unit/test_spec011_fi_columns.py`. SPEC-011 → `implemented/`.
