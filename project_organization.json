@@ -1,5 +1,43 @@
 {
-  "version": 1,
+  "version": 2,
   "policy": "warning-only",
-  "canonical_ledger": "ProjectManager/TODO_LUN_Development_2026-07-20.md"
+  "canonical_ledger": "ProjectManager/TODO_LUN_Development_2026-07-20.md",
+  "wiki": {
+    "control_plane": {
+      "versioning": "ProjectManager/WIKI_VERSIONING.md",
+      "changelog": "ProjectManager/WIKI_CHANGELOG.md",
+      "pass_tracker": "ProjectManager/WIKI_PASS_TRACKER.md",
+      "nav_hub": "00_README/README.md"
+    },
+    "governed": [
+      "01_Specs/**",
+      "03_Format_Spec/**",
+      "04_Audits/**",
+      "00_README/README.md",
+      "ProjectManager/WIKI_*.md",
+      "project_organization.json",
+      "scripts/wiki_*.py"
+    ],
+    "excluded": [
+      "02_Handoffs/**",
+      "06_Prototypes/**",
+      "08_Journal/**",
+      "10_Builder/**",
+      "ProjectManager/TODO_*.md"
+    ],
+    "lifecycle_states": [
+      "draft",
+      "active",
+      "accepted",
+      "implemented",
+      "rejected"
+    ],
+    "spec_lifecycle_glob": "01_Specs/*/SPEC-*.md",
+    "notes": [
+      "governed feeds check 7 (change detection) for every entry; checks 1 and 3 declare narrower input sets of their own.",
+      "project_organization.json and scripts/wiki_*.py are governed so that changing the rules themselves requires a version bump.",
+      "spec_lifecycle_glob is check 1's input set. 01_Specs/TEMPLATE.md is excluded from it by construction: it lives directly under 01_Specs/, not in a lifecycle folder.",
+      "03_Format_Spec/** is governed but outside check 1 - its docs carry '**Status:** Shipping', a version-state word on a different axis from the spec lifecycle."
+    ]
+  }
 }
