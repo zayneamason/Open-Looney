@@ -32,14 +32,24 @@ the risk — the Engine's `WIKI_HOME.md:10` reads `v2.23.0` while its own
 `WIKI_VERSIONING.md:7` reads `v2.23.1`.
 
 The governed set covers the contract documents (`01_Specs/`, `03_Format_Spec/`,
-`04_Audits/`, `00_README/README.md`), the control plane itself
-(`ProjectManager/WIKI_*.md`), and the tooling that defines these rules
+`04_Audits/`, `00_README/README.md`), the wiki home and control plane
+(`ProjectManager/Looney-WIKI/**`), and the tooling that defines these rules
 (`project_organization.json`, `scripts/wiki_*.py`). Changing the rules is
 therefore itself a governed change.
 
-Nav hub: `00_README/README.md`. This repo has no separate `WIKI_HOME.md`; the
-README already carries folder structure, glossary, format version, and open
-concerns, and a second orientation document would only duplicate claims.
+Nav hub: `WIKI_HOME.md`, in this same directory. As of P1 it carries a
+generated index over specs, format specs, audits, and authored breakdowns,
+diffed against a fresh regeneration by check 8 so it cannot silently go stale.
+`00_README/README.md` remains the top-level project README — folder structure,
+naming conventions, spec lifecycle definition — and stays governed (check 2
+still watches its prose lifecycle claims about specs), but it is not the nav
+hub. P0's original reasoning here ("no separate `WIKI_HOME.md`; a second
+orientation document would only duplicate claims") measured the Engine's
+`WIKI_HOME.md` against its own `WIKI_VERSIONING.md` and found a duplicated
+*version number* that had drifted — a real risk, but specific to a hand-authored
+second copy of one fact. A generated index carries no hand-maintained
+duplicate to drift; check 8 verifies it against its own generator on every
+run. That reasoning is why P1 reverses P0's call rather than repeating it.
 
 ## 2. Version Format
 
@@ -121,7 +131,12 @@ Nothing currently validates this footer; it is convention, not contract.
 
 ## 6. Related
 
+- `WIKI_HOME.md` — the wiki nav hub, generated index over specs, format specs,
+  audits, and breakdowns
 - `WIKI_CHANGELOG.md` — what changed, and why the bump was that size
 - `WIKI_PASS_TRACKER.md` — pass execution and gates
-- `scripts/wiki_check.py` — the verifier
-- `../00_README/README.md` — nav hub and spec lifecycle definition
+- `TAXONOMY.md` — classification vocabulary
+- `GLOSSARY.md` — canonical term definitions
+- `../../scripts/wiki_check.py` — the verifier
+- `../../00_README/README.md` — top-level project README and spec lifecycle
+  definition

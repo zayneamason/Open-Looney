@@ -178,7 +178,7 @@ def check_2_readme_claims(config: dict) -> list[Finding]:
     span, and plain unbolded prose. A bold-adjacency rule sees only the first.
     """
     wiki = config["wiki"]
-    hub = ROOT / wiki["control_plane"]["nav_hub"]
+    hub = ROOT / wiki["control_plane"]["readme"]
     states = wiki["lifecycle_states"]
     state_re = re.compile(r"\b(" + "|".join(states) + r")\b", re.IGNORECASE)
     actual = spec_actual_states(wiki["spec_lifecycle_glob"])

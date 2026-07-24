@@ -1,20 +1,21 @@
 {
-  "version": 2,
+  "version": 3,
   "policy": "warning-only",
   "canonical_ledger": "ProjectManager/TODO_LUN_Development_2026-07-20.md",
   "wiki": {
     "control_plane": {
-      "versioning": "ProjectManager/WIKI_VERSIONING.md",
-      "changelog": "ProjectManager/WIKI_CHANGELOG.md",
-      "pass_tracker": "ProjectManager/WIKI_PASS_TRACKER.md",
-      "nav_hub": "00_README/README.md"
+      "home": "ProjectManager/Looney-WIKI/WIKI_HOME.md",
+      "versioning": "ProjectManager/Looney-WIKI/WIKI_VERSIONING.md",
+      "changelog": "ProjectManager/Looney-WIKI/WIKI_CHANGELOG.md",
+      "pass_tracker": "ProjectManager/Looney-WIKI/WIKI_PASS_TRACKER.md",
+      "readme": "00_README/README.md"
     },
     "governed": [
       "01_Specs/**",
       "03_Format_Spec/**",
       "04_Audits/**",
       "00_README/README.md",
-      "ProjectManager/WIKI_*.md",
+      "ProjectManager/Looney-WIKI/**",
       "ProjectManager/README.md",
       "project_organization.json",
       "scripts/wiki_*.py"
@@ -38,7 +39,8 @@
       "governed feeds check 7 (change detection) for every entry; checks 1 and 3 declare narrower input sets of their own.",
       "project_organization.json and scripts/wiki_*.py are governed so that changing the rules themselves requires a version bump.",
       "spec_lifecycle_glob is check 1's input set. 01_Specs/TEMPLATE.md is excluded from it by construction: it lives directly under 01_Specs/, not in a lifecycle folder.",
-      "03_Format_Spec/** is governed but outside check 1 - its docs carry '**Status:** Shipping', a version-state word on a different axis from the spec lifecycle."
+      "03_Format_Spec/** is governed but outside check 1 - its docs carry '**Status:** Shipping', a version-state word on a different axis from the spec lifecycle.",
+      "control_plane.home (WIKI_HOME.md) is the wiki nav hub as of v0.2.0/P1. control_plane.readme (00_README/README.md) is the top-level project README, still governed and still watched by check 2 for prose lifecycle claims, but it is not the nav hub."
     ]
   }
 }
