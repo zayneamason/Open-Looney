@@ -1,10 +1,10 @@
 # SPEC-010: LUNM migration discipline
 
-**Status:** accepted (2026-07-23; Q1–Q6 resolved; Engine implements Rules 1–3 + integrity report later)
+**Status:** implemented (2026-07-24; Luna Engine PR #158 merge `c5c451fa`)
 **Severity:** high
 **Author:** Ahab (with Claude)
 **Created:** 2026-07-21
-**Last updated:** 2026-07-23
+**Last updated:** 2026-07-24 (Engine migration discipline landed; moved to implemented/)
 **Affects format version:** LUNM v0.1 (no `user_version` bump — see § Migration path)
 
 ---
@@ -177,9 +177,7 @@ Each Q below was resolved ahead of the `active → accepted` promotion. Question
 
 ## Implementation notes
 
-(Filled in when status moves to `implemented`.)
-
-- Commit/PR reference:
-- Implementation date:
-- Deviations from spec:
-- Follow-up issues created:
+- Commit/PR reference: Luna Engine PR [#158](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/158) merge `c5c451fa` (`feat/spec-010-migration-discipline`). Artifacts: `src/luna/substrate/migration_discipline.py`, `src/luna/substrate/migration_targets.py`, `classification_for` / `strictest_classification` in `lunm_manifest.py`, rewritten `_migrate_*` helpers in `database.py`, tests under `tests/unit/test_spec010_*`, `tests/substrate/test_migration_integrity_*`, `tests/substrate/test_ambassador_path_ddl_errors.py`, `tests/substrate/test_spec010_format_invariant_propagate.py`.
+- Implementation date: 2026-07-24
+- Deviations from spec: Phases 1–3 shipped in one Engine PR (integrity report + FI fail-loud + remaining tiers + AST lint) rather than three sequential PRs; soak happens post-merge. `migrations/004_ambassador_protocol.sql` remains path-loaded (expected; SPEC-009 deferred folding). No known failing format-invariant migration at promote time (fresh-connect integrity report shows zero degraded in tests).
+- Follow-up issues created: optional LUNC migration-discipline SPEC (out of scope here); live-matrix soak of the §4.4 integrity report in production installs.

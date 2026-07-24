@@ -88,4 +88,4 @@ Research intake added 2026-07-21:
 - [x] Resolve the `entities` ownership split — **not a LUNM split**: owner is `luna.substrate` / `schema.sql` for the LUNM entity family; `aibrarian_schema.entities` is cartridge-only (name collision). Recorded in SPEC-009 §4.1 + Q5.
 - [x] Promote SPEC-009 and SPEC-010 `active → accepted` (2026-07-23). Handoff: `02_Handoffs/HANDOFF_2026-07-23_spec-009-010-accepted.md`.
 - [x] Engine SPEC-009 landings (2026-07-24): PR [#157](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/157) merge `dd5c3060` — `lunm_table_manifest.toml`, §4.4 CI conformance, delete `migrations/003`. Snapshot: `04_Audits/AUDIT_2026-07-24_lunm-table-manifest.toml`. SPEC-009 → `implemented/`.
-- [ ] Engine SPEC-010: integrity report first, then fail-loud `format-invariant` migrations, then remaining tiers.
+- [x] Engine SPEC-010: integrity report first, then fail-loud `format-invariant` migrations, then remaining tiers — Luna Engine PR [#158](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/158) merge `c5c451fa` (2026-07-24). SPEC-010 → `implemented/`.
