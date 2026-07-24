@@ -39,8 +39,10 @@ Changes:
   pointing into the empty `01_Specs/accepted/`.
 - `01_Specs/implemented/SPEC-001`, `SPEC-002`, `SPEC-003` — converted an
   identical broken cross-repo handoff link to a prose citation in each.
-- `ProjectManager/README.md` — documented the control plane; corrected the
-  now-false claim that no organization checker exists.
+- `ProjectManager/README.md` — documented the control plane and the pass-close
+  procedure; corrected the now-false claim that no organization checker exists.
+  Added to governed scope: it documents the rules, so changing it is a governed
+  change. Found by check 7 reporting every other edited file but not this one.
 
 Rationale for baseline:
 
@@ -77,4 +79,22 @@ Deferred (measured, not assumed):
 - `scripts/wiki_bump.py` and a pre-commit hook — the Engine added its bump
   script in Pass 6, after its doc plane proved out. Same sequencing here.
 
-Validated against: (pending)
+Verification performed:
+
+- Known-answer test (verifier landed before the repairs): exactly the predicted
+  8 items, described above.
+- False-positive floor: zero findings against `01_Specs/TEMPLATE.md`
+  (whose `**Status:**` line must list all five states) and zero against
+  `03_Format_Spec/**` (whose docs read `**Status:** Shipping`).
+- Negative test: flipping `SPEC-007`'s header to `accepted` produced
+  `01_Specs/implemented/SPEC-007_cartridge-sketches.md:3: header says 'accepted'
+  but the file sits in implemented/`. Reverted.
+- Working-tree test: with the repairs uncommitted, check 7 reported all five
+  edited governed files. The original design compared only
+  `last-bump..HEAD` and would have reported nothing — the case that matters
+  most, since a pass is closed from a dirty tree.
+- Exit-code test: exit 0 under `policy: "warning-only"`, exit 1 under
+  `--strict`.
+
+Validated against: `2c849ed` (the P0 control-plane commit) plus the repairs in
+this commit; `scripts/wiki_check.py` clean at seal time.

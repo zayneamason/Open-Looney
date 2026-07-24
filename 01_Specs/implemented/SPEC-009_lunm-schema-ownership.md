@@ -171,7 +171,7 @@ Each Q below was resolved ahead of the `active → accepted` promotion. Question
 
 **Downstream:**
 
-- **[SPEC-010](../accepted/SPEC-010_lunm-migration-discipline.md)** — LUNM migration discipline. Its tiered fail-loud rule keys off SPEC-009's classification: a migration touching a `format-invariant` table may not fail silently. Engine implementation unblocked now that this manifest exists.
+- **[SPEC-010](../implemented/SPEC-010_lunm-migration-discipline.md)** — LUNM migration discipline. Its tiered fail-loud rule keys off SPEC-009's classification: a migration touching a `format-invariant` table may not fail silently. Engine implementation unblocked now that this manifest exists.
 - **SPEC-011+ (future)** — per-family DDL ratification, one spec per owner, against the map SPEC-009 produces.
 - **SPEC-008 Q2** — `lunm.schema_fingerprint` was deferred here. SPEC-009 specifies its shape; the key itself lands as a SPEC-008 amendment.
 

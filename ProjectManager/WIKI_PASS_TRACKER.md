@@ -39,7 +39,7 @@ Wiki target version:
 
 | Pass | Name | Owner | Status | Gate | Evidence |
 |---|---|---|---|---|---|
-| P0 | Baseline — control plane and drift verifier | Claude | in progress | — | `WIKI_CHANGELOG.md` `[v0.1.0]` |
+| P0 | Baseline — control plane and drift verifier | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.1.0]` |
 
 ## Gate Rule
 

@@ -15,6 +15,7 @@
       "04_Audits/**",
       "00_README/README.md",
       "ProjectManager/WIKI_*.md",
+      "ProjectManager/README.md",
       "project_organization.json",
       "scripts/wiki_*.py"
     ],

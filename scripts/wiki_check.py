@@ -387,12 +387,16 @@ def check_7_unbumped(config: dict) -> list[Finding]:
     plane = config["wiki"]["control_plane"]
     globs = config["wiki"]["governed"]
 
-    baseline = git("log", "-1", "--format=%H", "--", plane["versioning"]).strip()
+    # Anchor to the whole control plane, not just the policy file. Every bump
+    # necessarily touches at least one of the three, so this avoids forcing a
+    # ceremonial edit to WIKI_VERSIONING.md on passes that do not change policy.
+    anchors = [plane["versioning"], plane["changelog"], plane["pass_tracker"]]
+    baseline = git("log", "-1", "--format=%H", "--", *anchors).strip()
     if not baseline:
         # Never pass an empty baseline to git diff: "..HEAD" silently becomes
         # HEAD..HEAD and exits 0 with no output, reading as a pass.
-        print(f"check 7: no bump baseline yet "
-              f"({plane['versioning']} not committed) - skipped\n")
+        print("check 7: no bump baseline yet "
+              "(no control-plane file committed) - skipped\n")
         return []
 
     changed = set()
@@ -406,7 +410,7 @@ def check_7_unbumped(config: dict) -> list[Finding]:
 
     findings = []
     for path in sorted(changed):
-        if path == plane["versioning"]:
+        if path in anchors:
             continue
         if matches_governed(path, globs):
             findings.append(Finding(

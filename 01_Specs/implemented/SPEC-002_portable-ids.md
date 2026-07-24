@@ -1481,7 +1481,7 @@ Phase 5 commits (chronological, all on `fix/intergalactic-hub-phase-2-runtime` a
 
 Phase 5 Step 3 (Lansing v0.2 build) produces a gitignored cartridge artifact at `data/cartridges/PRIESTS_AND_PROGRAMMERS_Lansing.lun` (no commit). Phase 5 Step 6 edits `../Research/Code for .lun Development/01_Specs/accepted/SPEC-002_portable-ids.md` which lives outside the engine repo's git tree (no commit; edit persists on disk).
 
-**Handoff:** [HANDOFF_NEXUS_LUN_V02_PHASE5_MIGRATION_CLOSEOUT.md](../../../HeyLuna_BETA/_LunaEngine_BetaProject_V2.0_Root/Docs/Handoffs/Nexus/HANDOFF_NEXUS_LUN_V02_PHASE5_MIGRATION_CLOSEOUT.md) rev 2.
+**Handoff:** `Docs/Handoffs/Nexus/HANDOFF_NEXUS_LUN_V02_PHASE5_MIGRATION_CLOSEOUT.md` (Luna Engine repo) rev 2.
 
 #### Item 1 — Pre-flight greps (7) + Step 0 resolution
 
