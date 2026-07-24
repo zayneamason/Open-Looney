@@ -11,7 +11,7 @@
 
 ## Problem statement
 
-The engine applies 25 in-place migrations to every matrix it opens, and 22 of them cannot fail. Not "do not fail" — *cannot report failing*: each wraps its statements in `except Exception` and writes a `logger.debug` line. A migration that silently does nothing leaves the file in a state the engine believes it has, and nothing anywhere notices. This is not hypothetical. [SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) Q1 found that `profile_config` — a table SPEC-008 declares a format invariant — is created by exactly one of these swallowing migrations, on the only fail-silent path in a file whose other tables ride a propagating `executescript`. SPEC-010 sets the rule that would have caught it, plus the mechanics [SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) Q4 handed down for `user_version` bumps.
+The engine applies 25 in-place migrations to every matrix it opens, and 22 of them cannot fail. Not "do not fail" — *cannot report failing*: each wraps its statements in `except Exception` and writes a `logger.debug` line. A migration that silently does nothing leaves the file in a state the engine believes it has, and nothing anywhere notices. This is not hypothetical. [SPEC-008](SPEC-008_lunm-family-foundation.md) Q1 found that `profile_config` — a table SPEC-008 declares a format invariant — is created by exactly one of these swallowing migrations, on the only fail-silent path in a file whose other tables ride a propagating `executescript`. SPEC-010 sets the rule that would have caught it, plus the mechanics [SPEC-008](SPEC-008_lunm-family-foundation.md) Q4 handed down for `user_version` bumps.
 
 ## Observed evidence
 
@@ -31,14 +31,14 @@ All counts taken 2026-07-21 against Luna Engine HEAD `2ed07b0`.
 - **The contrast is inside the same function.** `_load_schema()` runs `await self._connection.executescript(schema_sql)` unguarded at `database.py:199`; a failure there propagates and the engine does not start. Two classes of table — one that fails loud, one that cannot fail — with nothing recording which is which or why.
 - **The severity gradient is real and currently inverted.** `profile_config` is a SPEC-008 § 4.3 format invariant and rides the silent path. `_migrate_quests_completed_at_column()` patches an engine-extension table and rides the same path. The mechanism does not distinguish them.
 - **`logger.debug` is the wrong level even for tolerated failures.** Debug is off in any normal deployment, so a tolerated failure and a catastrophic one produce identical observable output: nothing.
-- **Migrations are introspection-gated, not version-gated.** Every helper dispatches on `PRAGMA table_info(...)` or `CREATE TABLE IF NOT EXISTS` and no-ops when already applied. `user_version` plays no part in dispatch — established in [SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) Q4's resolution, which also found that policy (a) had been nominally in force since 2026-05-10 and violated 25 consecutive times without consequence.
+- **Migrations are introspection-gated, not version-gated.** Every helper dispatches on `PRAGMA table_info(...)` or `CREATE TABLE IF NOT EXISTS` and no-ops when already applied. `user_version` plays no part in dispatch — established in [SPEC-008](SPEC-008_lunm-family-foundation.md) Q4's resolution, which also found that policy (a) had been nominally in force since 2026-05-10 and violated 25 consecutive times without consequence.
 - **The bump mechanism has a fork hazard.** `database.py:155–175` writes the pragmas only inside the `application_id == 0` branch. Editing the `user_version` literal at `:164` would give new files the new value while every existing matrix stayed at `2`, with no detector.
 
 ## Root cause analysis
 
 1. **`try/except` around DDL was doing two unrelated jobs.** One is legitimate: a migration that runs on every open must tolerate already-being-applied. The other is not: swallowing a genuine failure. SQLite's `IF NOT EXISTS` and the introspection guards already handle the first job, which means the `except Exception` is, in every one of these 22 cases, handling only the second. The pattern was almost certainly copied for the first reason and now serves only the second.
 
-2. **There was no vocabulary for "this table matters more."** Without a classification, a blanket rule is the only option, and a blanket fail-loud rule is genuinely wrong for a conditional subsystem whose absence is legal. So the blanket fail-*silent* rule won by default. [SPEC-009](../implemented/SPEC-009_lunm-schema-ownership.md) supplies the missing vocabulary, which is why SPEC-010 depends on it.
+2. **There was no vocabulary for "this table matters more."** Without a classification, a blanket rule is the only option, and a blanket fail-loud rule is genuinely wrong for a conditional subsystem whose absence is legal. So the blanket fail-*silent* rule won by default. [SPEC-009](SPEC-009_lunm-schema-ownership.md) supplies the missing vocabulary, which is why SPEC-010 depends on it.
 
 ## Proposed solution
 
@@ -46,7 +46,7 @@ Three rules. The first is the spec's teeth; the second and third make it surviva
 
 ### 4.1 Rule 1 — failure tolerance is tiered by classification
 
-A migration's permitted failure behaviour is determined by the [SPEC-009](../implemented/SPEC-009_lunm-schema-ownership.md) classification of the table it touches:
+A migration's permitted failure behaviour is determined by the [SPEC-009](SPEC-009_lunm-schema-ownership.md) classification of the table it touches:
 
 | Table classification | On failure | Rationale |
 | --- | --- | --- |
@@ -75,11 +75,11 @@ At the end of the migration chain, the engine MUST emit a summary: how many migr
 
 ### 4.5 `user_version` bump mechanics
 
-[SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) § 4.1 settles *when* LUNM bumps. SPEC-010 carries *how*:
+[SPEC-008](SPEC-008_lunm-family-foundation.md) § 4.1 settles *when* LUNM bumps. SPEC-010 carries *how*:
 
 1. A bump MUST land as an explicit migration branch that reads the current `user_version` and writes the new one. It MUST NOT be performed by editing the literal at `database.py:164`, which sits inside the `application_id == 0` branch and would therefore apply only to newly-created files — forking production matrices at the old value with no detector.
 2. The bump migration MUST be idempotent under Rule 3: re-running it on an already-bumped file is a no-op, not an error.
-3. `lunm.format_version` ([SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) Q2) MUST move in the same migration. The two are the same fact in two places, and SPEC-008's Block B validation asserts they agree.
+3. `lunm.format_version` ([SPEC-008](SPEC-008_lunm-family-foundation.md) Q2) MUST move in the same migration. The two are the same fact in two places, and SPEC-008's Block B validation asserts they agree.
 4. A bump MUST NOT be combined with unrelated schema work in one migration. The bump is the thing a future reader will bisect for.
 
 ### Schema changes
@@ -88,7 +88,7 @@ None. SPEC-010 constrains how DDL is applied, not what it says.
 
 ### Behavioral changes
 
-1. Remove the 22 blanket `except Exception` handlers from `database.py`, replacing each per Rules 1–3. `_migrate_profile_config_table()` is the priority: it touches a format invariant and MUST become fail-loud, which is also [SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md) Q1's first precondition for `implemented/`.
+1. Remove the 22 blanket `except Exception` handlers from `database.py`, replacing each per Rules 1–3. `_migrate_profile_config_table()` is the priority: it touches a format invariant and MUST become fail-loud, which is also [SPEC-008](SPEC-008_lunm-family-foundation.md) Q1's first precondition for `implemented/`.
 2. Raise the surviving tolerated-failure log lines from `debug` to `warning` / `info` per Rule 1.
 3. Add the § 4.4 integrity report.
 4. Path-loaded DDL (engine-root `migrations/`) MUST distinguish file-not-found from statement-failed in logging, in addition to Rule 1 by table classification (see SPEC-009 Q5 disposition).
@@ -160,7 +160,7 @@ Each Q below was resolved ahead of the `active → accepted` promotion. Question
 
    **Resolution (2026-07-23):** Out of scope. Flag for a possible future LUNC migration-discipline SPEC; do not invent that SPEC here.
 
-6. **What governs the engine-root `migrations/` directory?** `_migrate_ambassador_tables()` (`database.py:1233–1252`) reads `migrations/004_ambassador_protocol.sql` from disk and `executescript`s it, wrapped in the same `except Exception` / `logger.debug` swallow as its siblings — so a missing or unreadable *file* degrades identically to a failed statement. Path-loaded DDL has a failure mode module-resident DDL does not: the file can simply be absent from a deployment. **Recommendation:** Rule 1 applies by the classification of the tables involved, and path-loaded DDL additionally MUST distinguish "file not found" from "statement failed" in its logging. See [SPEC-009](../implemented/SPEC-009_lunm-schema-ownership.md) Q5 for the directory's disposition.
+6. **What governs the engine-root `migrations/` directory?** `_migrate_ambassador_tables()` (`database.py:1233–1252`) reads `migrations/004_ambassador_protocol.sql` from disk and `executescript`s it, wrapped in the same `except Exception` / `logger.debug` swallow as its siblings — so a missing or unreadable *file* degrades identically to a failed statement. Path-loaded DDL has a failure mode module-resident DDL does not: the file can simply be absent from a deployment. **Recommendation:** Rule 1 applies by the classification of the tables involved, and path-loaded DDL additionally MUST distinguish "file not found" from "statement failed" in its logging. See [SPEC-009](SPEC-009_lunm-schema-ownership.md) Q5 for the directory's disposition.
 
    **Resolution (2026-07-23):** Accept the recommendation. Rule 1 by classification + file-not-found vs statement-failed. Directory disposition is SPEC-009 Q5 (002 superseded; 003 schedule delete; 004 fold into owner).
 
@@ -168,8 +168,8 @@ Each Q below was resolved ahead of the `active → accepted` promotion. Question
 
 **Upstream (must be accepted):**
 
-- **[SPEC-008](../implemented/SPEC-008_lunm-family-foundation.md)** (accepted 2026-07-21) — supplies the `user_version` bump *triggers* that § 4.5 gives mechanics for, and the `profile_config` finding that motivates Rule 1.
-- **[SPEC-009](../implemented/SPEC-009_lunm-schema-ownership.md)** (implemented 2026-07-24; Engine PR #157) — supplies the classification Rule 1 keys off. With the Engine manifest landed, SPEC-010 implementation (integrity report → fail-loud tiers) is unblocked.
+- **[SPEC-008](SPEC-008_lunm-family-foundation.md)** (accepted 2026-07-21) — supplies the `user_version` bump *triggers* that § 4.5 gives mechanics for, and the `profile_config` finding that motivates Rule 1.
+- **[SPEC-009](SPEC-009_lunm-schema-ownership.md)** (implemented 2026-07-24; Engine PR #157) — supplies the classification Rule 1 keys off. With the Engine manifest landed, SPEC-010 implementation (integrity report → fail-loud tiers) is unblocked.
 
 **Downstream:**
 
