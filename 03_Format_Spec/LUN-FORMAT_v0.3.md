@@ -1,7 +1,7 @@
 # .lun Cartridge Format Specification — Version 0.3
 
 **Status:** Shipping (2026-05-22; engine commit `407122f`; Meditations v0.3 audit passed)
-**Scope:** Cartridge family (`application_id = 0x4C554E43`, `'LUNC'`). The runtime matrix family (`'LUNM'`) is a sibling format with a different schema; it will get its own spec when its schema stabilizes.
+**Scope:** Cartridge family (`application_id = 0x4C554E43`, `'LUNC'`). The runtime matrix family (`'LUNM'`) is a sibling format — see [`SPEC-008`](../01_Specs/implemented/SPEC-008_lunm-family-foundation.md).
 **Source:** Consolidates SPEC-005 (annotation ledger, implemented 2026-05-22), SPEC-005_payload-schemas (implemented 2026-05-22), SPEC-002 D5 (integer-rowid removal, named in `01_Specs/implemented/SPEC-002_portable-ids.md` Phase 2), and the C-01 audit follow-up from `04_Audits/AUDIT_2026-05-22_meditations-v02.md` (rename `claim_sources` → `extraction_sources`).
 **Builder version:** Luna Engine commit `407122f` (`feat(cartridge): SPEC-005 v0.3 schema + annotation ledger + lun fsck`).
 **Supersedes:** v0.2 (`LUN-FORMAT_v0.2.md`). v0.3 is Shipping after the Meditations v0.3 reference cartridge audit passed with no shipping blockers.

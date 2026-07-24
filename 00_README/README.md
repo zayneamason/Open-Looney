@@ -39,11 +39,10 @@ identify which family a file belongs to without opening the schema.
 
 **This research project focuses on the cartridge family**, with LUNM
 format law now under active specs. The runtime matrix family foundation is
-[SPEC-008](../01_Specs/accepted/SPEC-008_lunm-family-foundation.md)
-(**accepted** 2026-07-21); ownership/manifest is SPEC-009 and migration
-discipline is SPEC-010 (both **accepted** 2026-07-23). Engine work gates
-SPEC-008 → `implemented/` (and the LUN-FORMAT line-4 “see SPEC-008”
-repoint). See `08_Journal/2026-05-10.md` for the application_id decision,
+[SPEC-008](../01_Specs/implemented/SPEC-008_lunm-family-foundation.md)
+(**implemented** 2026-07-24; Engine PR #156); ownership/manifest is SPEC-009 and migration
+discipline is SPEC-010 (both **accepted** 2026-07-23).
+See `08_Journal/2026-05-10.md` for the application_id decision,
 and `01_Specs/implemented/SPEC-006_v02-hygiene-bundle.md` for the contract
 that establishes both family values.
 
@@ -169,27 +168,23 @@ the Luna engine repo. Historical format doc: `03_Format_Spec/LUN-FORMAT_v0.2.md`
 `nodes_fts` virtual table and its FTS5 shadow tables. See
 `03_Format_Spec/LUN-FORMAT_v0.1.md` for full historical documentation.
 
-**LUNM (runtime matrix)** — family foundation is SPEC-008 (**accepted**);
-schema ownership/manifest is SPEC-009 and migration discipline is SPEC-010
-(both **accepted** 2026-07-23). Format-spec LUNM “see SPEC-008” repoint and
-SPEC-008 → `implemented/` wait on Engine § Behavioral changes landing.
+**LUNM (runtime matrix)** — family foundation is SPEC-008 (**implemented** 2026-07-24;
+Engine PR #156); schema ownership/manifest is SPEC-009 and migration discipline is
+SPEC-010 (both **accepted** 2026-07-23). LUN-FORMAT_v0.* LUNM lines now point at SPEC-008.
 
 ---
 
-## Open concerns (as of 2026-07-23)
+## Open concerns (as of 2026-07-24)
 
-1. **SPEC-008 → implemented** — Engine § Behavioral changes + §4.4 identity
-   check are landing-ready in Luna Engine; promote after that PR merges, then
-   repoint LUN-FORMAT_v0.* LUNM deferral lines to SPEC-008.
-2. **SPEC-009 / SPEC-010 accepted** — Engine still owes the table manifest,
+1. **SPEC-009 / SPEC-010 accepted** — Engine still owes the table manifest,
    conformance test, and migration fail-loud rollout.
-3. **Governance arc (LUNC)** — SPEC-005 + payload schemas remain accepted;
+2. **Governance arc (LUNC)** — SPEC-005 + payload schemas remain accepted;
    engine ledger write path for ambassador upgrades continues separately.
-4. **Single confidence axis** — SPEC-003 produced raw signals; SPEC-004
+3. **Single confidence axis** — SPEC-003 produced raw signals; SPEC-004
    (implemented 2026-05-22) defines the four-axis composition. Reader v0.3.x
    ships the reference composer.
-5. **Contract verification table** [future spec]
-6. **Role-based access metadata** [future spec]
+4. **Contract verification table** [future spec]
+5. **Role-based access metadata** [future spec]
 
 Carried-forward historical items (not v0.3 blockers):
 

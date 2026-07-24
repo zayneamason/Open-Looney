@@ -1,7 +1,7 @@
 # .lun Cartridge Format Specification — Version 0.1
 
 **Status:** Shipping (as of 2026-04-10)
-**Scope:** Cartridge family (`application_id = 0x4C554E43`, `'LUNC'`). The runtime matrix family (`'LUNM'`) is a sibling format with a different schema; it will get its own spec when its schema stabilizes.
+**Scope:** Cartridge family (`application_id = 0x4C554E43`, `'LUNC'`). The runtime matrix family (`'LUNM'`) is a sibling format — see [`SPEC-008`](../01_Specs/implemented/SPEC-008_lunm-family-foundation.md).
 **Source:** Reverse-engineered from `PRIESTS_AND_PROGRAMMERS_Lansing.lun`
 **Builder version:** `luna.cartridge.builder` (schema.py line 10)
 **Superseded by:** v0.2 (shipping as of 2026-05-12) — see `01_Specs/implemented/` for the four bundled specs (SPEC-006, SPEC-001, SPEC-002, SPEC-003) and the forthcoming `LUN-FORMAT_v0.2.md`

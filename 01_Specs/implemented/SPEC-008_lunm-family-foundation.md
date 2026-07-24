@@ -1,10 +1,10 @@
 # SPEC-008: LUNM runtime matrix family — foundational contract
 
-**Status:** accepted (2026-07-21; all five open questions resolved — engine implementation pending, see § Behavioral changes)
+**Status:** implemented (2026-07-24; Luna Engine PR #156 merge `53a6367b`)
 **Severity:** medium
 **Author:** Ahab (with Claude)
 **Created:** 2026-05-24
-**Last updated:** 2026-07-21
+**Last updated:** 2026-07-24 (engine landings merged; moved to implemented/)
 **Affects format version:** LUNM v0.1 (independent from LUNC version trajectory)
 
 ---
@@ -235,9 +235,10 @@ No spec must change as a prerequisite for SPEC-008 to be accepted. SPEC-006's li
 
 ## Implementation notes
 
-(Filled in when status moves to `implemented`.)
-
-- Commit/PR reference:
-- Implementation date:
-- Deviations from spec:
-- Follow-up issues created:
+- **Commit/PR reference:** Luna Engine PR [#156](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/156) merged 2026-07-24 as `53a6367b` (tip commits include `d5f98471` SPEC-008 landing + CI fixture fixes).
+- **Implementation date:** 2026-07-23 (engine land) / 2026-07-24 (merged to `main`; this file promoted to `implemented/`).
+- **Deviations from spec:**
+  - Satellite §4.4 binding uses cartridge/satellite `meta` key `lunm.bound_matrix_ulid` (narrow identity write). Sealed LUNC still does **not** write `nexus_refs`.
+  - Block B post-seed asserts are soft-log (SHOULD), not hard-raise on connect.
+  - `lunm.engine_version` remains the declared placeholder (`luna.__version__` = `"2.0.0"`).
+- **Follow-up issues created:** SPEC-009 (schema ownership / manifest) and SPEC-010 (fail-loud migration discipline) are accepted and await Engine implementation. Format-spec LUNM deferral lines repointed to this SPEC on the same day.
