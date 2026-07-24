@@ -29,7 +29,11 @@ wiki system exists to prevent.
 - **Node** — an entry in `doc_nodes`; document, section, paragraph, or
   sentence.
 - **Extraction** — an LLM-generated summary, claim, or entity.
-- **Anchor** — a row in `claim_sources` linking a claim to a source node.
+- **Anchor** — a row in `claim_sources` (v0.1/v0.2) or `extraction_sources`
+  (v0.3+, renamed per audit finding C-01 — the table anchors `summary`
+  extractions as well as `claim` extractions, not claims only) linking an
+  extraction to a source node. See
+  [`sections/lun-format-family.md`](sections/lun-format-family.md) §4.
 - **Orphan claim** — a claim with no anchor row.
 - **Imprint** — the process of a claim entering the Memory Matrix with weight.
 - **The Wall** — the boundary between a cartridge's local data and the shared

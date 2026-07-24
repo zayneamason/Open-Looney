@@ -20,7 +20,7 @@ polished.
 
 Current wiki version:
 
-- `v0.3.0`
+- `v0.4.0`
 
 ## 1. Scope
 
@@ -59,8 +59,9 @@ run. That reasoning is why P1 reverses P0's call rather than repeating it.
   rules change, a spec in `implemented/` is amended so that shipped behavior is
   now non-conforming, or a spec is withdrawn from `implemented/`.
 - **MINOR** — additive: a spec advances lifecycle state, a new spec or
-  format-spec version lands, a new audit artifact is added, or the verifier's
-  gate semantics change.
+  format-spec version lands, a new audit artifact is added, a new authored
+  breakdown lands under `Looney-WIKI/sections/`, or the verifier's gate
+  semantics change.
 - **PATCH** — editorial: wording, link repairs, formatting, README re-sync with
   no change to any claim.
 

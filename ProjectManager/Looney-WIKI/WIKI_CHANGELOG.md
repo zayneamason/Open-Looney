@@ -14,6 +14,70 @@ tags:
 Reverse-chronological. Every entry states what changed and why the bump was that
 size. Policy: `WIKI_VERSIONING.md`.
 
+## [v0.4.0] - 2026-07-24
+
+Pass: P3 — `lun-format-family` breakdown
+Type: minor
+
+Changes:
+
+- `ProjectManager/Looney-WIKI/sections/lun-format-family.md` (new) — second
+  authored breakdown, same template as `lunm-runtime-matrix.md`: definition
+  → classification → what's stored vs. not → per-item detail → citations.
+  Covers the `.lun` cartridge format (LUNC) across v0.1/v0.2/v0.3: the
+  identity contract (required from v0.2 onward, not v0.1), the
+  `nexus_refs` status change at the v0.3 boundary (not a v0.2-only table —
+  its meaning changes, not its presence), the confidence → raw-signals
+  story (SPEC-003), the anchor taxonomy (SPEC-001) and its C-01 rename
+  (`claim_sources` → `extraction_sources`, because it anchors summaries too,
+  not just claims), the ledger's soft-covenant honesty (SPEC-005), and the
+  FTS5 reattachment decision (Q1) with its measured alternatives. Evidence
+  appendix re-run fresh against `Marcus-Aurelius-Meditations.v03.lun` at
+  authoring time — cross-checks, not bare counts (e.g. `anchor_status
+  = 'unknown'` count exactly equals entity count; `extraction_sources` row
+  count exactly equals `anchored` count).
+- `ProjectManager/Looney-WIKI/GLOSSARY.md` — Anchor definition corrected to
+  name both `claim_sources` (v0.1/v0.2) and `extraction_sources` (v0.3+,
+  C-01 rename) and both extraction kinds it anchors. The prior definition
+  named only `claim_sources` and only claims — stale the moment this
+  breakdown explains the rename.
+- `ProjectManager/Looney-WIKI/WIKI_VERSIONING.md` §2 — added "a new authored
+  breakdown lands under `Looney-WIKI/sections/`" to the MINOR trigger list.
+  P1 shipped the first breakdown without hitting this gap only because it
+  also added check 8 (an already-listed trigger); this pass is the first to
+  actually need the breakdown case named.
+- `WIKI_HOME.md` regenerated — `BREAKDOWN_INDEX` now lists 2 breakdowns; also
+  picked up `SPEC-012` (landed by the concurrent P2 pass) in the active-spec
+  count with zero manual intervention, confirming the generator handles
+  work from other agents without hand-sync.
+
+Rationale for MINOR bump:
+
+- A new authored breakdown landed, which `WIKI_VERSIONING.md` §2 now names
+  as a MINOR trigger (added in this same pass). No shipped `LUN-FORMAT`
+  rule changed, no implemented spec was amended, no LUNM format-invariant
+  classification changed. The GLOSSARY and policy edits are corrections
+  bundled with the breakdown that made them necessary, not independent
+  contract changes.
+
+Verification performed:
+
+- `python3 scripts/wiki_home.py` — breakdown count 1 → 2, confirmed by eye.
+- `python3 scripts/wiki_check.py` — clean except check 7 (unbumped), as
+  expected pre-seal; zero broken links, zero README-claim drift introduced.
+- Grepped the new breakdown for every `claim_sources` mention — confirmed
+  each is version-qualified or is itself the sentence warning against
+  unqualified usage. (This check exists because an early draft of this
+  pass's plan made exactly that mistake before implementation began — see
+  the P3 pass log.)
+- `python3 scripts/wiki_check.py --strict` clean at the closing commit.
+- Pass numbering re-confirmed immediately before sealing:
+  `git log --oneline` and `WIKI_PASS_TRACKER.md` re-checked for any pass
+  landing after `8c1b6b5` (P2) — none found; `P3`/`v0.4.0` correct.
+
+Validated against: (pending — see the P3 pass-tracker row for the closing
+commit SHA once sealed)
+
 ## [v0.3.0] - 2026-07-24
 
 Pass: P2 — SPEC-012: LUNM entity unification

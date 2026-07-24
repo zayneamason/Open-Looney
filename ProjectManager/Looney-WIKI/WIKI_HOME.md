@@ -30,11 +30,11 @@ Two layers, two different trust models:
 ## Current Status
 
 <!-- AUTOGEN:STATUS START -->
-**Current version:** `v0.3.0`
+**Current version:** `v0.4.0`
 
 | Specs (implemented) | Specs (accepted) | Specs (active) | Specs (rejected) | Format specs | Audits | Breakdowns |
 |---|---|---|---|---|---|---|
-| 12 | 0 | 1 | 0 | 3 | 5 | 1 |
+| 12 | 0 | 1 | 0 | 3 | 5 | 2 |
 <!-- AUTOGEN:STATUS END -->
 
 Policy and promotion criteria: [`WIKI_VERSIONING.md`](WIKI_VERSIONING.md).
@@ -104,6 +104,7 @@ classification → what's stored vs. not → per-item detail → citations.
 <!-- AUTOGEN:BREAKDOWN_INDEX START -->
 | Title | Description | File |
 |---|---|---|
+| The `.lun` cartridge format family (LUNC) | The .lun cartridge format (LUNC) — v0.1 through v0.3, identity contract, table evolution, what's stored vs. not, the annotation ledger in detail | [lun-format-family.md](sections/lun-format-family.md) |
 | LUNM: the runtime matrix | LUNM runtime matrix — identity, format-invariant vs. engine-extension tables, what's stored vs. not, threads and entities in detail | [lunm-runtime-matrix.md](sections/lunm-runtime-matrix.md) |
 <!-- AUTOGEN:BREAKDOWN_INDEX END -->
 

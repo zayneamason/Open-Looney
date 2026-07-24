@@ -28,7 +28,7 @@ Wiki version baseline:
 
 Wiki current version:
 
-- `v0.3.0`
+- `v0.4.0`
 
 Wiki target version:
 
@@ -42,6 +42,7 @@ Wiki target version:
 | P0 | Baseline — control plane and drift verifier | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.1.0]` |
 | P1 | Looney-WIKI: a real wiki home | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.2.0]` |
 | P2 | SPEC-012: LUNM entity unification | Codex | done | pass | `02_Handoffs/HANDOFF_2026-07-24_spec-012-entity-unification-drafted.md` |
+| P3 | `lun-format-family` breakdown | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.4.0]` |
 
 ## Gate Rule
 
@@ -173,3 +174,62 @@ No format-invariant set changed and no `user_version` bump is specified.
 Entity tables remain SPEC-009 `engine-extension` tables owned by
 `luna.substrate` / `schema.sql`; Engine implementation is deferred until the
 acceptance audit resolves the open questions in SPEC-012.
+
+### P3 — `lun-format-family` breakdown
+
+Second authored breakdown, same template as LUNM (P1): definition →
+classification → what's stored vs. not → per-item detail → citations. Covers
+the `.lun` cartridge format (LUNC) across all three shipped versions.
+
+**A multi-agent collision, caught by the system this repo just built.** While
+this pass was being planned, `Codex` landed P2 directly on `main`
+(`8c1b6b5`) and claimed `P2` / `v0.3.0` — the exact numbers this pass had
+already drafted a plan around. Caught before any file was touched, by doing
+what the pass tracker exists for: `git log` plus a fresh read of
+`WIKI_PASS_TRACKER.md`'s current version and next-pass-ID, right before
+writing anything. Renumbered to `P3` / `v0.4.0` and re-verified immediately
+before sealing that nothing further had landed in the interim. This is the
+scenario the pass tracker and `wiki_check.py` were built for — more than one
+agent can work this repo at once, and the control plane is what stops two
+passes from silently claiming the same identity.
+
+**Two review findings in this pass's own plan were mistakes made with the
+correct source material already in hand**, not gaps in research — worth
+recording because it's a sharper failure mode than a citation gap:
+
+- The plan claimed `application_id` is "stable across every minor version,"
+  contradicted by `LUN-FORMAT_v0.1.md:29-32` ("Not set in v0.1 builds"),
+  which had already been read in full earlier in the same planning turn.
+- The plan classified `nexus_refs` as "v0.2-only," contradicted by
+  `LUN-FORMAT_v0.3.md`'s own `nexus_refs` section (read in full, same turn),
+  which states the table becomes **active** in v0.3, not that it disappears.
+
+Both are fixed in the shipped breakdown (§1 and §3 respectively), and the
+breakdown adds an explicit self-check absent from earlier passes: grep the
+new prose for every `claim_sources` mention and confirm each is
+version-qualified, since C-01's `claim_sources` → `extraction_sources`
+rename is exactly the kind of fact that's easy to state once and then forget
+to re-qualify three paragraphs later.
+
+**Two edits landed outside the new breakdown file, both load-bearing for
+it, not incidental:**
+
+- `GLOSSARY.md`'s Anchor definition named only `claim_sources` and only
+  claims — stale the moment this breakdown explains the v0.3 rename and its
+  reason (the table anchors summaries too). Corrected to name both table
+  forms, version-scoped.
+- `WIKI_VERSIONING.md` §2's MINOR trigger list never named "a new authored
+  breakdown lands" — P1 shipped the *first* breakdown without hitting this
+  gap only because it also added check 8, an already-listed trigger. This
+  pass is the first bump that actually needs the breakdown case in the
+  policy text to justify itself, so the policy gap closed in the same
+  commit as the breakdown that exposed it.
+
+Evidence appendix re-run fresh at authoring time against
+`Marcus-Aurelius-Meditations.v03.lun` (not reused from planning) — every
+number in §6 is a cross-check against another number in the same file
+(`anchor_status = 'unknown'` count equals entity count exactly;
+`extraction_sources` row count equals `anchored` count exactly;
+`sqlite_sequence` lists only `doc_nodes` and `annotation_ledger`, confirming
+the rowid-removal migration completed), not a bare count asserted on its
+own.
