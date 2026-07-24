@@ -21,6 +21,12 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
 
+Session handoff 2026-07-24: `02_Handoffs/HANDOFF_2026-07-24_spec-011-implemented.md`
+(SPEC-011 → implemented after Engine PR #159 / `629679b5`).
+
+Session handoff 2026-07-24: `02_Handoffs/HANDOFF_2026-07-24_spec-011-accepted.md`
+(SPEC-011 Q1–Q4 resolved; promoted to `accepted/`; Engine FI column conformance next).
+
 Session handoff 2026-07-24: `02_Handoffs/HANDOFF_2026-07-24_spec-010-soak-spec-011-drafted.md`
 (SPEC-010 soak clean; SPEC-011 FI DDL drafted).
 
@@ -47,7 +53,7 @@ Research intake added 2026-07-21:
 - [x] M-01 title truncation audit follow-up closed: PDF parser now merges multi-line title blocks; Meditations cartridge rebuilt; follow-on memory updated.
 - [x] Investigate S-01 embedding coverage gap: **classified expected builder policy** (skip sections with no embeddable descendant text). Post-M-01 ratio **149/166** (not 149/176).
 - [x] Update the relevant audit/spec note once S-01 is classified — v0.2 + v0.3 audits + `LUN-FORMAT_v0.3.md` Coverage policy one-liner.
-- [ ] Keep historical v0.2 limitations alive only where still applicable: Lansing 9.5% baseline measurement and form-feed artifacts are not blocked by v0.3, but should remain documented until separately resolved.
+- [ ] Keep historical v0.2 limitations alive only where still applicable: Lansing 9.5% baseline measurement and form-feed artifacts are not blocked by v0.3, but should remain documented until separately resolved. **Verified 2026-07-24:** living homes current — `LUN-FORMAT_v0.2.md` §12–13, `LUN-FORMAT_v0.3.md` §8–9, `00_README/README.md`, `08_Journal/2026-05-21.md`. Leave open until PDF recovery / `\x0c` strip (or explicit won’t-fix).
 
 ## LUNM Runtime Matrix Specs
 
@@ -82,7 +88,7 @@ Research intake added 2026-07-21:
 ## Repo Hygiene
 
 - [x] Update `00_README/README.md`: Current format version = **v0.3 Shipping**; LUNM no longer “wait forever” — points at SPEC-008 accepted + Engine gate for `implemented/`. Folder tree documents `10_Builder/` + `ProjectManager/`.
-- [ ] Decide whether this repo should get a root `project_organization.json` with `canonical_ledger = "ProjectManager/TODO_LUN_Development_2026-07-20.md"`.
+- [x] Decide whether this repo should get a root `project_organization.json` with `canonical_ledger = "ProjectManager/TODO_LUN_Development_2026-07-20.md"`. **Yes (2026-07-24):** minimal `version` / `policy: warning-only` / `canonical_ledger` at repo root. Allowlists deferred until a checker is ported.
 - [x] Decide whether the copied `10_Builder/` subtree should be labeled as a stale/reference snapshot, updated to v0.3, or moved out of the authority path. **Labeled in place** via `10_Builder/STALE.md` (non-authority; pinned `325c68b…`); not deleted, not updated to v0.3.
 - [x] Add or update repo guidance so future agents treat top-level specs and audits as authority over stale implementation snapshots — covered by `10_Builder/STALE.md` + README folder note.
 
@@ -100,5 +106,6 @@ Research intake added 2026-07-21:
 ## SPEC-011+
 
 - [x] Draft SPEC-011 (2026-07-24) — *LUNM format-invariant DDL ratification* for the eight SPEC-008 core tables only (`luna.substrate` / `schema.sql`). Evidence: `04_Audits/AUDIT_2026-07-24_lunm-fi-pragma-table-info.md` (live ≡ schema column names). Handoff: `02_Handoffs/HANDOFF_2026-07-24_spec-010-soak-spec-011-drafted.md`.
-- [ ] Resolve SPEC-011 Q1–Q4 (sessions FK, additive-column amendment policy, fingerprint serialization, SHA pin policy).
-- [ ] Promote SPEC-011 `active → accepted` after Qs; Engine conformance test at `implemented/`.
+- [x] Resolve SPEC-011 Q1–Q4 (2026-07-24): Q1 convention-only sessions FK; Q2 amendment-first additive FI columns; Q3 `name\tsql` SHA-256 incl. Appendix A indexes; Q4 always pin Engine SHA. Handoff: `02_Handoffs/HANDOFF_2026-07-24_spec-011-accepted.md`.
+- [x] Promote SPEC-011 `active → accepted` (2026-07-24). File: `01_Specs/accepted/SPEC-011_lunm-format-invariant-ddl.md`.
+- [x] Engine SPEC-011 conformance (2026-07-24): PR [#159](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/159) merge `629679b5` — `tests/unit/test_spec011_fi_columns.py`. SPEC-011 → `implemented/`.

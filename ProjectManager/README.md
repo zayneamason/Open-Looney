@@ -2,7 +2,7 @@
 doc_type: runbook
 status: active
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-24
 tags:
   - projectmanager
   - ledger
@@ -17,10 +17,12 @@ reader, audit, and project-organization follow-up.
 
 ## Canonical ledger
 
-`ProjectManager/TODO_LUN_Development_2026-07-20.md`
+Declared in root `project_organization.json` as:
+
+`canonical_ledger = "ProjectManager/TODO_LUN_Development_2026-07-20.md"`
 
 There should be exactly one active `TODO_*.md` ledger in this folder. If a later
-organization checker is added to this repo, this path should be the
+organization checker is added to this repo, that path is the machine-readable
 `canonical_ledger` value.
 
 ## Add a task

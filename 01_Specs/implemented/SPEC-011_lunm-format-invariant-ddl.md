@@ -1,10 +1,10 @@
 # SPEC-011: LUNM format-invariant DDL ratification
 
-**Status:** active
+**Status:** implemented (2026-07-24; Luna Engine PR #159 merge `629679b5`)
 **Severity:** high
 **Author:** Ahab (with Claude)
 **Created:** 2026-07-24
-**Last updated:** 2026-07-24
+**Last updated:** 2026-07-24 (Engine FI column conformance landed; moved to implemented/)
 **Affects format version:** LUNM v0.1 (no `user_version` bump anticipated — additive ratification of already-shipped columns; see § Migration path)
 
 ---
@@ -73,7 +73,7 @@ The normative CREATE TABLE text for each FI table is the `CREATE TABLE IF NOT EX
 
 Per SPEC-008 Q2 / SPEC-009: fingerprint is **not** a hash of `schema.sql`. For the FI owner slice, SPEC-011 defines the contribution as:
 
-> Hash (stable serialization) of `sqlite_master.sql` for each of the eight FI table names (and their non-autoindexes listed in Appendix A), ordered by table name.
+> SHA-256 hex of the UTF-8 bytes of `\n`-joined `name\tsql` lines from `sqlite_master`, for the eight FI **tables** plus their Appendix A **non-autoindexes**, sorted by `name`. (Q3.)
 
 The full `lunm.schema_fingerprint` value remains a SPEC-008 amendment at Engine implement time; SPEC-011 only fixes the FI owner’s input set.
 
@@ -85,7 +85,7 @@ None at draft. Ratification describes already-shipped DDL. If acceptance discove
 
 1. Add a conformance test: fresh matrix and/or live fixture — FI `PRAGMA table_info` names equal ratified set.
 2. Optionally stamp / document `lunm.schema_fingerprint` FI contribution (SPEC-008 follow-up).
-3. Do **not** add a FOREIGN KEY from `conversation_turns.session_id` → `sessions` without resolving Q1 below.
+3. Do **not** add a FOREIGN KEY from `conversation_turns.session_id` → `sessions` (Q1: convention-only for v0.1).
 
 ### Migration path
 
@@ -115,17 +115,25 @@ SPEC-009 §4.4 remains the authority for table *presence*. SPEC-011 is the autho
 - **(b) Start with `ih_*`.** Rejected for first slice — conditional classification; Hub-gated; not format-invariant.
 - **(c) Ratify by English prose only (no DDL appendix).** Rejected — auditors need citeable CREATE text.
 
-## Open questions
+## Resolved questions
 
-Each Q below blocks `active → accepted`.
+Each Q below was resolved ahead of the `active → accepted` promotion. Question bodies are preserved; each `**Resolution (2026-07-24):**` records what was picked.
 
 1. **Should `conversation_turns.session_id` gain a FOREIGN KEY to `sessions`?** SPEC-008 left this convention-only after finding ad-hoc writers. Adding an FK is a contract-affecting schema change (likely SPEC-008 Q4 bump). **Recommendation:** leave convention-only in v0.1 ratification; open a follow-up Engine audit of writers before any FK.
 
+   **Resolution (2026-07-24):** Leave convention-only for v0.1 ratification — no FK in Appendix A. Track a follow-up Engine writers audit (HistoryManager, MemoryMatrix, Guardian raw INSERT in `server.py`, tests) before any future FK; inherited from SPEC-008 Q5. `PRAGMA foreign_keys=ON` on `MemoryDatabase` means a real FK would enforce immediately.
+
 2. **Are additive EE-driven columns on FI tables (e.g. future `memory_nodes` columns) allowed without a SPEC-011 amendment?** SPEC-008 Q4 says additive columns do not bump `user_version`. **Recommendation:** additive columns on FI tables REQUIRE a SPEC-011 amendment (or a dated appendix revision) even when they do not bump `user_version`, so the ratified column set does not silently drift. Engine MAY ship the column behind SPEC-010 before the amendment lands only if classified carefully — prefer amendment-first.
+
+   **Resolution (2026-07-24):** Additive columns on FI tables REQUIRE a SPEC-011 amendment (or dated Appendix A revision) even when they do not bump `user_version`. **Amendment-first:** the amendment must land before or in the same change set as the Engine column; no silent ship-then-amend. SPEC-008 Q4 bump triggers are unchanged.
 
 3. **Exact serialization for the FI fingerprint contribution** (canonical JSON of `{table: sql}` vs SQLite `sqlite_master` order)? **Recommendation:** sorted table name → `sql` text from `sqlite_master` where `type='table'`, UTF-8, `\n`-joined `name\tsql` lines; hash algorithm SHA-256 hex. Confirm at acceptance against Engine helper.
 
+   **Resolution (2026-07-24):** SHA-256 hex of UTF-8 bytes of `\n`-joined `name\tsql` lines from `sqlite_master`, for the eight FI **tables** plus Appendix A **non-autoindexes**, sorted by `name`. No Engine fingerprint helper exists yet — this locks the format before one is written. Aligns with §4.4 (indexes included). Full `lunm.schema_fingerprint` stamping remains a SPEC-008 follow-up.
+
 4. **Pin policy:** must Implementation notes always name an Engine commit SHA for `schema.sql`, or is “main at date” enough? **Recommendation:** always pin SHA (mirror SPEC-009/010 implementation notes).
+
+   **Resolution (2026-07-24):** Always pin an Engine commit SHA for `schema.sql` in Implementation notes. Never “main at date.” Matches SPEC-009/010 house style.
 
 ## Dependencies
 
@@ -142,12 +150,10 @@ Each Q below blocks `active → accepted`.
 
 ## Implementation notes
 
-(Filled in when status moves to `implemented`.)
-
-- Commit/PR reference:
-- Implementation date:
-- Deviations from spec:
-- Follow-up issues created:
+- Commit/PR reference: Luna Engine PR [#159](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/159) merge `629679b5` (`spec-011-fi-column-conformance`). Artifact: `tests/unit/test_spec011_fi_columns.py` (fresh-matrix FI `PRAGMA table_info` names ≡ Appendix A). Authoritative DDL pin remains `schema.sql` at ancestor `c5c451fa` (FI CREATE blocks unchanged through `629679b5`).
+- Implementation date: 2026-07-24
+- Deviations from spec: none. Fingerprint stamping not implemented (SPEC-008 follow-up; Q3 locks serialization only).
+- Follow-up issues created: Engine writers audit before any `conversation_turns.session_id` → `sessions` FK (Q1); SPEC-008 amendment for full `lunm.schema_fingerprint` stamp.
 
 ---
 
@@ -292,3 +298,32 @@ CREATE TABLE IF NOT EXISTS nexus_registry (
     source TEXT NOT NULL DEFAULT 'yaml'
 );
 ```
+
+### A.7 Non-autoindexes (SHOULD; fingerprint contribution)
+
+Declared in `schema.sql` with the FI tables at `c5c451fa`. Absence on an otherwise-valid matrix is not a family discriminator failure (§4.3). Included in the FI fingerprint contribution (Q3 / §4.4).
+
+| Index | On |
+| --- | --- |
+| `idx_nodes_type` | `memory_nodes(node_type)` |
+| `idx_nodes_created` | `memory_nodes(created_at)` |
+| `idx_nodes_importance` | `memory_nodes(importance DESC)` |
+| `idx_nodes_accessed` | `memory_nodes(last_accessed DESC)` |
+| `idx_nodes_lock_in` | `memory_nodes(lock_in DESC)` |
+| `idx_nodes_lock_in_state` | `memory_nodes(lock_in_state)` |
+| `idx_nodes_classification` | `memory_nodes(classification)` |
+| `idx_nodes_custodian` | `memory_nodes(custodian)` |
+| `idx_turns_session` | `conversation_turns(session_id)` |
+| `idx_turns_created` | `conversation_turns(created_at)` |
+| `idx_turns_tier_timestamp` | `conversation_turns(tier, created_at DESC)` |
+| `idx_turns_session_tier` | `conversation_turns(session_id, tier)` |
+| `idx_turns_turn_type` | `conversation_turns(turn_type)` |
+| `idx_turns_thread_id` | `conversation_turns(thread_id)` |
+| `idx_sessions_started` | `sessions(started_at DESC)` |
+| `idx_edges_from` | `graph_edges(from_id)` |
+| `idx_edges_to` | `graph_edges(to_id)` |
+| `idx_edges_relationship` | `graph_edges(relationship)` |
+| `idx_profile_config_updated_at` | `profile_config(updated_at DESC)` |
+| `idx_nexus_nodes_collection` | `nexus_nodes(collection_key)` |
+| `idx_nexus_edges_src` | `nexus_edges(src_node_id)` |
+| `idx_nexus_edges_dst` | `nexus_edges(dst_node_id)` |
