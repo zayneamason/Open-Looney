@@ -476,14 +476,15 @@ rows_with_formfeed    0
   by the 2026-05-21 journal item 13 is absent from this cartridge — either this PDF source
   is clean of form-feed glyphs, or the parser handles them. Item 13 does not apply here.
 
-- **FINDING S-01 (low).** Section embedding coverage gap: 149 of 176 sections have a
-  `section`-level embedding (84.7%); 27 sections do not. Likely the very short title-page
-  sections (ids 6-8 above, content lengths 18, 25, 39 chars) and any other sections with
-  content below the embedding threshold or with NULL content. The 27 gap matches roughly the
-  count of very-short / NULL-content sections (128 NULL content + 48 nested sections may
-  overlap). Worth a focused investigation. Forward-ref: builder embedding policy
-  documentation (or a format-spec note that `embeddings` coverage is best-effort, not
-  total).
+- **FINDING S-01 (low) — CLASSIFIED 2026-07-23: expected builder policy, not a defect.**
+  Original v0.2 observation: 149 of 176 sections had a `section`-level embedding (84.7%);
+  27 sections did not. Post-M-01 reference cartridge (`Marcus-Aurelius-Meditations.v03.lun`)
+  is **149/166** (17 skipped): M-01 merged ~10 fragmented headings, so the old 149/176
+  denominator is obsolete. Classification: the builder skips section embed when the
+  recursive subtree yields no non-empty `sentence` / `list_item` / `cell` content (textless
+  structural sections). Paragraph embeddings remain 310/310. Format already documents
+  best-effort coverage (`LUN-FORMAT_v0.3.md` Coverage policy). No Engine embedder change
+  required.
 
 ## Portability proof
 
@@ -516,7 +517,7 @@ audit — no custom parser needed, just `sqlite3` + the validation rules.
 | M-01 | medium   | meta         | `title = "The meditations of"` is semantically truncated    | Builder/parser; extend title blocklist     |
 | T-01 | low      | tree         | PDF parser splits title-page text into separate sections    | Builder/parser; title-block recognition    |
 | C-01 | low      | anchoring    | `claim_sources.claim_id` actually anchors any extraction type (claims AND summaries) | Format-spec clarification or v0.3 rename |
-| S-01 | low      | schema       | Section embedding coverage gap: 149/176 sections (27 missing) | Builder embedding policy doc + investigation |
+| S-01 | low      | schema       | Section embedding coverage — CLASSIFIED expected policy; post-M-01 **149/166** (was 149/176) | Closed 2026-07-23 — no builder defect |
 
 Plus 22 POSITIVE findings (meta contract complete, all SPEC-001/002/003/006 invariants hold,
 integrity check passes, reader/sqlite3 cross-validation succeeds), 4 OBSERVATIONS (counts and

@@ -1,10 +1,10 @@
 # SPEC-010: LUNM migration discipline
 
-**Status:** active
+**Status:** accepted (2026-07-23; Q1–Q6 resolved; Engine implements Rules 1–3 + integrity report later)
 **Severity:** high
 **Author:** Ahab (with Claude)
 **Created:** 2026-07-21
-**Last updated:** 2026-07-21
+**Last updated:** 2026-07-23
 **Affects format version:** LUNM v0.1 (no `user_version` bump — see § Migration path)
 
 ---
@@ -57,6 +57,10 @@ A migration's permitted failure behaviour is determined by the [SPEC-009](SPEC-0
 
 A migration touching tables of mixed classification takes the strictest applicable rule.
 
+**Unknown classification (resolved):** treat as `format-invariant` — fail loud. An unclassified table is already a SPEC-009 conformance failure; the strict default makes both defects surface together.
+
+**Retroactive scope (resolved):** Rule 1 applies retroactively to all 22 handlers, staged per § Migration path — integrity report first, then convert `format-invariant`, then the rest.
+
 ### 4.2 Rule 2 — a tolerated exception must be named
 
 Where an `except` is permitted, it MUST name the specific exception type it tolerates and state why in a comment. `except Exception` around DDL is prohibited outright, at every classification. Catching everything is how a typo in a column name becomes a silent no-op.
@@ -87,6 +91,7 @@ None. SPEC-010 constrains how DDL is applied, not what it says.
 1. Remove the 22 blanket `except Exception` handlers from `database.py`, replacing each per Rules 1–3. `_migrate_profile_config_table()` is the priority: it touches a format invariant and MUST become fail-loud, which is also [SPEC-008](../accepted/SPEC-008_lunm-family-foundation.md) Q1's first precondition for `implemented/`.
 2. Raise the surviving tolerated-failure log lines from `debug` to `warning` / `info` per Rule 1.
 3. Add the § 4.4 integrity report.
+4. Path-loaded DDL (engine-root `migrations/`) MUST distinguish file-not-found from statement-failed in logging, in addition to Rule 1 by table classification (see SPEC-009 Q5 disposition).
 
 Sequencing note: SPEC-008 Q1 requires relocating `profile_config`'s DDL into `schema.sql`, which moves it onto the already-propagating `executescript` path and satisfies Rule 1 for that table as a side effect. Doing the SPEC-008 work first makes this spec's highest-severity item disappear rather than needing a separate fix.
 
@@ -96,9 +101,11 @@ Forward-compatible; no `user_version` bump, per SPEC-008 § 4.1's triggers — c
 
 **One risk deserves stating plainly.** Making 22 migrations fail-loud may surface failures that are happening today and going unseen. That is the point of the change, but it means the rollout order matters: land the integrity report (§ 4.4) *first*, observe one release at `warning`, then convert the format-invariant migrations to propagating. Converting first and observing second risks turning a silent partial failure into an engine that will not start, on a user's machine, with no prior signal.
 
+**Live failures found by the report (resolved):** file as separate bugs; do **not** block SPEC-010 acceptance. SPEC-010 MUST NOT reach `implemented/` while a `format-invariant` migration is known failing.
+
 ## Validation rules
 
-Static, at review time:
+Static, at review time (resolved: AST lint in Engine test suite, scoped to SPEC-009 owner modules):
 
 ```python
 # Pseudocode — a lint over the migration helpers.
@@ -129,28 +136,40 @@ Runtime, at open: the § 4.4 report. No build-time validation applies — LUNM h
 - **(c) Migration lifecycle and ordering as the centre.** There is a genuine ordering hazard — `_migrate_turn_type_column()` and `_migrate_turn_id_thread_column()` must run *before* `executescript` because `schema.sql` declares indexes on columns they add. Rejected as the centre because it is one known, commented, working case, whereas the silent-failure surface is 22 cases and unmonitored. Ordering belongs in this spec as a supporting rule, not its spine.
 - **(d) Do nothing; rely on review.** Rejected. Twenty-two identical handlers is what review-only produces.
 
-## Open questions
+## Resolved questions
 
-Each Q below blocks `active → accepted`.
+Each Q below was resolved ahead of the `active → accepted` promotion. Question bodies are preserved; each `**Resolution (2026-07-23):**` records what was picked.
 
 1. **Does Rule 1 apply retroactively to all 22 handlers, or only to new migrations?** Retroactive is correct in principle and is the rollout risk named in § Migration path. **Recommendation:** retroactive, but staged per that section — report first, then convert format-invariant, then the rest. Q3 covers what happens if the report reveals live failures.
 
+   **Resolution (2026-07-23):** Accept the recommendation. Retroactive, staged: integrity report → format-invariant → rest.
+
 2. **What is the failure behaviour when the classification is unknown?** A migration touching a table absent from SPEC-009's manifest has no tier. **Recommendation:** treat unknown as `format-invariant` — fail loud. An unclassified table is a SPEC-009 conformance failure already, and the strict default makes the two defects surface together rather than masking one another.
+
+   **Resolution (2026-07-23):** Accept the recommendation. Unknown ≡ format-invariant.
 
 3. **If the integrity report reveals migrations failing in production today, is that a SPEC-010 blocker or a separate bug?** **Recommendation:** separate bugs, filed individually, not blocking SPEC-010's acceptance — but SPEC-010 MUST NOT reach `implemented/` while a `format-invariant` migration is known to be failing, since that is the exact condition Rule 1 exists to prohibit.
 
+   **Resolution (2026-07-23):** Accept the recommendation.
+
 4. **Does the lint in § Validation rules ship, and where?** A regex over `database.py` is fragile; an AST check is real work. **Recommendation:** AST-based, in the engine's test suite, scoped to files SPEC-009's manifest names as owners. Fragile linting of a rule this load-bearing is worse than none, because a passing fragile lint reads as proof.
+
+   **Resolution (2026-07-23):** Accept the recommendation. AST lint in Engine tests; scoped to SPEC-009 owner modules.
 
 5. **Do the `cartridge/` migrations fall under this spec?** `cartridge/migrate.py` migrates LUNC cartridges, not LUNM matrices, and runs its own `executescript` at `migrate.py:507`. **Recommendation:** out of scope — SPEC-010 is a LUNM spec — but flag whether LUNC deserves a symmetric spec, since the cartridge builder has its own failure-handling conventions this spec has not examined.
 
+   **Resolution (2026-07-23):** Out of scope. Flag for a possible future LUNC migration-discipline SPEC; do not invent that SPEC here.
+
 6. **What governs the engine-root `migrations/` directory?** `_migrate_ambassador_tables()` (`database.py:1233–1252`) reads `migrations/004_ambassador_protocol.sql` from disk and `executescript`s it, wrapped in the same `except Exception` / `logger.debug` swallow as its siblings — so a missing or unreadable *file* degrades identically to a failed statement. Path-loaded DDL has a failure mode module-resident DDL does not: the file can simply be absent from a deployment. **Recommendation:** Rule 1 applies by the classification of the tables involved, and path-loaded DDL additionally MUST distinguish "file not found" from "statement failed" in its logging. See [SPEC-009](SPEC-009_lunm-schema-ownership.md) Q5 for the directory's disposition.
+
+   **Resolution (2026-07-23):** Accept the recommendation. Rule 1 by classification + file-not-found vs statement-failed. Directory disposition is SPEC-009 Q5 (002 superseded; 003 schedule delete; 004 fold into owner).
 
 ## Dependencies
 
 **Upstream (must be accepted):**
 
 - **[SPEC-008](../accepted/SPEC-008_lunm-family-foundation.md)** (accepted 2026-07-21) — supplies the `user_version` bump *triggers* that § 4.5 gives mechanics for, and the `profile_config` finding that motivates Rule 1.
-- **[SPEC-009](SPEC-009_lunm-schema-ownership.md)** (active) — supplies the classification Rule 1 keys off. SPEC-010 can be *accepted* alongside SPEC-009, but cannot be *implemented* before it: without a manifest there is no way to know which tier a migration falls under.
+- **[SPEC-009](SPEC-009_lunm-schema-ownership.md)** (accepted 2026-07-23) — supplies the classification Rule 1 keys off. SPEC-010 is accepted alongside SPEC-009, but cannot be *implemented* before the Engine manifest exists: without a manifest there is no way to know which tier a migration falls under.
 
 **Downstream:**
 

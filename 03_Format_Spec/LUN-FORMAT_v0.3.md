@@ -316,7 +316,7 @@ CREATE INDEX idx_embeddings_level ON embeddings(level);
 
 **Levels, vector format, consumer contract:** unchanged from v0.2. Vector blobs are still raw float32 bytes; readers MUST validate `length(vector) == embedding_dim * 4`.
 
-**Coverage policy (S-01 carry-forward from v0.2):** Embedding coverage is best-effort, not total. Builders MAY skip `doc_nodes` rows with NULL content, sub-threshold-length content, or other policy-defined exclusions. Readers MUST NOT assume every `doc_nodes` row has a corresponding `embeddings` row; LEFT JOIN, not INNER JOIN. No v0.3 reader invariant requires full coverage. Unchanged from the v0.2 §"Coverage policy" clarification added 2026-05-22.
+**Coverage policy (S-01 carry-forward from v0.2; classified 2026-07-23):** Embedding coverage is best-effort, not total. Builders MAY skip `doc_nodes` rows with NULL content, sub-threshold-length content, or other policy-defined exclusions — including **section** rows whose recursive subtree yields no non-empty `sentence` / `list_item` / `cell` text (Meditations post-M-01 reference: **149/166** section embeddings). Readers MUST NOT assume every `doc_nodes` row has a corresponding `embeddings` row; LEFT JOIN, not INNER JOIN. No v0.3 reader invariant requires full coverage. Unchanged from the v0.2 §"Coverage policy" clarification added 2026-05-22.
 
 ### `nodes_fts` — full-text search
 

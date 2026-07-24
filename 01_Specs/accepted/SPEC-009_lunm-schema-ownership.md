@@ -1,10 +1,10 @@
 # SPEC-009: LUNM schema ownership and the table manifest
 
-**Status:** active
+**Status:** accepted (2026-07-23; Q1–Q5 resolved; Engine implements the manifest + § 4.4 conformance test later)
 **Severity:** high
 **Author:** Ahab (with Claude)
 **Created:** 2026-07-21
-**Last updated:** 2026-07-21
+**Last updated:** 2026-07-23
 **Affects format version:** LUNM v0.1 (no `user_version` bump — see § Migration path)
 
 ---
@@ -15,13 +15,13 @@ Nobody can enumerate a LUNM file's schema. `src/luna/substrate/schema.sql` reads
 
 ## Observed evidence
 
-All counts taken 2026-07-21 against Luna Engine HEAD `2ed07b0` and the live matrix at `data/user/memory_matrix.lun` (`application_id = 1280659021`, `user_version = 2`).
+All counts taken 2026-07-21 against Luna Engine HEAD `2ed07b0` and the live matrix at `data/user/memory_matrix.lun` (`application_id = 1280659021`, `user_version = 2`). Disposition of `migrations/002` / `003` and the LUNM entity family were re-verified 2026-07-23 against the same live matrix.
 
 - **The 2.4× gap.** `schema.sql` contains 47 `CREATE TABLE` statements across 933 lines. `select count(*) from sqlite_master where type='table'` on the live matrix returns **89**.
-- **Twenty-four files declare `CREATE TABLE`** against the matrix: `substrate/schema.sql`, `substrate/database.py`, `substrate/aibrarian_schema.py`, `substrate/collection_annotations.py`, `substrate/collection_lock_in.py`, `substrate/vec_fallback.py`, `substrate/images.py`, `substrate/assets.py`, `memory/cluster_manager.py`, `lunascript/schema.py`, `qa/database.py`, `lunafm/spectral.py`, `tuning/session.py`, `services/kozmo/graph.py`, `diagnostics/trace_schema.sql`, `cartridge/schema.py`, `cartridge/migrate.py`, `intergalactic_hub/storage/db.py`, `intergalactic_hub/schema/load_entities.py`, and four numbered files in the engine-root `migrations/` directory.
-- **A family split across two owners.** `entities` is declared in `substrate/aibrarian_schema.py`; `entity_relationships`, `entity_mentions` and `entity_versions` are created by `_migrate_entity_relationship_evidence()` and siblings in `substrate/database.py`. One conceptual family, two owners, no declaration of that fact anywhere.
+- **Twenty-four files declare `CREATE TABLE`** against the matrix: `substrate/schema.sql`, `substrate/database.py`, `substrate/aibrarian_schema.py`, `substrate/collection_annotations.py`, `substrate/collection_lock_in.py`, `substrate/vec_fallback.py`, `substrate/images.py`, `substrate/assets.py`, `memory/cluster_manager.py`, `lunascript/schema.py`, `qa/database.py`, `lunafm/spectral.py`, `tuning/session.py`, `services/kozmo/graph.py`, `diagnostics/trace_schema.sql`, `cartridge/schema.py`, `cartridge/migrate.py`, `intergalactic_hub/storage/db.py`, `intergalactic_hub/schema/load_entities.py`, and four numbered files in the engine-root `migrations/` directory. Note: `aibrarian_schema.py` and `cartridge/*` primarily target **cartridge/collection** DBs; they appear in greps that do not discriminate family. The LUNM manifest MUST NOT treat cartridge DDL as matrix ownership.
+- **Name collision, not a family split.** An earlier draft treated `entities` in `aibrarian_schema.py` and `entity_*` helpers in `database.py` as one LUNM family with two owners. Re-check: live-matrix `entities` matches `schema.sql` (`name`, `aliases`, `full_profile`, …). `aibrarian_schema.entities` is a **different table** for cartridge/collection DBs (`doc_id`, `entity_value`). LUNM `entities` + `entity_relationships` / `entity_mentions` / `entity_versions` (+ `entity_relationship_evidence`) already live together under `luna.substrate` / `schema.sql`. The ownership decision is to record that owner explicitly, not to move DDL between aibrarian and database.
 - **DDL loaded by filesystem path, outside the package.** The live matrix contains `ambassador_protocol` and `ambassador_audit_log`. Neither has a `CREATE TABLE` anywhere in `src/luna/`: `_migrate_ambassador_tables()` resolves `project_root() / "migrations" / "004_ambassador_protocol.sql"` (`database.py:1233`) and `executescript`s the file it finds. Any audit that greps the substrate package misses these tables entirely — as this spec's own first draft did.
-- **An entire second DDL location, and part of it is dead.** The engine root holds `migrations/`, six numbered `.sql` files declaring 11 tables between them. Only two are referenced by any loader in `src/`, `scripts/` or `intergalactic_hub/`: `001_entity_system.sql` and `006_turn_type.sql`. **`002_conversation_history.sql` (3 tables) and `003_access_bridge.sql` (2 tables) have zero loaders** — five tables of DDL that nothing in the tree executes. Whether they were superseded by `schema.sql`, applied by hand once, or simply abandoned is unrecoverable from the code, which is precisely the condition SPEC-009 exists to end.
+- **Second DDL location; 002 superseded, 003 dead.** The engine root holds `migrations/`, six numbered `.sql` files. Only two are referenced by any loader today: `001_entity_system.sql` and `006_turn_type.sql`. **`002_conversation_history.sql` has zero loaders**, but the live matrix carries its objects (`sessions`, `compression_queue`, `extraction_queue`, `conversation_turns.tier`) and the same DDL now lives in `schema.sql` — historically applied, then absorbed. **`003_access_bridge.sql` has zero loaders** and its tables (`access_bridge`, `permission_log`) are **absent** from the live matrix — dead source-tree DDL, never loaded here. Q5 disposes of both.
 - **Nine tables carry no family prefix**: `clusters`, `entities`, `projects`, `protocols`, `quests`, `roles`, `sessions`, `tasks`, `threads`. Prefix is therefore a real convention (17 `ih_`, 11 `memory_`, 7 `task_`, 6 `lunascript_`, 4 `entity_`) but an unreliable one, and cannot serve as an identification mechanism.
 - **The gap has already produced a defect in a shipped spec.** [SPEC-008](../accepted/SPEC-008_lunm-family-foundation.md) § 4.3 originally enumerated ~31 out-of-scope tables against a believed total of ~36. Both numbers were wrong, the enumeration was incomplete on the day it was written, and its Q5 resolution had to delete the list and restate the boundary intensionally. SPEC-008's `lunm.schema_fingerprint` key (Q2) was deferred to this spec for the same reason: a hash of `schema.sql` fingerprints roughly half the file.
 
@@ -39,7 +39,9 @@ Three normative rules, plus one enforcement mechanism. No DDL is ratified.
 
 ### 4.1 Rule 1 — single declared owner
 
-Every table in a LUNM file MUST have exactly one **owner**: the subsystem responsible for its DDL, identified by module path (e.g. `luna.substrate`, `intergalactic_hub.storage`). Two owners declaring the same table is a defect. A table with no owner is a defect. Where a family is currently split — `entities` versus `entity_*` — SPEC-009 does not mandate which owner wins; it mandates that one be chosen and recorded.
+Every table in a LUNM file MUST have exactly one **owner**: the subsystem responsible for its DDL, identified by module path (e.g. `luna.substrate`, `intergalactic_hub.storage`). Two owners declaring the same table is a defect. A table with no owner is a defect.
+
+**LUNM entity family (resolved 2026-07-23):** owner is **`luna.substrate`**, DDL of record in **`substrate/schema.sql`**, covering `entities`, `entity_relationships`, `entity_mentions`, `entity_versions`, and `entity_relationship_evidence`. Cartridge `aibrarian_schema.entities` is out of scope for the LUNM manifest (different family, different columns). Path-loaded `migrations/001_entity_system.sql` is historical applied DDL for the same LUNM family and MUST be marked superseded in the manifest notes, not listed as a second owner.
 
 ### 4.2 Rule 2 — the manifest
 
@@ -47,7 +49,7 @@ Owners and their tables MUST be enumerable **without executing the engine**. Thi
 
 Runtime derivation (walking `sqlite_master`, or a registration API called at boot) is explicitly rejected as the *primary* mechanism — see § Alternatives. A live matrix reflects what one install happens to contain, which is a function of which subsystems loaded on that machine. The manifest states what the schema *is*.
 
-The manifest's location and serialization format are Q1 below.
+**Manifest location and format (resolved):** a checked-in **TOML or YAML** file in the Engine beside `schema.sql`. At SPEC-009 acceptance, a dated snapshot is mirrored into `04_Audits/`. A table inside the matrix is rejected — it would make the manifest subject to the very drift it exists to detect. Prefer declarative TOML/YAML over a typed Python module so non-Python auditors can read it.
 
 ### 4.3 Rule 3 — every table is classified
 
@@ -60,7 +62,7 @@ Each manifest entry MUST carry exactly one classification:
 | `conditional` | Present only when its subsystem is loaded. Absence is not a defect. | the `ih_*` family, gated on the Hub preload path |
 | `vestigial` | Declared but unused, scheduled for removal. Absence in a future version is not a breaking change. | `consciousness_snapshots` — zero readers or writers repo-wide, zero rows |
 
-A fifth state exists in the tree today and is deliberately **not** a classification: DDL that is declared but never executed, as in the two orphaned `migrations/` files. That is not a table class — those tables do not exist in any matrix — it is a source-tree defect, and the manifest surfaces it by having nothing to point at. Q5 disposes of it.
+A fifth state exists in the tree and is deliberately **not** a classification: DDL that is declared but never executed (`migrations/003_access_bridge.sql`). That is a source-tree defect; the manifest surfaces it by having nothing to point at. Separately, historically applied DDL that has been absorbed into an owner (`migrations/002_conversation_history.sql` → `schema.sql`) is recorded as superseded notes, not as a live owner. Q5 disposes of both.
 
 `format-invariant` is the only classification SPEC-008 has already fixed. SPEC-009 MUST NOT add to it: promoting a table into the format contract is a SPEC-008 amendment and a `user_version` question, not a bookkeeping decision made while writing a manifest.
 
@@ -71,7 +73,11 @@ A single test, run against a live matrix:
 - every table in `sqlite_master` appears in the manifest → else **fail**, naming the unmanifested table;
 - every manifested table appears in `sqlite_master` → else **fail**, unless classified `conditional` or `vestigial`.
 
-This is the whole mechanism, and it is why the manifest must be static: a manifest derived from the database cannot disagree with the database, so it can never catch drift. The test is the artifact that makes Rules 1–3 more than documentation. Whether it runs in CI, at engine boot, or both is Q3.
+This is the whole mechanism, and it is why the manifest must be static: a manifest derived from the database cannot disagree with the database, so it can never catch drift. The test is the artifact that makes Rules 1–3 more than documentation.
+
+**Where it runs (resolved):** CI runs it against a freshly-created matrix (which by construction excludes `conditional` families), and the engine runs it at boot in a development mode against the real file. Exact CI fixture paths are an Engine implementation detail.
+
+**Shadow tables (resolved):** the manifest declares virtual-table **parents only**. The § 4.4 check derives expected FTS5/vec0 shadow names from each parent's type, so an unowned table matching no parent still fails.
 
 ### Schema changes
 
@@ -79,15 +85,23 @@ None. SPEC-009 adds no tables, no columns, no indexes, and no DDL of any kind. I
 
 ### Behavioral changes
 
-No change to any read or write path. Three additions:
+No change to any read or write path. Three additions (all Engine work after acceptance):
 
-1. Author the manifest. This is an audit, not a code change, and its output belongs in `04_Audits/` per repo convention as well as in the engine.
-2. Add the § 4.4 conformance test.
-3. Resolve the `entities` / `entity_*` ownership split, and give `ambassador_*` a statically-readable declaration — runtime-assembled DDL is compatible with Rule 1 but defeats Rule 2's "without executing the engine."
+1. Author the manifest (TOML/YAML beside `schema.sql`). Mirror a dated snapshot into `04_Audits/` when the Engine artifact lands.
+2. Add the § 4.4 conformance test (CI + development boot).
+3. Give `ambassador_*` a statically-readable declaration under its owning subsystem (fold `004` out of path-only loading for Rule 2 readability), and delete dead `003` per Q5. Record LUNM entity ownership as already resolved in § 4.1.
 
 ### Migration path
 
 Forward-compatible; no `user_version` bump. Per [SPEC-008](../accepted/SPEC-008_lunm-family-foundation.md) § 4.1's ratified bump triggers, declaring ownership changes no table, no contract, and nothing a reader can observe. Every existing matrix is conformant the moment the manifest describes it accurately — that is the manifest's job, not the file's.
+
+### Prefix convention
+
+New LUNM tables SHOULD carry a family prefix. The nine existing unprefixed tables are recorded as exceptions in the manifest rather than grandfathered by silence. Prefix is not an identification mechanism for ownership.
+
+### `lunm.schema_fingerprint` shape
+
+Per SPEC-008 Q2's deferral: fingerprint is **per-owner hashes over live `sqlite_master`**, not a hash of `schema.sql`. SPEC-009 specifies that shape; the key itself lands as a SPEC-008 amendment at Engine implement time.
 
 ## Validation rules
 
@@ -95,8 +109,10 @@ Forward-compatible; no `user_version` bump. Per [SPEC-008](../accepted/SPEC-008_
 # Pseudocode — the § 4.4 conformance check.
 live      = {row.name for row in sqlite_master if row.type == "table"}
 manifest  = load_manifest()                     # static, no engine import
+# Shadow names derived from manifested virtual-table parents are treated as owned.
+owned     = manifest.keys() | derived_shadows(manifest)
 
-unmanifested = live - manifest.keys()
+unmanifested = live - owned
 assert not unmanifested, f"tables present but unowned: {sorted(unmanifested)}"
 
 for name, entry in manifest.items():
@@ -106,7 +122,7 @@ for name, entry in manifest.items():
         f"{name} is declared {entry.classification} but absent from the file"
 ```
 
-SQLite-internal shadow tables (FTS5 `_data` / `_idx` / `_docsize` / `_config`, vec0 `_info` / `_chunks` / `_rowids`) are owned by their parent virtual table, not manifested individually. Q2 covers whether the parent must declare them.
+SQLite-internal shadow tables (FTS5 `_data` / `_idx` / `_docsize` / `_config`, vec0 `_info` / `_chunks` / `_rowids`) are owned by their parent virtual table, not manifested individually.
 
 ## Governance implications
 
@@ -120,22 +136,32 @@ SQLite-internal shadow tables (FTS5 `_data` / `_idx` / `_docsize` / `_config`, v
 
 - **(a) Central declaration — all matrix DDL MUST live in `schema.sql`.** The cleanest invariant, and rejected. It would move DDL away from the subsystems that own it, inverting a module boundary that is otherwise sound, and it requires editing nineteen files before the first benefit arrives. It also cannot express `conditional`: a table that exists only when the Hub loads does not belong in a file that always runs.
 - **(b) Registration API — DDL lives anywhere but registers through one call at boot.** Rejected as the primary mechanism. It yields a runtime inventory, which cannot be consulted by a spec author, cannot be diffed in review, and — decisively — cannot catch a table that failed to register, because an unregistered table is invisible to exactly the mechanism meant to find it. Worth adding later as a *secondary* check; not a substitute for a static manifest.
-- **(c) Prefix convention as the identification mechanism.** Rejected on the evidence. Nine tables carry no prefix, and `entities` versus `entity_*` shows the same prefix spanning two owners. Prefix survives in this spec as a recommended convention for *new* tables (Q4), not as a way to determine ownership of existing ones.
-- **(d) Ratify all 89 tables' DDL now.** This is SPEC-009's original scope per the 2026-07-20 ledger, and it is rejected for the same reason SPEC-008 rejected it at ~700 lines — with the evidence now materially worse than SPEC-008 believed. Ratifying DDL requires knowing which DDL is authoritative, and for at least one family that question is currently unanswerable by reading source.
+- **(c) Prefix convention as the identification mechanism.** Rejected on the evidence. Nine tables carry no prefix. Prefix survives in this spec as a recommended convention for *new* tables, not as a way to determine ownership of existing ones.
+- **(d) Ratify all 89 tables' DDL now.** This is SPEC-009's original scope per the 2026-07-20 ledger, and it is rejected for the same reason SPEC-008 rejected it at ~700 lines — with the evidence now materially worse than SPEC-008 believed. Ratifying DDL requires knowing which DDL is authoritative; the manifest makes that question answerable before SPEC-011+ begins.
 
-## Open questions
+## Resolved questions
 
-Each Q below blocks `active → accepted`.
+Each Q below was resolved ahead of the `active → accepted` promotion. Question bodies are preserved; each `**Resolution (2026-07-23):**` records what was picked.
 
 1. **Manifest location and format.** Candidates: a TOML/YAML file in the engine beside `schema.sql`; a Python module with a typed structure; a table *inside* the matrix. **Recommendation:** a checked-in declarative file in the engine, mirrored into `04_Audits/` as a dated snapshot when SPEC-009 is accepted. A table inside the matrix is rejected on its face — it would make the manifest subject to the very drift it exists to detect.
 
+   **Resolution (2026-07-23):** Accept the recommendation as **TOML or YAML** beside `schema.sql` (prefer declarative over a Python module). Mirror a dated snapshot into `04_Audits/` when the Engine manifest artifact lands. In-matrix table remains rejected.
+
 2. **Do virtual-table parents declare their shadow tables?** FTS5 and vec0 generate 4–5 shadow tables each; the live matrix carries at least nine. Listing them individually is noise, but a bare exclusion rule means a genuinely unowned `foo_data` table would be silently tolerated. **Recommendation:** the manifest declares parents only, and the § 4.4 check derives expected shadow names from each parent's type, so an unowned table matching no parent still fails.
+
+   **Resolution (2026-07-23):** Accept the recommendation. Parents only; derived shadows.
 
 3. **Where does the conformance test run?** CI needs a matrix to check against, and the only real one is a developer's live profile. **Recommendation:** CI runs it against a freshly-created matrix (which by construction excludes `conditional` families), and the engine runs it at boot in a development mode against the real file. The two together cover both directions.
 
-4. **Is the prefix convention normative for new tables?** Making it a MUST is cheap for new work and would have prevented the `entities` / `entity_*` split. But nine existing tables violate it, and SPEC-009 should not declare a MUST that the shipped schema breaks — the mistake SPEC-008 § 4.4 had to correct. **Recommendation:** SHOULD for new tables, with the nine existing exceptions recorded in the manifest rather than grandfathered by silence.
+   **Resolution (2026-07-23):** Accept the recommendation. CI fixture paths are Engine implement-time detail.
+
+4. **Is the prefix convention normative for new tables?** Making it a MUST is cheap for new work and would have prevented ownership confusion around unprefixed names. But nine existing tables violate it, and SPEC-009 should not declare a MUST that the shipped schema breaks — the mistake SPEC-008 § 4.4 had to correct. **Recommendation:** SHOULD for new tables, with the nine existing exceptions recorded in the manifest rather than grandfathered by silence.
+
+   **Resolution (2026-07-23):** Accept the recommendation. SHOULD + nine exceptions in the manifest.
 
 5. **What is the status of the `migrations/` directory?** It is a second DDL location, path-loaded rather than imported, and at least two of its files are dead. Options: (a) declare it a legitimate owner and manifest its files like any other; (b) fold the live files into their owning subsystems and delete the dead ones; (c) keep it for historical record but mark every file applied-or-superseded. **Recommendation:** (b) for `004_ambassador_protocol.sql`, whose tables plainly belong to an owner, and (c) for the rest — but this needs a human who remembers whether `002` and `003` ever ran against a production matrix. Deleting DDL that silently shaped a live file is not a decision to make from the code alone.
+
+   **Resolution (2026-07-23):** Split by file, grounded in live-matrix verification (not human memory alone). **`004_ambassador_protocol.sql`:** (b) — fold into the owning subsystem declaration for Rule 2 readability; path-load may remain temporarily but MUST gain a static owner entry. **`002_conversation_history.sql`:** (c) historical / superseded — live matrix has `sessions`, `compression_queue`, `extraction_queue`, and `conversation_turns.tier`; identical DDL now lives in `schema.sql`. Keep the file; mark applied-or-superseded; do not delete in the research package. **`003_access_bridge.sql`:** dead source-tree defect — `access_bridge` / `permission_log` absent from the live matrix; zero loaders; schedule Engine delete after acceptance; until then keep the file but do not manifest its tables. **`001_entity_system.sql` / `006_turn_type.sql`:** keep as historical applied until folded into owners; not second owners of live tables. **LUNM entity owner** (companion human call): `luna.substrate` / `schema.sql` for the whole LUNM entity family; `aibrarian_schema.entities` is cartridge-only.
 
 ## Dependencies
 
@@ -145,7 +171,7 @@ Each Q below blocks `active → accepted`.
 
 **Downstream:**
 
-- **SPEC-010** — LUNM migration discipline. Its tiered fail-loud rule keys off SPEC-009's classification: a migration touching a `format-invariant` table may not fail silently. SPEC-010 cannot be implemented before SPEC-009's classification exists.
+- **[SPEC-010](SPEC-010_lunm-migration-discipline.md)** — LUNM migration discipline. Its tiered fail-loud rule keys off SPEC-009's classification: a migration touching a `format-invariant` table may not fail silently. SPEC-010 cannot be implemented before SPEC-009's classification exists (manifest authored in Engine).
 - **SPEC-011+ (future)** — per-family DDL ratification, one spec per owner, against the map SPEC-009 produces.
 - **SPEC-008 Q2** — `lunm.schema_fingerprint` was deferred here. SPEC-009 specifies its shape; the key itself lands as a SPEC-008 amendment.
 

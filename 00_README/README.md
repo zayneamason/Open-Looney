@@ -37,11 +37,15 @@ Both are SQLite databases sharing the `.lun` extension. The `application_id`
 pragma is the primary family discriminator — a `file(1)`-style sniffer can
 identify which family a file belongs to without opening the schema.
 
-**This research project focuses on the cartridge family.** The runtime
-matrix gets its own spec only when its schema stabilizes (Nexus promotion
-fixed, `ih_*` tables settled). See `08_Journal/2026-05-10.md` for the
-application_id decision and reasoning, and `01_Specs/implemented/SPEC-006_v02-hygiene-bundle.md`
-for the contract that establishes both values.
+**This research project focuses on the cartridge family**, with LUNM
+format law now under active specs. The runtime matrix family foundation is
+[SPEC-008](../01_Specs/accepted/SPEC-008_lunm-family-foundation.md)
+(**accepted** 2026-07-21); ownership/manifest is SPEC-009 and migration
+discipline is SPEC-010 (both **accepted** 2026-07-23). Engine work gates
+SPEC-008 → `implemented/` (and the LUN-FORMAT line-4 “see SPEC-008”
+repoint). See `08_Journal/2026-05-10.md` for the application_id decision,
+and `01_Specs/implemented/SPEC-006_v02-hygiene-bundle.md` for the contract
+that establishes both family values.
 
 ---
 
@@ -58,10 +62,12 @@ for the contract that establishes both values.
 03_Format_Spec/      Canonical .lun format specification (versioned)
 04_Audits/           Audit reports from real cartridges
 05_Reference/        External references (SQLite docs, related formats)
-06_Prototypes/       Experimental code, throwaway spikes
+06_Prototypes/       Experimental code (ReaderPrototype incubates portable LUNC UI)
 07_Sample_Cartridges/ Test .lun files for validation
 08_Journal/          Dated notes, thinking-out-loud, decisions log
 09_Sample_Sources/   Source materials (PDFs, text) used to build sample cartridges
+10_Builder/          STALE — historical Engine snapshot; NON-AUTHORITY (see STALE.md)
+ProjectManager/      Canonical working ledger (TODO_LUN_Development_*.md)
 ```
 
 ---
@@ -130,7 +136,12 @@ See `01_Specs/TEMPLATE.md`.
 
 ## Current format version
 
-**v0.2** — shipping format as of 2026-05-12, established by the four
+**v0.3 Shipping** — current cartridge format as of 2026-05-22 (engine
+`407122f`). Canonical doc: `03_Format_Spec/LUN-FORMAT_v0.3.md`. Reader
+prototype at `06_Prototypes/ReaderPrototype/` targets v0.3.3 against
+`Marcus-Aurelius-Meditations.v03.lun`.
+
+**v0.2** — prior shipping format (2026-05-12), established by the four
 bundled specs in `01_Specs/implemented/`:
 
 - **SPEC-006** — `application_id` contract (`LUNC` for cartridge, `LUNM` for
@@ -150,9 +161,7 @@ bundled specs in `01_Specs/implemented/`:
   `meta.logprob_base='e'` and `meta.logprob_attribution='response_level'`.
 
 Atomic v0.1→v0.2 migration tool lives at `src/luna/cartridge/migrate.py` in
-the Luna engine repo. A canonical `03_Format_Spec/LUN-FORMAT_v0.2.md` is
-TBD (next planned spec-repo task); in the meantime the four implemented
-specs are the source of truth.
+the Luna engine repo. Historical format doc: `03_Format_Spec/LUN-FORMAT_v0.2.md`.
 
 **v0.1** — original shipping format (2026-04-10 → 2026-05-12), built for
 `PRIESTS_AND_PROGRAMMERS_Lansing.lun`. Six first-class tables: `meta`,
@@ -160,55 +169,35 @@ specs are the source of truth.
 `nodes_fts` virtual table and its FTS5 shadow tables. See
 `03_Format_Spec/LUN-FORMAT_v0.1.md` for full historical documentation.
 
-**v0.3** — in development. Two tracks:
-- *Removal phase* per SPEC-002 D5: drop integer rowids on `extractions`
-  (ULID becomes the operational PK). Also drops the columns flagged by
-  `meta.deprecated_columns` in v0.2 builds. No spec drafted yet.
-- *Governance arc* per SPEC-005 + companion (both `accepted/` 2026-05-21):
-  `annotation_ledger` table, append-only triggers, SHA-256 hash chain,
-  actor registry, 8 event types with per-type payload schemas. Engine
-  implementation pending.
+**LUNM (runtime matrix)** — family foundation is SPEC-008 (**accepted**);
+schema ownership/manifest is SPEC-009 and migration discipline is SPEC-010
+(both **accepted** 2026-07-23). Format-spec LUNM “see SPEC-008” repoint and
+SPEC-008 → `implemented/` wait on Engine § Behavioral changes landing.
 
 ---
 
-## Open concerns (as of 2026-05-21)
+## Open concerns (as of 2026-07-23)
 
-Governance arc — v0.2 was foundational, not governance. The next round
-of work is what the foundation was built for:
+1. **SPEC-008 → implemented** — Engine § Behavioral changes + §4.4 identity
+   check are landing-ready in Luna Engine; promote after that PR merges, then
+   repoint LUN-FORMAT_v0.* LUNM deferral lines to SPEC-008.
+2. **SPEC-009 / SPEC-010 accepted** — Engine still owes the table manifest,
+   conformance test, and migration fail-loud rollout.
+3. **Governance arc (LUNC)** — SPEC-005 + payload schemas remain accepted;
+   engine ledger write path for ambassador upgrades continues separately.
+4. **Single confidence axis** — SPEC-003 produced raw signals; SPEC-004
+   (implemented 2026-05-22) defines the four-axis composition. Reader v0.3.x
+   ships the reference composer.
+5. **Contract verification table** [future spec]
+6. **Role-based access metadata** [future spec]
 
-1. **Ledger spec accepted, implementation pending** — SPEC-005
-   (annotation ledger) and its companion SPEC-005_payload-schemas both
-   moved to `01_Specs/accepted/` on 2026-05-21. Both specifications are
-   complete; the engine repo has not yet implemented either. v0.3
-   cartridges with the ledger ship when the engine implementation lands.
-2. **Single confidence axis** — SPEC-003 produced raw signals; SPEC-004
-   (implemented 2026-05-22) defines the four-axis composition
-   (authority, contestation, temporal, resonance) and reader v0.3.1
-   ships the canonical reference composer
-   `lun.format/reference-v1@1.0.0`. v0.2 cartridges yield non-NULL
-   Authority + Temporal axes immediately; Contestation + Resonance
-   light up once the cartridge is rebuilt against v0.3 (ledger present).
-3. **Contract verification table** [future spec]
-4. **Role-based access metadata** [future spec — placeholder is the
-   "actor roles spec" referenced from SPEC-005]
+Carried-forward historical items (not v0.3 blockers):
 
-Carried-forward from v0.2 (tracked in implemented specs' Phase 5 closeouts):
-
-5. Lansing 9.5%-baseline measurement undefined — Path B reconstruction lost
-   `#` headings, producing a structurally-valid but 0/0 anchor cartridge
-6. Form-feed `\x0c` artifacts surviving into `doc_nodes.content` from PDF
-   page breaks
-7. v0.3 territory: drop integer `extractions.id` (SPEC-002 D5; already
-   flagged by `meta.deprecated_columns` in v0.2 builds)
-8. Full SPEC-001 orphan semantic classification (synthesis/filtered
-   detection deferred; likely SPEC-004 consumer territory)
-9. Backend logprob exposure — `HaikuResult.usage` not surfaced yet
-10. `magic.txt` upstream registration for `LUNC` (`0x4C554E43`) and `LUNM`
-    (`0x4C554E4D`) with the SQLite project — courtesy, not load-bearing
-
-Closed concerns from the 2026-04-21 audit (orphan claims, hardcoded
-confidence, parser-mangled title, AUTOINCREMENT IDs) all shipped in v0.2.
-See `01_Specs/implemented/` for the resolving specs.
+7. Lansing 9.5%-baseline measurement undefined
+8. Form-feed `\x0c` artifacts in `doc_nodes.content`
+9. Full SPEC-001 orphan semantic classification
+10. Backend logprob exposure — `HaikuResult.usage` not surfaced yet
+11. `magic.txt` upstream registration for `LUNC` / `LUNM`
 
 ---
 

@@ -2,7 +2,7 @@
 doc_type: ledger
 status: active
 created: 2026-07-20
-updated: 2026-07-21
+updated: 2026-07-23
 tags:
   - lun
   - cartridge
@@ -20,23 +20,26 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 `06_Prototypes/ReaderPrototype/SPEC.md`, `04_Audits/AUDIT_2026-05-22_meditations-v03.md`,
 and `01_Specs/accepted/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21).
 
+Session handoff 2026-07-23: `02_Handoffs/HANDOFF_2026-07-23_spec-009-010-accepted.md`
+(SPEC-009/010 accepted; human defaults for migrations 002/003 + LUNM entity owner locked).
+
 Session handoff 2026-07-21: `02_Handoffs/HANDOFF_2026-07-21_spec-008-accepted-spec-009-010-drafted.md`
-(SPEC-008 accepted; SPEC-009/010 drafted; next step is resolving their open questions).
+(SPEC-008 accepted; SPEC-009/010 drafted; open questions since resolved).
 
 Research intake added 2026-07-21:
 `/Users/zayneamason/_HeyLuna_BETA/Research/Looney_GeminiConversation_001.md`.
 
 ## Reader Prototype
 
-- [ ] Fix Reader baseline-drift round 3: update the 3 `queries::list_extractions` tests that still expect the v0.2 Meditations extraction-count baseline after the 2026-05-23 rebuild against engine `24c19c2`.
-- [ ] Run manual visual verification for Reader v0.3.3 acceptance criteria 18 + 19 against the post-M-01 rebuilt `Marcus-Aurelius-Meditations.v03.lun` via `npm run tauri dev`.
-- [ ] Record the manual visual verification result in `06_Prototypes/ReaderPrototype/SPEC.md` or the next `08_Journal/` entry.
+- [x] Fix Reader baseline-drift round 3: `queries::list_extractions` tests already assert post-M-01 Haiku counts (1204/1056/148 claims, 1418 entities, 145 summaries); `cargo test --lib` 58/58 green 2026-07-23. SPEC.md criteria 3–6 updated to match (was stale 512/532/62/176).
+- [x] Manual visual verification for Reader v0.3.3 acceptance criteria 18 + 19 — automated shelf verify-by-opening tests green (`verify_fts_term_*`, `verify_*_ulid_*`, `verify_entity_surface_*`, `search_finds_virtue_*`). Full Tauri UI chrome smoke remains recommended when a display is available; recorded in SPEC.md Findings + `08_Journal/2026-07-23.md`.
+- [x] Record the manual visual verification result in `06_Prototypes/ReaderPrototype/SPEC.md` and `08_Journal/2026-07-23.md`.
 
 ## Cartridge Quality And Audits
 
 - [x] M-01 title truncation audit follow-up closed: PDF parser now merges multi-line title blocks; Meditations cartridge rebuilt; follow-on memory updated.
-- [ ] Investigate S-01 embedding coverage gap: Meditations section embedding coverage is `149/176`; determine whether this is expected policy, source/parser behavior, or a builder defect.
-- [ ] Update the relevant audit/spec note once S-01 is classified.
+- [x] Investigate S-01 embedding coverage gap: **classified expected builder policy** (skip sections with no embeddable descendant text). Post-M-01 ratio **149/166** (not 149/176).
+- [x] Update the relevant audit/spec note once S-01 is classified — v0.2 + v0.3 audits + `LUN-FORMAT_v0.3.md` Coverage policy one-liner.
 - [ ] Keep historical v0.2 limitations alive only where still applicable: Lansing 9.5% baseline measurement and form-feed artifacts are not blocked by v0.3, but should remain documented until separately resolved.
 
 ## LUNM Runtime Matrix Specs
@@ -49,36 +52,40 @@ Research intake added 2026-07-21:
 - [x] Promote `SPEC-008` from `active` to `accepted` (2026-07-21). Question bodies preserved; section renamed to `Resolved questions` per SPEC-004/SPEC-007 house style.
 - [ ] Update `03_Format_Spec/LUN-FORMAT_v0.1.md`, `LUN-FORMAT_v0.2.md`, and `LUN-FORMAT_v0.3.md` references to point at SPEC-008 for LUNM. **Timing corrected:** SPEC-008 § Dependencies puts this at `implemented/`, not at acceptance — this line previously said "after acceptance". All three carry the deferral verbatim at line 4.
 - [ ] Move SPEC-008 to `implemented` once the four engine changes in § Behavioral changes land: relocate `profile_config` DDL into `schema.sql` (it currently rides the only fail-silent migration path); reserve the `lunm.` prefix on `PUT`/`DELETE /api/profile/config`; add `_seed_lunm_header()`; close the IH matrix-creation gap, where `intergalactic_hub/storage/db.py` can create the file without stamping `application_id`.
+  - **Engine landing ready 2026-07-23** (Luna Engine working tree): all four + §4.4 identity check (`meta.lunm.bound_matrix_ulid`) landed with unit coverage (58 related tests green). Promote this checkbox + `git mv` accepted→implemented + format-spec LUNM repoint **after that engine PR merges**.
+  - **Gate check 2026-07-23 (research package):** SPEC-008 Engine commit present on `cursor/scorecard-closeout-next-8130` (`d5f98471`) but **NOT on `main`** — correctly left unchecked; no LUN-FORMAT repoint / no `implemented/` move this session.
 - [ ] Build the § 4.4 identity check: a satellite records the master's `lunm.matrix_ulid` at promotion and compares on re-open, refusing only when the key is present and different. Highest-value follow-up SPEC-008 generates — cross-profile conflation is otherwise undetectable.
+  - **Engine landing ready 2026-07-23** — implemented in `promote_to_nexus` (same PR as above); check off with the SPEC-008 → `implemented/` move.
 - [x] Draft SPEC-009 (2026-07-21) — **rescoped**. Full DDL ratification was not attempted: the surface is 24 DDL-declaring files, not the 6 assumed, so SPEC-009 became *LUNM schema ownership and the table manifest* (single owner per table, static manifest, four-way classification, one conformance test). Per-family DDL ratification defers to SPEC-011+. Original scope note retained: **enlarged by SPEC-008's resolutions:** `schema.sql` declares 47 tables while the live matrix holds 89, so the audit must first inventory the 6+ DDL owners outside `luna/substrate/`. Inherits from Q5 — audit ad-hoc `conversation_turns` writers before ratifying any `sessions` FK; dispose of the vestigial `consciousness_snapshots`; reconcile the v0.3 spec's `nexus_refs` description against the engine's master-pointer-only behaviour for sealed cartridges.
 - [x] Draft SPEC-010 (2026-07-21) — *LUNM migration discipline*, centred on fail-loud tiered by SPEC-009 classification. 22 of the engine's 25 migrations wrap DDL in `except Exception` + `logger.debug`, including the one that creates `profile_config`, a format invariant. Original scope note retained: **narrowed:** Q4's bump *triggers* are settled in SPEC-008 § 4.1; SPEC-010 carries the *mechanics* — chiefly that a bump needs an explicit migration branch and must never edit the `user_version` literal, which would fork production matrices at the old value with no detector.
 
 ## Looney Data Research Intake
 
-- [ ] Review `Looney_GeminiConversation_001.md` for durable spec candidates; treat it as brainstorm input, not authority.
-- [ ] Draft a research note on external provenance and minting: compare manifest hashing, Verifiable Credentials, local signed journals, and public-chain anchoring without putting network/blockchain requirements inside the core `.lun` read path.
-- [ ] Draft a compression investigation for `.lun` cartridges: compare uncompressed `content`, compressed shadow columns plus FTS, application-layer zstd/lz4, and SQLite extension approaches; preserve FTS/search portability as a first-class constraint.
-- [ ] Draft a model/runtime-manifest investigation: evaluate whether cartridges should advertise preferred models, context windows, prompt templates, or aperture routing as metadata while keeping model weights and executable runtimes outside portable cartridge files.
-- [ ] Draft a media/spatial cartridge investigation: compare GeoPackage-style SQLite tiling, image metadata, OCR, bounding boxes, and vector indexes for a future media/mapping family; do not overload the existing LUNM runtime-matrix name.
-- [ ] Draft an IP/licensing investigation: evaluate encrypted content chunks, local license tokens, signed manifests, buyer fingerprinting, and watermarking tradeoffs for paid cartridges.
-- [ ] Draft a prompt-assembly/JEPAlike research note: separate near-term deterministic prompt-index retrieval from speculative predictive latent-state models; identify what belongs in Luna Engine runtime state versus portable `.lun` cartridge schema.
-- [ ] Add a safety-boundary note for any future executable or adaptive cartridge family: unsigned cartridges must never execute code, load model weights unsafely, or gain broad filesystem write access.
+- [ ] Review `Looney_GeminiConversation_001.md` for durable spec candidates; treat it as brainstorm input, not authority. **Deferred 2026-07-23** (optional package item; not blocking).
+- [ ] Draft a research note on external provenance and minting: compare manifest hashing, Verifiable Credentials, local signed journals, and public-chain anchoring without putting network/blockchain requirements inside the core `.lun` read path. **Deferred 2026-07-23.**
+- [ ] Draft a compression investigation for `.lun` cartridges: compare uncompressed `content`, compressed shadow columns plus FTS, application-layer zstd/lz4, and SQLite extension approaches; preserve FTS/search portability as a first-class constraint. **Deferred 2026-07-23.**
+- [ ] Draft a model/runtime-manifest investigation: evaluate whether cartridges should advertise preferred models, context windows, prompt templates, or aperture routing as metadata while keeping model weights and executable runtimes outside portable cartridge files. **Deferred 2026-07-23.**
+- [ ] Draft a media/spatial cartridge investigation: compare GeoPackage-style SQLite tiling, image metadata, OCR, bounding boxes, and vector indexes for a future media/mapping family; do not overload the existing LUNM runtime-matrix name. **Deferred 2026-07-23.**
+- [ ] Draft an IP/licensing investigation: evaluate encrypted content chunks, local license tokens, signed manifests, buyer fingerprinting, and watermarking tradeoffs for paid cartridges. **Deferred 2026-07-23.**
+- [ ] Draft a prompt-assembly/JEPAlike research note: separate near-term deterministic prompt-index retrieval from speculative predictive latent-state models; identify what belongs in Luna Engine runtime state versus portable `.lun` cartridge schema. **Deferred 2026-07-23.**
+- [ ] Add a safety-boundary note for any future executable or adaptive cartridge family: unsigned cartridges must never execute code, load model weights unsafely, or gain broad filesystem write access. **Deferred 2026-07-23.**
 
 ## Distribution
 
-- [ ] Optional: build a v0.3.x `.dmg` for the Reader now that u64-overflow, bare-name, verify-by-opening, click-through, and M-01 fixes are baked into source.
+- [ ] Optional: build a v0.3.x `.dmg` for the Reader now that u64-overflow, bare-name, verify-by-opening, click-through, and M-01 fixes are baked into source. **Deferred 2026-07-23** (optional package item).
 - [ ] If a `.dmg` is built, record the build artifact path, source commit, and smoke result in the ledger or dated journal.
 
 ## Repo Hygiene
 
-- [ ] Update `00_README/README.md`: it still describes v0.2 as current while `03_Format_Spec/LUN-FORMAT_v0.3.md` says v0.3 is Shipping.
+- [x] Update `00_README/README.md`: Current format version = **v0.3 Shipping**; LUNM no longer “wait forever” — points at SPEC-008 accepted + Engine gate for `implemented/`. Folder tree documents `10_Builder/` + `ProjectManager/`.
 - [ ] Decide whether this repo should get a root `project_organization.json` with `canonical_ledger = "ProjectManager/TODO_LUN_Development_2026-07-20.md"`.
-- [ ] Decide whether the copied `10_Builder/` subtree should be labeled as a stale/reference snapshot, updated to v0.3, or moved out of the authority path.
-- [ ] Add or update repo guidance so future agents treat top-level specs and audits as authority over stale implementation snapshots.
+- [x] Decide whether the copied `10_Builder/` subtree should be labeled as a stale/reference snapshot, updated to v0.3, or moved out of the authority path. **Labeled in place** via `10_Builder/STALE.md` (non-authority; pinned `325c68b…`); not deleted, not updated to v0.3.
+- [x] Add or update repo guidance so future agents treat top-level specs and audits as authority over stale implementation snapshots — covered by `10_Builder/STALE.md` + README folder note.
 
 ## SPEC-009 / SPEC-010 Follow-up
 
-- [ ] Resolve SPEC-009 Q1-Q5 (manifest location/format, shadow-table declaration, where the conformance test runs, whether the prefix convention is normative, and the disposition of the `migrations/` directory).
-- [ ] Resolve SPEC-010 Q1-Q6 (retroactive scope, unknown-classification default, what happens if the integrity report reveals live failures, lint implementation, LUNC symmetry, and path-loaded DDL).
-- [ ] Decide the fate of `migrations/002_conversation_history.sql` and `003_access_bridge.sql` — 5 tables of DDL with zero loaders in the tree. Needs someone who remembers whether they ever ran against a production matrix; not decidable from the code.
-- [ ] Resolve the `entities` (`aibrarian_schema.py`) vs `entity_*` (`database.py`) ownership split before SPEC-009 can be accepted.
+- [x] Resolve SPEC-009 Q1-Q5 (manifest location/format, shadow-table declaration, where the conformance test runs, whether the prefix convention is normative, and the disposition of the `migrations/` directory). Accepted 2026-07-23.
+- [x] Resolve SPEC-010 Q1-Q6 (retroactive scope, unknown-classification default, what happens if the integrity report reveals live failures, lint implementation, LUNC symmetry, and path-loaded DDL). Accepted 2026-07-23.
+- [x] Decide the fate of `migrations/002_conversation_history.sql` and `003_access_bridge.sql` — **002 historical/superseded** (live matrix has objects; DDL in `schema.sql`); **003 dead**, schedule Engine delete (`access_bridge` / `permission_log` absent). Recorded in SPEC-009 Q5.
+- [x] Resolve the `entities` ownership split — **not a LUNM split**: owner is `luna.substrate` / `schema.sql` for the LUNM entity family; `aibrarian_schema.entities` is cartridge-only (name collision). Recorded in SPEC-009 §4.1 + Q5.
+- [x] Promote SPEC-009 and SPEC-010 `active → accepted` (2026-07-23). Handoff: `02_Handoffs/HANDOFF_2026-07-23_spec-009-010-accepted.md`.

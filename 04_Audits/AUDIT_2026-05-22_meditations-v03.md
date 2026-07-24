@@ -183,10 +183,12 @@ nodes_fts                3813
   458 anchored, 54 match_failed.
 - **POSITIVE.** `extraction_context_nodes = 0`, consistent with this corpus
   having no synthesized claims requiring multi-source context rows.
-- **CARRIED FORWARD S-01 (low, non-blocking for v0.3 shipping).** Embedding
+- **S-01 CLASSIFIED 2026-07-23 (low, non-blocking; expected policy).** Embedding
   coverage remains 459 total rows: 310 paragraph embeddings and 149 section
-  embeddings. The v0.2 audit's section-embedding coverage follow-up remains
-  valid and is not introduced by v0.3.
+  embeddings against **166** sections post-M-01 (**149/166**, not 149/176).
+  Skip predicate: sections whose recursive subtree has no embeddable text
+  nodes. See v0.2 audit classification note and `LUN-FORMAT_v0.3.md` Coverage
+  policy.
 
 ## Ledger and postconditions
 
@@ -270,7 +272,7 @@ OK: Marcus-Aurelius-Meditations.v03.lun uv=3 ledger=2 rows, head=2 0.2ms
 | ID | Severity | Area | Finding | Disposition |
 |---|---:|---|---|---|
 | M-01 | medium | metadata | Title remains truncated: `The meditations of` | Carried forward from v0.2; not a v0.3 blocker |
-| S-01 | low | embeddings | Section embedding coverage remains 149/176 | Carried forward from v0.2; not a v0.3 blocker |
+| S-01 | low | embeddings | Section embedding coverage **149/166** — expected policy skip | Classified 2026-07-23; not a defect |
 
 Plus positive v0.3 findings:
 
