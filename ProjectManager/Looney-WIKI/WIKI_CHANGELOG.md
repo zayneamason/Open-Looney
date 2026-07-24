@@ -14,6 +14,45 @@ tags:
 Reverse-chronological. Every entry states what changed and why the bump was that
 size. Policy: `WIKI_VERSIONING.md`.
 
+## [v0.3.0] - 2026-07-24
+
+Pass: P2 — SPEC-012: LUNM entity unification
+Type: minor
+
+Changes:
+
+- `01_Specs/active/SPEC-012_lunm-entity-unification.md` (new) — active
+  architecture spec for unifying Luna's LUNM entity subsystem around one
+  canonical entity row key. It rewrites the entity blueprint into this repo's
+  family vocabulary: LUNM runtime matrix, not cartridge; LUNC entity
+  extractions are portable observations/evidence, not authoritative live
+  identity.
+- SPEC-012 explicitly keeps the LUNM entity family as SPEC-009
+  `engine-extension` tables owned by `luna.substrate` / `schema.sql`; it does
+  not promote entity tables into the SPEC-008 format-invariant set and does not
+  require a `user_version` bump for additive entity work.
+- SPEC-012 records the phased Engine implementation order: canonical identity,
+  unknown default, prompt diet, mentions/salience, Observatory DTO, maintenance
+  safety, and later span/fact normalization.
+- `02_Handoffs/HANDOFF_2026-07-24_spec-012-entity-unification-drafted.md`
+  (new) — closeout handoff naming the acceptance blockers and next Engine audit
+  arc.
+- `ProjectManager/TODO_LUN_Development_2026-07-20.md` — records the SPEC-012
+  draft and next acceptance/Engine audit follow-up under LUNM Runtime Matrix
+  Specs.
+- `WIKI_HOME.md` regenerated so the active spec index reflects SPEC-012.
+
+Rationale for MINOR bump:
+
+- A new active spec landed, which `WIKI_VERSIONING.md` §2 names as a MINOR
+  trigger. No shipped LUN-FORMAT rule changed, no implemented spec was amended,
+  and no LUNM format-invariant classification changed.
+
+Verification performed:
+
+- `python3 scripts/wiki_home.py`
+- `python3 scripts/wiki_check.py`
+
 ## [v0.2.0] - 2026-07-24
 
 Pass: P1 — Looney-WIKI: a real wiki home

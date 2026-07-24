@@ -28,7 +28,7 @@ Wiki version baseline:
 
 Wiki current version:
 
-- `v0.2.0`
+- `v0.3.0`
 
 Wiki target version:
 
@@ -41,6 +41,7 @@ Wiki target version:
 |---|---|---|---|---|---|
 | P0 | Baseline — control plane and drift verifier | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.1.0]` |
 | P1 | Looney-WIKI: a real wiki home | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.2.0]` |
+| P2 | SPEC-012: LUNM entity unification | Codex | done | pass | `02_Handoffs/HANDOFF_2026-07-24_spec-012-entity-unification-drafted.md` |
 
 ## Gate Rule
 
@@ -148,3 +149,27 @@ Not done, deferred with reasoning:
   above instead.
 - `scripts/wiki_bump.py`, pre-commit hook — same reasoning as P0: earn the
   automation after the manual rhythm proves out.
+
+### P2 — SPEC-012: LUNM entity unification
+
+Asked to turn the entity-unification architecture blueprint into repo authority,
+this pass adds `SPEC-012_lunm-entity-unification.md` as an active LUNM spec.
+The spec deliberately keeps the current family boundary intact: LUNM is the
+runtime matrix family, not a cartridge; LUNC entity extractions are portable
+observations, not Luna's authoritative entity identity layer.
+
+The design locks the architecture while preserving acceptance blockers that
+must be re-verified in the Luna Engine repo:
+
+- The canonical entity key is the live LUNM `entities` row key, but the exact
+  column name must be verified before `active → accepted`.
+- `ENTITY` graph nodes, thread rosters, and Observatory chips become
+  projections over that key rather than peer identity namespaces.
+- Unknown-default typing, prompt diet, mention salience, Observatory DTOs, and
+  maintenance live-locks are part of the same architecture because each one
+  prevents the canonical identity repair from being immediately repolluted.
+
+No format-invariant set changed and no `user_version` bump is specified.
+Entity tables remain SPEC-009 `engine-extension` tables owned by
+`luna.substrate` / `schema.sql`; Engine implementation is deferred until the
+acceptance audit resolves the open questions in SPEC-012.

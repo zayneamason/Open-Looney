@@ -24,6 +24,9 @@ Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine P
 Session handoff 2026-07-24: `02_Handoffs/HANDOFF_2026-07-24_spec-011-implemented.md`
 (SPEC-011 → implemented after Engine PR #159 / `629679b5`).
 
+Session handoff 2026-07-24: `02_Handoffs/HANDOFF_2026-07-24_spec-012-entity-unification-drafted.md`
+(SPEC-012 drafted as active LUNM entity-unification architecture; Engine acceptance audit next).
+
 Session handoff 2026-07-24: `02_Handoffs/HANDOFF_2026-07-24_spec-011-accepted.md`
 (SPEC-011 Q1–Q4 resolved; promoted to `accepted/`; Engine FI column conformance next).
 
@@ -57,6 +60,15 @@ Research intake added 2026-07-21:
 
 ## LUNM Runtime Matrix Specs
 
+- [x] Draft SPEC-012 (2026-07-24) — *LUNM entity unification*. Scope: one
+  canonical LUNM entity row key; graph `ENTITY` nodes, thread rosters, and
+  Observatory chips become projections; unknown-default typing and prompt diet
+  are included because they prevent identity repair from being repolluted. File:
+  `01_Specs/active/SPEC-012_lunm-entity-unification.md`.
+- [ ] Promote SPEC-012 `active → accepted` after a read-only Luna Engine audit
+  verifies the exact `entities` row key, whether a temporary graph-node bridge
+  is needed, quarantine DDL, feature flags, Observatory DTO owners, and the
+  unknown-default probe corpus.
 - [x] Resolve SPEC-008 Q1: `profile_config`, under a reserved `lunm.*` namespace. Its stated rationale was falsified against the live engine — the table is absent from `schema.sql`, holds 0 rows in every live matrix, and is deletable over HTTP — so three engine preconditions ride along.
 - [x] Resolve SPEC-008 Q2: four keys — `lunm.format_version`, **`lunm.matrix_ulid`** (renamed from `profile_ulid` and re-scoped to the file; the genesis hook fires per file, and no profile ULID exists in the engine), `lunm.created_at`, `lunm.engine_version` (declared placeholder). `lunm.schema_fingerprint` deferred to SPEC-009, defined over live `sqlite_master`.
 - [x] Resolve SPEC-008 Q3: `MUST`, unqualified — already shipped and test-covered in `promote_to_nexus()`. The unsafe carve-out was dropped (zero precedent repo-wide, one production caller); the umbrella MUST scoped to production paths, `SHOULD` for maintenance tooling.
