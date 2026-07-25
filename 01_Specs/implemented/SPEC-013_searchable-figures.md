@@ -161,7 +161,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 ## Still deferred (follow-on)
 
 1. External size/kind thresholds when `external` is re-enabled  
-2. Local OCR stack  
+2. Local OCR stack — Engine PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167): optional `--figure-ocr` / `figure_ocr=True` rolls pytesseract text into `figure.content` (needs `.[ocr]` + tesseract; non-fatal when absent)  
 3. Extraction type strings + discourse representation  
 4. SPEC-007 sketches + figure terms  
 5. Reader bbox UX  
@@ -183,13 +183,15 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | 2026-07-25 | Engine PR #164 merged (`01d2fc65`); SPEC promoted **accepted → implemented**. |
 | 2026-07-25 | Engine PR #165 merged (`fa78da70`) — PDF XObjects → figure/image spine. |
 | 2026-07-25 | Bare-image builder input landed (PR #166, `b3022894`): filename stem → `figure.content` FTS. |
+| 2026-07-25 | Optional figure OCR rollup opened (PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167)): append to `figure.content`; default off. |
 
 ## Implementation notes
 
 - Engine PR [#164](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164) merged 2026-07-25 as `01d2fc65` (Markdown spine).
 - Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merged 2026-07-25 as `fa78da70` (PDF embedded images).
 - Engine PR [#166](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/166) merged 2026-07-25 as `b3022894` (bare PNG/JPEG/GIF/WebP → figure spine).
-- Promoted `accepted → implemented` after #164; #165/#166 extend the same SPEC spine.
+- Engine PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167) — optional figure OCR → `figure.content` FTS (`figure_ocr.py`).
+- Promoted `accepted → implemented` after #164; #165/#166/#167 extend the same SPEC spine.
 
 ## References
 
