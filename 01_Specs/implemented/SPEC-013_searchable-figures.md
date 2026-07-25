@@ -168,7 +168,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 6. Scanned PDF page-as-image typing  
 7. Vision embedding flag  
 8. `media_kind` enrichment pass + validators  
-9. PDF image extraction slice  
+9. PDF image extraction slice — Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) (in flight; promote note on merge)  
 10. Engine PR merge of `feat/searchable-figures-spike` → `implemented/` promotion
 
 ## Decision log
