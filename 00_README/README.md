@@ -206,12 +206,10 @@ LUN-FORMAT_v0.* LUNM lines point at SPEC-008; ownership artifact is
  ships the reference composer.
 4. **Contract verification table** [future spec]
 5. **Role-based access metadata** [future spec]
-6. **Searchable figures / Structured Payload Pattern** — SPEC-013 **accepted**
-   (2026-07-25) for figure **spine** (`01_Specs/accepted/SPEC-013_searchable-figures.md`).
-   Design: `08_Journal/2026-07-24_design-intimate-searchable-figures.md`. Spike AUDIT
-   on file. Engine branch `feat/searchable-figures-spike` pending PR/merge → then
-   `implemented/`. Enrichment (taxonomy/visual/discourse), regions, PDF images, COG
-   deferred.
+6. **Searchable figures / Structured Payload Pattern** — SPEC-013 **implemented**
+   (Engine PR [#164](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164) merge
+   `01d2fc65`; `01_Specs/implemented/SPEC-013_searchable-figures.md`). Enrichment
+   (taxonomy/visual/discourse), regions, PDF images, COG remain deferred.
 
 Carried-forward historical items (not v0.3 blockers):
 

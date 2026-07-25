@@ -1,11 +1,12 @@
 # SPEC-013: Searchable Figures (Structured Payload Pattern — Figure Spine)
 
-**Status:** accepted  
+**Status:** implemented  
 **Severity:** medium  
 **Author:** Ahab  
 **Created:** 2026-07-24  
 **Last updated:** 2026-07-25  
-**Accepted:** 2026-07-25  
+**Accepted:** 2026-07-25
+**Implemented:** 2026-07-25  
 **Affects format version:** LUNC additive (no `user_version` bump in this slice — `media_blobs` + `image` node role are additive; LUN-FORMAT amendment may pin v0.4 later)  
 **Research brief:** [`08_Journal/2026-07-24_research-searchable-figures.md`](../../08_Journal/2026-07-24_research-searchable-figures.md)  
 **Research design:** [`08_Journal/2026-07-24_design-intimate-searchable-figures.md`](../../08_Journal/2026-07-24_design-intimate-searchable-figures.md)  
@@ -178,11 +179,13 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | 2026-07-24 | Design Approach 2 approved; folded into draft. |
 | 2026-07-24 | Markdown+PNG spike closed (AUDIT). Acceptance withheld pending paper freeze. |
 | 2026-07-25 | **Accepted** for figure **spine** only. Enrichment/regions/PDF/COG remain deferred. R1–R6 resolved. |
+| 2026-07-25 | Engine PR #164 merged (`01d2fc65`); SPEC promoted **accepted → implemented**. |
 
 ## Implementation notes
 
-- Engine spike: PR https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164 (`feat/searchable-figures-spike`, head `81549e56`+). Not yet merged — treat as reference implementation pending merge.
-- On Engine merge: record PR URL + SHA here; `git mv` this file → `01_Specs/implemented/`.
+- Engine PR [#164](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164) merged 2026-07-25 as `01d2fc65`.
+- Branch `feat/searchable-figures-spike` deleted on remote after merge.
+- Promoted `accepted → implemented` same day.
 
 ## References
 
