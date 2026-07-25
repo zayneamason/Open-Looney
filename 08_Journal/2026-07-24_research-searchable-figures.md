@@ -1,18 +1,21 @@
 # RESEARCH — Searchable Figures & Modality-General Node Pattern for Open-Looney / .lun
 
-**Status:** draft research brief (session handoff)  
+**Status:** research brief + approved design (not shipping)  
 **Created:** 2026-07-24  
 **Owner:** Ahab (Zayne)  
 **Parent:** Open-Looney (LUNC cartridge family) + Luna Engine assembly/retrieval  
-**SPEC stub:** [`01_Specs/active/SPEC-013_searchable-figures.md`](../01_Specs/active/SPEC-013_searchable-figures.md)  
-**Trigger question:** Documents contain pictures; those need to be searchable. GIS/GeoPackage is a parallel for SQLite-as-container — the transferable pattern is structured, addressable units + derived meaning + indexes, not “become GIS.”  
-**Next session goal:** Turn this into an accepted SPEC (or reject with reasons) and a thin prototype plan.
+**SPEC draft:** [`01_Specs/active/SPEC-013_searchable-figures.md`](../01_Specs/active/SPEC-013_searchable-figures.md)  
+**Design:** [`2026-07-24_design-intimate-searchable-figures.md`](2026-07-24_design-intimate-searchable-figures.md)  
+**Trigger question:** Documents contain pictures; those need to be searchable *and intimately understood*. GIS/GeoPackage / open-source GIS are parallels for SQLite-as-container and layered rasters — transferable pattern is structured, addressable units + derived meaning + indexes, not “become GIS.”  
+**Primary mode:** research → design → fold SPEC-013 draft. No Engine ship in this pass.  
+**Next session goal:** User review of design + SPEC-013 fold; only then optional `writing-plans` / spike.
 
 **Resume prompt (paste next session):**
 
-> Continue RESEARCH — Searchable Figures & Modality-General Node Pattern.  
-> Read `08_Journal/2026-07-24_research-searchable-figures.md` and `01_Specs/active/SPEC-013_searchable-figures.md`.  
-> Decide Option A vs B; harden SPEC-013; optionally spike Markdown+PNG → searchable figure node.  
+> Continue RESEARCH — Intimate Searchable Figures.  
+> Read `08_Journal/2026-07-24_research-searchable-figures.md`,  
+> `08_Journal/2026-07-24_design-intimate-searchable-figures.md`, and SPEC-013.  
+> Revise if needed; do not implement Engine/builder unless explicitly requested.  
 > Do not implement COG/GeoPackage tiles unless we explicitly open a media-family RFC.
 
 ---
@@ -77,16 +80,17 @@ Five layers that already describe LUNC text; apply to any payload type:
 
 ---
 
-## 5. Scope options (decide next session)
+## 5. Scope options (DECIDED 2026-07-24)
 
-| Option | Description | Pros | Cons |
-|---|---|---|---|
-| **A. Minimal searchable figures** | `doc_nodes.type` ∈ {figure, image}; caption + OCR text as child nodes or fields; FTS on OCR/caption; bytes as file path or BLOB | Fits v0.3 evolution; shippable | No region-level search yet |
-| **B. Region-addressable figures** | A + `region` nodes with bbox; OCR/claims anchored to regions | True “search inside image” | Harder builder (layout/OCR pipeline) |
-| **C. Media-family cartridge** | Separate `application_id` / kind for maps & large rasters (GeoPackage-inspired tiles) | Right tool for huge assets | New family; don’t block A/B |
-| **D. Vision embeddings on whole image only** | Embed full image, no OCR | Easy | Weak keyword search; opaque |
+| Option | Description | Verdict |
+|---|---|---|
+| **A. Minimal searchable figures** | figure/image + caption/OCR → FTS | **Absorbed** into Approach 2 as the linguistic spine tier |
+| **B. Region-addressable figures** | A + `region` bbox nodes | **Reserved** compatible extension under `image` |
+| **C. Media-family cartridge** | GeoPackage-inspired tiles / maps SKU | **Parked** — separate RFC |
+| **D. Vision embeddings only** | Embed full image, no OCR | **Rejected** as sole strategy |
+| **Approach 2 — Intimate-figure law** | Taxonomy + locus + linguistic + visual appearance + discourse; hybrid storage/placement; tiered enrichment; GDAL optional | **Accepted research design** |
 
-**Recommendation to debate:** Accept **A** as first SPEC slice; design **B** as compatible extension; park **C** as future family RFC; reject **D** as sole strategy.
+See design doc for full locked decision table.
 
 ---
 
@@ -181,32 +185,37 @@ Parse document
 
 ---
 
-## 9. Related art to study (next session reading list)
+## 9. Related art to study
 
 | System | Why |
 |---|---|
 | **GeoPackage** | SQLite + rasters/vectors; standards process |
+| **Open-source GIS survey** | [GIS Geography tag](https://gisgeography.com/tag/open-source-gis-software/) + [13 free GIS apps](https://gisgeography.com/free-gis-software/) (QGIS, GRASS, Whitebox, SAGA, gvSIG, …) — layered analysis, drivers, research platforms; not a Luna shopping list |
+| **GDAL** | Optional builder; Dataset/bands/window/overview/VRT metaphors |
 | **PDF tagged figures / PDF/UA** | Figure structure in source docs |
 | **IIIF** | Image API, regions, tiles for cultural heritage |
 | **Mukurtu / cultural archive patterns** | Sovereignty + media metadata (TEAM_LUNA FNIGC adjacency) |
-| **LlamaIndex / Unstructured image elements** | Industry chunking of figures |
+| **LlamaIndex / Unstructured image elements** | Industry chunking of figures + image description enrichment |
 | **Open-Looney SPEC-001–007** | Anchor, ULID, ledger, sketches — extension surface |
 | **Engine `substrate/images.py`** | What *not* to merge into matrix |
 
 ---
 
-## 10. Open questions (answer in next session)
+## 10. Open questions
 
-1. Embedded BLOB vs external file vs hybrid — default for v0.4?
-2. Is OCR mandatory at build time, or lazy/on-demand?
-3. Which OCR stack (local) for offline/sovereign builds?
-4. Region model now or after captions work?
-5. Confirm SPEC number **SPEC-013** (stub already opened)?
-6. How do sketches (SPEC-007) include figure/OCR terms?
-7. Reader prototype: render figure + show search hit highlight on bbox?
-8. Copyright / ceremonial cartridges: images often higher sensitivity — classification metadata?
-9. Multi-page scanned PDFs: is each page an `image` under a `section`, or a different type?
-10. Does vision embedding belong in LUNC core or optional builder flag (`--embed-vision`)?
+**Closed (see design):** hybrid bytes; tiered layers (not all-eager); regions reserved not required; SPEC-013 confirmed; intimacy target C; figure wraps image; GDAL optional; Approach 2.
+
+**Still open (acceptance / later plan):**
+
+1. Exact embed-vs-external size/kind thresholds
+2. Local OCR stack for offline/sovereign builds
+3. Exact extraction type strings + discourse-link representation
+4. Sketches (SPEC-007) + figure/OCR terms
+5. Reader UX: cite vs optional bbox highlight
+6. Ceremonial sensitivity / classification metadata detail
+7. Multi-page scanned PDFs typing
+8. Vision embedding flag vs separate table
+9. Final `media_kind` enum refinement
 
 ---
 
@@ -231,14 +240,12 @@ Parse document
 
 ---
 
-## 13. Suggested next-session agenda (90–120 min)
+## 13. Suggested next-session agenda
 
-1. Re-read this brief + `03_Format_Spec/LUN-FORMAT_v0.3.md` node/extraction sections
-2. Decide Option **A vs B** for first SPEC slice
-3. Harden `01_Specs/active/SPEC-013_searchable-figures.md` from template completeness
-4. Spike: one Markdown doc with one PNG → builder creates figure node + caption/OCR → FTS hit
-5. Write AUDIT on a sample cartridge after spike
-6. Update Open-Looney open concerns when SPEC moves accepted → implemented
+1. User review of design + SPEC-013 fold (research-primary; no ship)
+2. Resolve remaining open questions worth closing on paper
+3. Only if requested: `writing-plans` or Markdown+PNG conceptual spike
+4. Do **not** open media-family / COG RFC unless maps/artifacts are the workload
 
 ---
 
@@ -261,3 +268,4 @@ Parse document
 | Date | Note |
 |---|---|
 | 2026-07-24 | Initial research brief from Cursor session (architecture discussion + Gemini GIS riff + clarification: searchable document images / transferable Structured Payload Pattern). Filed under Open-Looney journal; SPEC-013 stub opened. |
+| 2026-07-24 | Brainstorming: intimacy target C; Approach 2 design approved; GIS Geography open-source survey cited; design doc written; SPEC-013 folded as research draft (not accepted, not shipping). |

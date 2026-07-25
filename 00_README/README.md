@@ -206,10 +206,11 @@ LUN-FORMAT_v0.* LUNM lines point at SPEC-008; ownership artifact is
  ships the reference composer.
 4. **Contract verification table** [future spec]
 5. **Role-based access metadata** [future spec]
-6. **Searchable figures / Structured Payload Pattern** — research filed
- (`08_Journal/2026-07-24_research-searchable-figures.md`); SPEC-013 active stub
- (`01_Specs/active/SPEC-013_searchable-figures.md`). Option A vs B undecided;
- COG/tile pyramids explicitly deferred.
+6. **Searchable figures / Structured Payload Pattern** — research + design filed
+   (`08_Journal/2026-07-24_research-searchable-figures.md`,
+   `08_Journal/2026-07-24_design-intimate-searchable-figures.md`); SPEC-013 active
+   **research draft** (not accepted). Intimate-figure law (Approach 2); regions
+   reserved; COG/tile pyramids deferred to media-family RFC. No Engine ship yet.
 
 Carried-forward historical items (not v0.3 blockers):
 
