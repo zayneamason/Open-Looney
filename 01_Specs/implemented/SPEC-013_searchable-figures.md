@@ -139,10 +139,10 @@ Additive only. Existing cartridges remain valid. Markdown: flat `figure`+`src` �
 When implemented later (not part of this acceptance gate):
 
 - Closed `media_kind`: `photo` | `diagram` | `chart` | `map` | `painting` | `schematic` | `screenshot` | `other` (+ open style tags) — **kinds frozen**; Engine writes `extractions.type=media_classification` with `content=<kind>` (`extraction_method=rule`, PR #168). Style tags still deferred.
-- Extractions: `media_classification` (**frozen**), `visual_description` (**frozen** as caption/OCR rollup stub, Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169)); discourse as a typed extraction shape TBD
+- Extractions: `media_classification` (**frozen**), `visual_description` (**frozen** as caption/OCR rollup stub, Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169)); discourse type **`figure_discourse`** (**frozen**, Engine PR [#170](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/170)) — prev/next paragraph ULIDs via `extraction_context_nodes`
 - Optional local OCR stack — **done** (PR #167)
 - Optional GDAL for TIFF/GeoTIFF/large plates
-- Exact discourse extraction type strings still TBD
+- Discourse shape frozen as `figure_discourse` + context nodes (no separate type string TBD)
 
 ## Governance implications
 
@@ -156,14 +156,14 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | R2 Storage default | Embed for v1 book figures; `external` reserved; no abs build paths in shipped cartridges |
 | R3 Markdown linguistic | Alt/caption only; OCR not required for spine |
 | R4 Thumbnail | Optional, non-validating |
-| R5 Discourse | Deferred to enrichment |
+| R5 Discourse | Frozen as `figure_discourse` + `extraction_context_nodes` (prev/next paragraph); Engine PR #170 |
 | R6 Intimacy target C | North star; enrichment may be empty; spine acceptance does not require all five layers |
 
 ## Still deferred (follow-on)
 
 1. External size/kind thresholds when `external` is re-enabled  
 2. Local OCR stack — **done** Engine PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167) merge `840db392`: optional `--figure-ocr` / `figure_ocr=True` rolls pytesseract text into `figure.content` (needs `.[ocr]` + tesseract; non-fatal when absent)  
-3. Extraction type strings + discourse representation — **partial:** `media_classification` + `visual_description` frozen; discourse still open  
+3. Extraction type strings + discourse representation — **done** for figure enrichment trio (`media_classification`, `visual_description`, `figure_discourse`); style tags / richer discourse still open  
 4. SPEC-007 sketches + figure terms  
 5. Reader bbox UX  
 6. Scanned PDF page-as-image typing  
@@ -172,7 +172,8 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 9. PDF image extraction slice — **done** Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merge `fa78da70`  
 10. Engine PR merge of `feat/searchable-figures-spike` → `implemented/` promotion  
 11. Bare PNG/JPEG (etc.) as builder input — **done** Engine PR [#166](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/166) merge `b3022894`  
-12. `visual_description` stub — **done** Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) merge `5d39c96e`: rule rollup of `figure.content` → anchored extraction
+12. `visual_description` stub — **done** Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) merge `5d39c96e`: rule rollup of `figure.content` → anchored extraction  
+13. `figure_discourse` — Engine PR [#170](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/170): prev/next paragraph soft-links via `extraction_context_nodes`
 
 ## Decision log
 
@@ -188,6 +189,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | 2026-07-25 | Optional figure OCR rollup landed (PR #167, `840db392`): append to `figure.content`; default off. |
 | 2026-07-25 | Froze extraction type `media_classification` and closed `media_kind` set; Engine PR #168 merged (`a67e7ee9`) (rule heuristics, always-on). |
 | 2026-07-25 | Froze extraction type `visual_description` as figure.content rollup stub; Engine PR #169 merged (`5d39c96e`). |
+| 2026-07-25 | Froze extraction type `figure_discourse`; prev/next paragraph via `extraction_context_nodes` (PR [#170](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/170)). |
 
 ## Implementation notes
 
@@ -197,7 +199,8 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 - Engine PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167) merged 2026-07-25 as `840db392` (optional figure OCR → `figure.content` FTS).
 - Engine PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168) merged 2026-07-25 as `a67e7ee9` (rule-based `media_classification` / `media_kind`).
 - Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) merged 2026-07-25 as `5d39c96e` (`visual_description` stub from `figure.content`).
-- Promoted `accepted → implemented` after #164; #165–#169 extend the same SPEC spine.
+- Engine PR [#170](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/170) — `figure_discourse` + `extraction_context_nodes`.
+- Promoted `accepted → implemented` after #164; #165–#170 extend the same SPEC spine.
 
 ## References
 
