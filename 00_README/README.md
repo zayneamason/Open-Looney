@@ -197,15 +197,19 @@ LUN-FORMAT_v0.* LUNM lines point at SPEC-008; ownership artifact is
 ## Open concerns (as of 2026-07-24)
 
 1. **SPEC-010 implemented** — integrity report and tiered fail-loud migration
-   shipped in Engine PR #158. Live-matrix soak of the §4.4 integrity report in
-   production installs remains open.
+ shipped in Engine PR #158. Live-matrix soak of the §4.4 integrity report in
+ production installs remains open.
 2. **Governance arc (LUNC)** — SPEC-005 + payload schemas are **implemented**;
-   engine ledger write path for ambassador upgrades continues separately.
+ engine ledger write path for ambassador upgrades continues separately.
 3. **Single confidence axis** — SPEC-003 produced raw signals; SPEC-004
-   (implemented 2026-05-22) defines the four-axis composition. Reader v0.3.x
-   ships the reference composer.
+ (implemented 2026-05-22) defines the four-axis composition. Reader v0.3.x
+ ships the reference composer.
 4. **Contract verification table** [future spec]
 5. **Role-based access metadata** [future spec]
+6. **Searchable figures / Structured Payload Pattern** — research filed
+ (`08_Journal/2026-07-24_research-searchable-figures.md`); SPEC-013 active stub
+ (`01_Specs/active/SPEC-013_searchable-figures.md`). Option A vs B undecided;
+ COG/tile pyramids explicitly deferred.
 
 Carried-forward historical items (not v0.3 blockers):
 
