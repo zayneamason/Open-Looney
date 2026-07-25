@@ -207,9 +207,9 @@ LUN-FORMAT_v0.* LUNM lines point at SPEC-008; ownership artifact is
 4. **Contract verification table** [future spec]
 5. **Role-based access metadata** [future spec]
 6. **Searchable figures / Structured Payload Pattern** — SPEC-013 **implemented**
-   (Engine PR [#164](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164) merge
-   `01d2fc65`; `01_Specs/implemented/SPEC-013_searchable-figures.md`). Enrichment
-   (taxonomy/visual/discourse), regions, PDF images, COG remain deferred.
+   (PR [#164](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164) Markdown;
+   PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) PDF images,
+   merge `fa78da70`). Enrichment, regions, bare-image input, COG remain deferred.
 
 Carried-forward historical items (not v0.3 blockers):
 

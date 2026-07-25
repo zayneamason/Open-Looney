@@ -89,7 +89,7 @@ Extractions MAY anchor to figure/image ULIDs via SPEC-001. Optional for spine ac
 - COG / MrSID / in-SQLite tile pyramids
 - GeoTIFF CRS for non-map docs
 - GDAL required to read PNG/JPEG
-- PDF image XObject extraction (separate slice)
+- ~~PDF image XObject extraction~~ — landed PR #165 (`fa78da70`); OCR of those images still deferred
 - Regions / bbox
 - Taxonomy / visual_description / discourse as required fields
 - Thumbnail/overview as a validity requirement (optional, non-validating if present)
@@ -168,7 +168,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 6. Scanned PDF page-as-image typing  
 7. Vision embedding flag  
 8. `media_kind` enrichment pass + validators  
-9. PDF image extraction slice — Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) (in flight; promote note on merge)  
+9. PDF image extraction slice — **done** Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merge `fa78da70`  
 10. Engine PR merge of `feat/searchable-figures-spike` → `implemented/` promotion
 
 ## Decision log
@@ -180,12 +180,13 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | 2026-07-24 | Markdown+PNG spike closed (AUDIT). Acceptance withheld pending paper freeze. |
 | 2026-07-25 | **Accepted** for figure **spine** only. Enrichment/regions/PDF/COG remain deferred. R1–R6 resolved. |
 | 2026-07-25 | Engine PR #164 merged (`01d2fc65`); SPEC promoted **accepted → implemented**. |
+| 2026-07-25 | Engine PR #165 merged (`fa78da70`) — PDF XObjects → figure/image spine. |
 
 ## Implementation notes
 
-- Engine PR [#164](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164) merged 2026-07-25 as `01d2fc65`.
-- Branch `feat/searchable-figures-spike` deleted on remote after merge.
-- Promoted `accepted → implemented` same day.
+- Engine PR [#164](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164) merged 2026-07-25 as `01d2fc65` (Markdown spine).
+- Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merged 2026-07-25 as `fa78da70` (PDF embedded images).
+- Promoted `accepted → implemented` after #164; #165 extends the same SPEC spine.
 
 ## References
 
