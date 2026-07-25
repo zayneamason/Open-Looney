@@ -138,10 +138,11 @@ Additive only. Existing cartridges remain valid. Markdown: flat `figure`+`src` �
 
 When implemented later (not part of this acceptance gate):
 
-- Closed `media_kind`: `photo` | `diagram` | `chart` | `map` | `painting` | `schematic` | `screenshot` | `other` (+ open style tags)
-- Extractions: `media_classification`, `visual_description`; discourse as a typed extraction shape TBD
-- Optional local OCR stack TBD; optional GDAL for TIFF/GeoTIFF/large plates
-- Exact extraction type strings frozen in a SPEC-013 amendment or follow-on SPEC
+- Closed `media_kind`: `photo` | `diagram` | `chart` | `map` | `painting` | `schematic` | `screenshot` | `other` (+ open style tags) — **kinds frozen**; Engine writes `extractions.type=media_classification` with `content=<kind>` (`extraction_method=rule`, PR #168). Style tags still deferred.
+- Extractions: `media_classification` (**frozen**), `visual_description` (deferred); discourse as a typed extraction shape TBD
+- Optional local OCR stack — **done** (PR #167)
+- Optional GDAL for TIFF/GeoTIFF/large plates
+- Exact discourse extraction type strings still TBD
 
 ## Governance implications
 
@@ -162,12 +163,12 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 
 1. External size/kind thresholds when `external` is re-enabled  
 2. Local OCR stack — **done** Engine PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167) merge `840db392`: optional `--figure-ocr` / `figure_ocr=True` rolls pytesseract text into `figure.content` (needs `.[ocr]` + tesseract; non-fatal when absent)  
-3. Extraction type strings + discourse representation  
+3. Extraction type strings + discourse representation — **partial:** `media_classification` frozen (see #8); `visual_description` + discourse still open  
 4. SPEC-007 sketches + figure terms  
 5. Reader bbox UX  
 6. Scanned PDF page-as-image typing  
 7. Vision embedding flag  
-8. `media_kind` enrichment pass + validators  
+8. `media_kind` enrichment pass + validators — Engine PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168): rule-based `media_classification` extraction; closed kinds `photo|diagram|chart|map|painting|schematic|screenshot|other`  
 9. PDF image extraction slice — **done** Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merge `fa78da70`  
 10. Engine PR merge of `feat/searchable-figures-spike` → `implemented/` promotion  
 11. Bare PNG/JPEG (etc.) as builder input — **done** Engine PR [#166](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/166) merge `b3022894`
@@ -184,6 +185,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | 2026-07-25 | Engine PR #165 merged (`fa78da70`) — PDF XObjects → figure/image spine. |
 | 2026-07-25 | Bare-image builder input landed (PR #166, `b3022894`): filename stem → `figure.content` FTS. |
 | 2026-07-25 | Optional figure OCR rollup landed (PR #167, `840db392`): append to `figure.content`; default off. |
+| 2026-07-25 | Froze extraction type `media_classification` and closed `media_kind` set; Engine PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168) (rule heuristics, always-on). |
 
 ## Implementation notes
 
@@ -191,7 +193,8 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 - Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merged 2026-07-25 as `fa78da70` (PDF embedded images).
 - Engine PR [#166](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/166) merged 2026-07-25 as `b3022894` (bare PNG/JPEG/GIF/WebP → figure spine).
 - Engine PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167) merged 2026-07-25 as `840db392` (optional figure OCR → `figure.content` FTS).
-- Promoted `accepted → implemented` after #164; #165/#166/#167 extend the same SPEC spine.
+- Engine PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168) — rule-based `media_classification` / `media_kind` enrichment.
+- Promoted `accepted → implemented` after #164; #165–#168 extend the same SPEC spine.
 
 ## References
 
