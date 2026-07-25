@@ -172,7 +172,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 9. PDF image extraction slice — **done** Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merge `fa78da70`  
 10. Engine PR merge of `feat/searchable-figures-spike` → `implemented/` promotion  
 11. Bare PNG/JPEG (etc.) as builder input — **done** Engine PR [#166](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/166) merge `b3022894`  
-12. `visual_description` stub — Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169): rule rollup of `figure.content` → anchored extraction
+12. `visual_description` stub — **done** Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) merge `5d39c96e`: rule rollup of `figure.content` → anchored extraction
 
 ## Decision log
 
@@ -187,7 +187,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | 2026-07-25 | Bare-image builder input landed (PR #166, `b3022894`): filename stem → `figure.content` FTS. |
 | 2026-07-25 | Optional figure OCR rollup landed (PR #167, `840db392`): append to `figure.content`; default off. |
 | 2026-07-25 | Froze extraction type `media_classification` and closed `media_kind` set; Engine PR #168 merged (`a67e7ee9`) (rule heuristics, always-on). |
-| 2026-07-25 | Froze extraction type `visual_description` as figure.content rollup stub; Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169). |
+| 2026-07-25 | Froze extraction type `visual_description` as figure.content rollup stub; Engine PR #169 merged (`5d39c96e`). |
 
 ## Implementation notes
 
@@ -196,7 +196,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 - Engine PR [#166](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/166) merged 2026-07-25 as `b3022894` (bare PNG/JPEG/GIF/WebP → figure spine).
 - Engine PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167) merged 2026-07-25 as `840db392` (optional figure OCR → `figure.content` FTS).
 - Engine PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168) merged 2026-07-25 as `a67e7ee9` (rule-based `media_classification` / `media_kind`).
-- Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) — `visual_description` stub from `figure.content`.
+- Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) merged 2026-07-25 as `5d39c96e` (`visual_description` stub from `figure.content`).
 - Promoted `accepted → implemented` after #164; #165–#169 extend the same SPEC spine.
 
 ## References
