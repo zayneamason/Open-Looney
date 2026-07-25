@@ -28,7 +28,7 @@ Wiki version baseline:
 
 Wiki current version:
 
-- `v0.6.0`
+- `v0.6.1`
 
 Wiki target version:
 

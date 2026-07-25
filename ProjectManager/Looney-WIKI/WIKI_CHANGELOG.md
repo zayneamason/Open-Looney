@@ -14,6 +14,24 @@ tags:
 Reverse-chronological. Every entry states what changed and why the bump was that
 size. Policy: `WIKI_VERSIONING.md`.
 
+## [v0.6.1] - 2026-07-25
+
+Pass: P5 follow-up — wiki_check clean
+Type: patch
+
+Changes:
+
+- `04_Audits/AUDIT_2026-07-24_searchable-figures-spike.md` — drop false-positive
+  relative-link parse from markdown image example.
+- `WIKI_HOME.md` regenerated (STATUS block freshness).
+
+Rationale: PATCH — typo/link-check hygiene after P5, no lifecycle advance.
+
+Verified:
+
+- `python3 scripts/wiki_home.py`
+- `python3 scripts/wiki_check.py`
+
 ## [v0.6.0] - 2026-07-25
 
 Pass: P5 — SPEC-013 searchable figures (spine + enrichment)

@@ -30,7 +30,7 @@ Two layers, two different trust models:
 ## Current Status
 
 <!-- AUTOGEN:STATUS START -->
-**Current version:** `v0.5.0`
+**Current version:** `v0.6.1`
 
 | Specs (implemented) | Specs (accepted) | Specs (active) | Specs (rejected) | Format specs | Audits | Breakdowns |
 |---|---|---|---|---|---|---|

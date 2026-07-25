@@ -20,7 +20,7 @@ polished.
 
 Current wiki version:
 
-- `v0.6.0`
+- `v0.6.1`
 
 ## 1. Scope
 
