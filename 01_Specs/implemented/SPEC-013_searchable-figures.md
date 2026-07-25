@@ -14,7 +14,7 @@
 **Engine spike branch:** `feat/searchable-figures-spike` (LunaEngineBetaV2.0; merge/PR separate)
 
 **Acceptance scope:** figure **spine** only (nodes + bytes + FTS linguistic spine + honesty).  
-Approach 2 intimacy (taxonomy / visual_description / discourse) remains the **north star** but is **enrichment**, not required for this acceptance. Regions, PDF images, GDAL, COG, vision embeddings are deferred.
+Approach 2 intimacy (taxonomy / visual_description / discourse) remains the **north star** but is **enrichment**, not required for this acceptance. Regions, OCR, GDAL, COG, vision embeddings are deferred. Markdown / PDF XObjects / bare raster inputs land via Engine PRs #164–#166.
 
 ---
 
@@ -169,7 +169,8 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 7. Vision embedding flag  
 8. `media_kind` enrichment pass + validators  
 9. PDF image extraction slice — **done** Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merge `fa78da70`  
-10. Engine PR merge of `feat/searchable-figures-spike` → `implemented/` promotion
+10. Engine PR merge of `feat/searchable-figures-spike` → `implemented/` promotion  
+11. Bare PNG/JPEG (etc.) as builder input — Engine PR [#166](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/166) (pending merge)
 
 ## Decision log
 
@@ -181,12 +182,14 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | 2026-07-25 | **Accepted** for figure **spine** only. Enrichment/regions/PDF/COG remain deferred. R1–R6 resolved. |
 | 2026-07-25 | Engine PR #164 merged (`01d2fc65`); SPEC promoted **accepted → implemented**. |
 | 2026-07-25 | Engine PR #165 merged (`fa78da70`) — PDF XObjects → figure/image spine. |
+| 2026-07-25 | Bare-image builder input opened (PR #166): filename stem → `figure.content` FTS. |
 
 ## Implementation notes
 
 - Engine PR [#164](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164) merged 2026-07-25 as `01d2fc65` (Markdown spine).
 - Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merged 2026-07-25 as `fa78da70` (PDF embedded images).
-- Promoted `accepted → implemented` after #164; #165 extends the same SPEC spine.
+- Engine PR [#166](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/166) — bare PNG/JPEG/GIF/WebP → figure spine (`ImageParser`).
+- Promoted `accepted → implemented` after #164; #165/#166 extend the same SPEC spine.
 
 ## References
 
