@@ -2,7 +2,7 @@
 doc_type: changelog
 status: active
 created: 2026-07-24
-updated: 2026-07-24
+updated: 2026-07-25
 tags:
   - projectmanager
   - wiki
@@ -13,6 +13,32 @@ tags:
 
 Reverse-chronological. Every entry states what changed and why the bump was that
 size. Policy: `WIKI_VERSIONING.md`.
+
+## [v0.6.0] - 2026-07-25
+
+Pass: P5 — SPEC-013 searchable figures (spine + enrichment)
+Type: minor
+
+Changes:
+
+- `01_Specs/implemented/SPEC-013_searchable-figures.md` — searchable figures
+  spine + enrichment arc recorded through Engine PRs #164–#170 (Markdown,
+  PDF XObjects, bare raster input, optional OCR, `media_classification`,
+  `visual_description`, `figure_discourse`).
+- `01_Specs/accepted/SPEC-012_lunm-entity-unification.md` — removed stale
+  accepted copy; implemented file is sole home (SPEC-012 already promoted).
+- `ProjectManager/TODO_LUN_Development_2026-07-20.md` — SPEC-013 ledger items.
+- `08_Journal/2026-07-25.md` — catch-up through PR #170.
+- `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md` — session close.
+- `WIKI_HOME.md` regenerated — SPEC-012 + SPEC-013 in implemented index.
+
+Rationale: specs advanced / new implemented SPEC appeared in the index, which
+`WIKI_VERSIONING.md` §2 names as a MINOR trigger.
+
+Verified:
+
+- `python3 scripts/wiki_home.py`
+- `python3 scripts/wiki_check.py`
 
 ## [v0.5.0] - 2026-07-24
 

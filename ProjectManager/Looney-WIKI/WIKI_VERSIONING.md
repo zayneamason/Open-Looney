@@ -2,7 +2,7 @@
 doc_type: policy
 status: active
 created: 2026-07-24
-updated: 2026-07-24
+updated: 2026-07-25
 tags:
   - projectmanager
   - wiki
@@ -20,7 +20,7 @@ polished.
 
 Current wiki version:
 
-- `v0.5.0`
+- `v0.6.0`
 
 ## 1. Scope
 

@@ -2,7 +2,7 @@
 doc_type: ledger
 status: active
 created: 2026-07-20
-updated: 2026-07-24
+updated: 2026-07-25
 tags:
   - lun
   - cartridge
@@ -20,6 +20,9 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 `06_Prototypes/ReaderPrototype/SPEC.md`, `04_Audits/AUDIT_2026-05-22_meditations-v03.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
+
+Session handoff 2026-07-25: `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md`
+(SPEC-013 spine + enrichment through Engine PRs #164–#170; wiki P5 / `v0.6.0`).
 
 Session handoff 2026-07-24: `02_Handoffs/HANDOFF_2026-07-24_spec-011-implemented.md`
 (SPEC-011 → implemented after Engine PR #159 / `629679b5`).
@@ -61,6 +64,21 @@ Research intake added 2026-07-21:
 - [x] Update the relevant audit/spec note once S-01 is classified — v0.2 + v0.3 audits + `LUN-FORMAT_v0.3.md` Coverage policy one-liner.
 - [ ] Keep historical v0.2 limitations alive only where still applicable: Lansing 9.5% baseline measurement and form-feed artifacts are not blocked by v0.3, but should remain documented until separately resolved. **Verified 2026-07-24:** living homes current — `LUN-FORMAT_v0.2.md` §12–13, `LUN-FORMAT_v0.3.md` §8–9, `00_README/README.md`, `08_Journal/2026-05-21.md`. Leave open until PDF recovery / `\x0c` strip (or explicit won’t-fix).
 
+## SPEC-013 Searchable Figures
+
+- [x] Accept + implement figure spine (Engine PR [#164](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164) / `01d2fc65`) — Markdown `figure`→`image` + `media_blobs` + FTS.
+- [x] PDF embedded images (PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) / `fa78da70`).
+- [x] Bare PNG/JPEG/GIF/WebP builder input (PR [#166](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/166) / `b3022894`).
+- [x] Optional figure OCR → `figure.content` (PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167) / `840db392`).
+- [x] Rule `media_classification` / closed `media_kind` (PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168) / `a67e7ee9`).
+- [x] `visual_description` stub from `figure.content` (PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) / `5d39c96e`).
+- [x] `figure_discourse` + `extraction_context_nodes` (PR [#170](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/170) / `fb8d81cc`).
+- [ ] Scanned PDF page-as-image typing (full-page rasters as `figure`/`image`).
+- [ ] Assembler/RRF consumption of `figure_discourse` neighbors.
+- [ ] Vision embeddings / richer visual description; regions; GDAL; COG / media-family RFC.
+- File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
+  Handoff: `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md`.
+
 ## LUNM Runtime Matrix Specs
 
 - [x] Draft SPEC-012 (2026-07-24) — *LUNM entity unification*. Scope: one
@@ -71,7 +89,8 @@ Research intake added 2026-07-21:
 - [x] Promote SPEC-012 `active → accepted` (2026-07-24) after read-only Luna
   Engine audit. Locked: canonical key `entities.id`; no `graph_node_id` bridge;
   quarantine DDL; N-way quarantine-only unless allowlist; flag set; DTO owners;
-  unknown-default probe corpus. File: `01_Specs/accepted/SPEC-012_lunm-entity-unification.md`.
+  unknown-default probe corpus. File: `01_Specs/implemented/SPEC-012_lunm-entity-unification.md`
+  (promoted through accepted → implemented; stale `accepted/` copy removed 2026-07-25).
   Handoff: `02_Handoffs/HANDOFF_2026-07-24_spec-012-accepted.md`.
 - [x] Resolve SPEC-008 Q1: `profile_config`, under a reserved `lunm.*` namespace. Its stated rationale was falsified against the live engine — the table is absent from `schema.sql`, holds 0 rows in every live matrix, and is deletable over HTTP — so three engine preconditions ride along.
 - [x] Resolve SPEC-008 Q2: four keys — `lunm.format_version`, **`lunm.matrix_ulid`** (renamed from `profile_ulid` and re-scoped to the file; the genesis hook fires per file, and no profile ULID exists in the engine), `lunm.created_at`, `lunm.engine_version` (declared placeholder). `lunm.schema_fingerprint` deferred to SPEC-009, defined over live `sqlite_master`.

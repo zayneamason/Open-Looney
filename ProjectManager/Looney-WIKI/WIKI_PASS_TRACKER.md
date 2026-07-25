@@ -2,7 +2,7 @@
 doc_type: tracker
 status: active
 created: 2026-07-24
-updated: 2026-07-24
+updated: 2026-07-25
 tags:
   - projectmanager
   - wiki
@@ -28,7 +28,7 @@ Wiki version baseline:
 
 Wiki current version:
 
-- `v0.5.0`
+- `v0.6.0`
 
 Wiki target version:
 
@@ -44,6 +44,7 @@ Wiki target version:
 | P2 | SPEC-012: LUNM entity unification | Codex | done | pass | `02_Handoffs/HANDOFF_2026-07-24_spec-012-entity-unification-drafted.md` |
 | P3 | `lun-format-family` breakdown | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.4.0]` |
 | P4 | SPEC-012 accepted | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.5.0]`; `02_Handoffs/HANDOFF_2026-07-24_spec-012-accepted.md` |
+| P5 | SPEC-013 searchable figures (spine + enrichment) | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.6.0]`; `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md` |
 
 ## Gate Rule
 
@@ -242,3 +243,11 @@ locked Q1–Q6. Canonical key is `entities.id`; no `graph_node_id` bridge;
 quarantine DDL frozen; N-way coalesce is quarantine-only unless an allowlist
 names the survivor. Wiki bump `v0.4.0 → v0.5.0` (MINOR — lifecycle advance).
 Engine WP0+ implementation is the next ledger item.
+
+### P5 — SPEC-013 searchable figures
+
+Documented the SPEC-013 spine + enrichment arc through Engine PRs #164–#170
+(Markdown/PDF/bare figures, optional OCR, `media_classification`,
+`visual_description`, `figure_discourse`). Removed stale SPEC-012 `accepted/`
+copy. Wiki bump `v0.5.0 → v0.6.0` (MINOR — implemented SPEC in index). Next
+ledger items: scanned PDF page-as-figure or assembler discourse consumption.

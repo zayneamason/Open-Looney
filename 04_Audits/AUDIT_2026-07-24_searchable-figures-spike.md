@@ -77,7 +77,7 @@ FTS hits figure caption and surrounding prose. Linguistic spine searchable witho
 
 ## Spike scope verified
 
-- Markdown `![alt](png)` → `figure` + child `image` + `media_blobs` row
+- Markdown ``![alt](diagram.png)`` → `figure` + child `image` + `media_blobs` row
 - Embedded PNG bytes + SHA-256 persisted
 - Caption/alt on figure node indexed in `nodes_fts`
 - Builder validation (`validate_media_blobs`) runs on build (Task 5)
@@ -86,7 +86,7 @@ FTS hits figure caption and surrounding prose. Linguistic spine searchable witho
 
 | Area | Status |
 | --- | --- |
-| OCR / scanned-page fallback | not run |
+| OCR / scanned-page fallback | not run (later: Engine PR #167) |
 | Taxonomy enrichment (`media_classification`) | 0 extractions |
 | Visual description / discourse extractions | 0 extractions |
 | `region` nodes / bbox | 0 regions |

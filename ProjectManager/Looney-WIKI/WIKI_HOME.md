@@ -34,7 +34,7 @@ Two layers, two different trust models:
 
 | Specs (implemented) | Specs (accepted) | Specs (active) | Specs (rejected) | Format specs | Audits | Breakdowns |
 |---|---|---|---|---|---|---|
-| 12 | 1 | 0 | 0 | 3 | 5 | 2 |
+| 14 | 0 | 0 | 0 | 3 | 6 | 2 |
 <!-- AUTOGEN:STATUS END -->
 
 Policy and promotion criteria: [`WIKI_VERSIONING.md`](WIKI_VERSIONING.md).
@@ -71,7 +71,8 @@ Pass execution and gates: [`WIKI_PASS_TRACKER.md`](WIKI_PASS_TRACKER.md).
 | SPEC-009 | LUNM schema ownership and the table manifest | implemented | [SPEC-009_lunm-schema-ownership.md](../../01_Specs/implemented/SPEC-009_lunm-schema-ownership.md) |
 | SPEC-010 | LUNM migration discipline | implemented | [SPEC-010_lunm-migration-discipline.md](../../01_Specs/implemented/SPEC-010_lunm-migration-discipline.md) |
 | SPEC-011 | LUNM format-invariant DDL ratification | implemented | [SPEC-011_lunm-format-invariant-ddl.md](../../01_Specs/implemented/SPEC-011_lunm-format-invariant-ddl.md) |
-| SPEC-012 | LUNM entity unification | accepted | [SPEC-012_lunm-entity-unification.md](../../01_Specs/accepted/SPEC-012_lunm-entity-unification.md) |
+| SPEC-012 | LUNM entity unification | implemented | [SPEC-012_lunm-entity-unification.md](../../01_Specs/implemented/SPEC-012_lunm-entity-unification.md) |
+| SPEC-013 | Searchable Figures (Structured Payload Pattern — Figure Spine) | implemented | [SPEC-013_searchable-figures.md](../../01_Specs/implemented/SPEC-013_searchable-figures.md) |
 <!-- AUTOGEN:SPEC_INDEX END -->
 
 ## Format Specs
@@ -94,6 +95,7 @@ Pass execution and gates: [`WIKI_PASS_TRACKER.md`](WIKI_PASS_TRACKER.md).
 | AUDIT_2026-05-22_meditations-v03.md | 2026-05-22 | AUDIT: Marcus-Aurelius-Meditations.v03.lun | [AUDIT_2026-05-22_meditations-v03.md](../../04_Audits/AUDIT_2026-05-22_meditations-v03.md) |
 | AUDIT_2026-07-24_lunm-fi-pragma-table-info.md | 2026-07-24 | AUDIT: LUNM format-invariant PRAGMA table_info | [AUDIT_2026-07-24_lunm-fi-pragma-table-info.md](../../04_Audits/AUDIT_2026-07-24_lunm-fi-pragma-table-info.md) |
 | AUDIT_2026-07-24_lunm-table-manifest.toml | 2026-07-24 | (TOML data file) | [AUDIT_2026-07-24_lunm-table-manifest.toml](../../04_Audits/AUDIT_2026-07-24_lunm-table-manifest.toml) |
+| AUDIT_2026-07-24_searchable-figures-spike.md | 2026-07-24 | AUDIT: Searchable figures Markdown+PNG spike | [AUDIT_2026-07-24_searchable-figures-spike.md](../../04_Audits/AUDIT_2026-07-24_searchable-figures-spike.md) |
 <!-- AUTOGEN:AUDIT_INDEX END -->
 
 ## Breakdowns
