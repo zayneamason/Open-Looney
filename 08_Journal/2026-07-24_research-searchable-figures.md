@@ -1,22 +1,20 @@
 # RESEARCH — Searchable Figures & Modality-General Node Pattern for Open-Looney / .lun
 
-**Status:** research brief + approved design (not shipping)  
+**Status:** research brief + design; **SPEC-013 accepted 2026-07-25 (figure spine)**  
 **Created:** 2026-07-24  
 **Owner:** Ahab (Zayne)  
 **Parent:** Open-Looney (LUNC cartridge family) + Luna Engine assembly/retrieval  
-**SPEC draft:** [`01_Specs/active/SPEC-013_searchable-figures.md`](../01_Specs/active/SPEC-013_searchable-figures.md)  
+**SPEC (accepted spine):** [`01_Specs/accepted/SPEC-013_searchable-figures.md`](../01_Specs/accepted/SPEC-013_searchable-figures.md)  
 **Design:** [`2026-07-24_design-intimate-searchable-figures.md`](2026-07-24_design-intimate-searchable-figures.md)  
 **Trigger question:** Documents contain pictures; those need to be searchable *and intimately understood*. GIS/GeoPackage / open-source GIS are parallels for SQLite-as-container and layered rasters — transferable pattern is structured, addressable units + derived meaning + indexes, not “become GIS.”  
-**Primary mode:** research → design → fold SPEC-013 draft. No Engine ship in this pass.  
-**Next session goal:** User review of design + SPEC-013 fold; only then optional `writing-plans` / spike.
+**Primary mode:** research → design → SPEC-013 spine accepted. Enrichment intimacy = later.  
+**Next session goal:** Engine PR/merge of spike → `implemented/`; enrichment only if requested.
 
 **Resume prompt (paste next session):**
 
-> Continue RESEARCH — Intimate Searchable Figures.  
-> Read `08_Journal/2026-07-24_research-searchable-figures.md`,  
-> `08_Journal/2026-07-24_design-intimate-searchable-figures.md`, and SPEC-013.  
-> Revise if needed; do not implement Engine/builder unless explicitly requested.  
-> Do not implement COG/GeoPackage tiles unless we explicitly open a media-family RFC.
+> Continue SPEC-013 figure spine. Read accepted SPEC-013 + AUDIT spike.  
+> Merge or PR Engine `feat/searchable-figures-spike`, then promote SPEC → implemented.  
+> Do not start enrichment/OCR/regions/COG unless explicitly requested.
 
 ---
 
@@ -269,3 +267,4 @@ Parse document
 |---|---|
 | 2026-07-24 | Initial research brief from Cursor session (architecture discussion + Gemini GIS riff + clarification: searchable document images / transferable Structured Payload Pattern). Filed under Open-Looney journal; SPEC-013 stub opened. |
 | 2026-07-24 | Brainstorming: intimacy target C; Approach 2 design approved; GIS Geography open-source survey cited; design doc written; SPEC-013 folded as research draft (not accepted, not shipping). |
+| 2026-07-25 | SPEC-013 **accepted** for figure spine (R1–R6). Enrichment deferred. Handoff filed. |

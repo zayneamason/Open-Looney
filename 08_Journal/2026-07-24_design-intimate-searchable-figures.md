@@ -1,10 +1,10 @@
 # DESIGN — Intimate Searchable Figures (Research)
 
-**Status:** research design (approved in dialogue 2026-07-24); not an implementation plan  
-**Primary mode:** research → design → fold into SPEC-013 (draft). No Engine ship in this pass.  
+**Status:** research design (approved 2026-07-24); **SPEC-013 accepted 2026-07-25 for figure spine**  
+**Primary mode:** research → design → SPEC-013. Enrichment intimacy remains north star, not spine gate.  
 **Parent research:** [`2026-07-24_research-searchable-figures.md`](2026-07-24_research-searchable-figures.md)  
-**SPEC fold target:** [`01_Specs/active/SPEC-013_searchable-figures.md`](../01_Specs/active/SPEC-013_searchable-figures.md)  
-**Approach:** Intimate-figure law (Approach 2)
+**SPEC (accepted spine):** [`01_Specs/accepted/SPEC-013_searchable-figures.md`](../01_Specs/accepted/SPEC-013_searchable-figures.md)  
+**Approach:** Intimate-figure law (Approach 2) — ship spine first, enrichment second
 
 ---
 
@@ -66,7 +66,7 @@ document
 
 | Type | Role | Typical `content` |
 |---|---|---|
-| `figure` | Logical figure in the document | Search blend: caption and/or rollup of OCR/alt/label |
+| `figure` | Logical figure in the document | **v1 FTS carrier:** alt/caption (later OCR rollup written here). One rule — not dual undefined precedence. |
 | `image` | One raster asset | Often NULL; machine fields elsewhere |
 | `region` | Reserved under `image` | Optional per-bbox OCR snippet |
 
@@ -76,10 +76,10 @@ Note: LUN-FORMAT v0.3 already lists `figure` in observed vocabulary; Markdown al
 
 | Data | Where |
 |---|---|
-| FTS-critical linguistic spine | `figure.content` and/or thin children (`caption`, `ocr_text`, `alt`, `figure_label`) |
+| FTS-critical linguistic spine | **`figure.content` (v1).** Thin OCR/caption children optional later; must not leave figure empty when spine exists. |
 | Taxonomy | Extraction (e.g. `media_classification`) → closed `media_kind` + open tags |
 | Appearance | Extraction `visual_description`; optional later vision embedding on `image` |
-| Discourse | Extractions / soft links to nearby paragraph/sentence ULIDs; “see Fig. N” claims → `figure` |
+| Discourse | **Deferred to enrichment v2** — typed extraction shape TBD; not required for spine |
 | Machine fields | `meta_json` and/or `media_blobs`: storage, sha256, media_type, dims, path, page/src |
 
 ### 4.3 Payload sketch (non-normative DDL)
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS media_blobs (
 ) WITHOUT ROWID;
 ```
 
-Thumbnail / overview (GDAL-analogue) may be a small embedded preview — optional enrichment, not validity.
+Thumbnail / overview (GDAL-analogue) may be a small embedded preview — **optional and non-validating**; spikes MUST NOT invent it as a requirement.
 
 ### 4.4 Tiered completeness
 
@@ -166,16 +166,21 @@ Primary index used in this research pass:
 
 ---
 
-## 7. Success criteria (research / eventual SPEC)
+## 7. Success criteria
 
-- [ ] Keyword only in OCR/caption → figure ULID
+**Spine (accepted / spike-proven 2026-07-24):**
+
+- [x] Keyword in figure caption/alt → figure ULID (AUDIT FTS)
+- [x] Stock `sqlite3` lists figures, sha256, linguistic spine
+- [x] Chat `images.db` unchanged
+- [x] Empty enrichment tolerated
+
+**Enrichment / later (not acceptance gates):**
+
 - [ ] Semantic hit on caption/visual_description → figure without full bitmap
-- [ ] `media_kind` filter works when enrichment present
+- [ ] `media_kind` filter when enrichment present
 - [ ] Claims anchor to figure ULID with `anchor_status`
 - [ ] Discourse links figure ↔ surrounding text when enrichment present
-- [ ] v0.3 readers ignore unknown types / empty enrichment
-- [ ] Stock `sqlite3` lists figures, sha256, linguistic spine
-- [ ] Chat `images.db` unchanged
 
 ### Validation candidates
 
@@ -200,10 +205,10 @@ Primary index used in this research pass:
 
 ## 9. Fold path
 
-1. This design stays the research-approved model.
-2. Fold normative intent into SPEC-013 (**active draft**, not accepted).
-3. Update research brief decision log + open questions that are now closed.
-4. Implementation plan / Markdown+PNG spike only if explicitly requested later (`writing-plans` / separate session).
+1. Design remains the Approach 2 model.
+2. SPEC-013 **accepted 2026-07-25** for figure spine (R1–R6).
+3. Enrichment / PDF / regions / Engine PR merge = follow-on.
+4. Promote SPEC → `implemented/` when Engine spike merges to main.
 
 ---
 
@@ -212,3 +217,4 @@ Primary index used in this research pass:
 | Date | Note |
 |---|---|
 | 2026-07-24 | Design written from brainstorming dialogue (Approach 2). GIS Geography open-source survey cited as related art. Research-primary; SPEC fold next. |
+| 2026-07-25 | Spine rules frozen (`figure.content` FTS; embed v1; alt-only MD; thumbnail optional; discourse deferred). SPEC-013 accepted for spine. |
