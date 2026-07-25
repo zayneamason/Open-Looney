@@ -21,7 +21,7 @@
 
 ## Engine work (next)
 
-1. Open/merge PR for `feat/searchable-figures-spike` → Engine `main` (or keep branch until ready).
+1. Engine PR open: https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164 (`feat/searchable-figures-spike`).
 2. On merge: fill SPEC Implementation notes with PR + SHA; `git mv` → `01_Specs/implemented/`.
 3. Do **not** start Task 7 enrichment until spine is on Engine main (or explicitly requested).
 

@@ -181,7 +181,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 
 ## Implementation notes
 
-- Engine spike: branch `feat/searchable-figures-spike` (hardening through `81549e56`+). Not yet merged to Engine `main` at acceptance time — treat as reference implementation pending PR.
+- Engine spike: PR https://github.com/zayneamason/LunaEngineBetaV2.0/pull/164 (`feat/searchable-figures-spike`, head `81549e56`+). Not yet merged — treat as reference implementation pending merge.
 - On Engine merge: record PR URL + SHA here; `git mv` this file → `01_Specs/implemented/`.
 
 ## References
