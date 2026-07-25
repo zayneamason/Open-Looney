@@ -143,6 +143,7 @@ image; COG/media-family deferred; Approach 2 intimate-figure law.
 |---|---|
 | 2026-07-24 | Research filed; SPEC stub opened as **active**. |
 | 2026-07-24 | Research design approved (Approach 2 — intimate-figure law). Folded into this draft. Acceptance still blocked on open questions + review. Primary mode remains research; no ship authorization. |
+| 2026-07-24 | Markdown+PNG spike closed (Engine `ce57d2d4`, Tasks 1–6). Evidence: `04_Audits/AUDIT_2026-07-24_searchable-figures-spike.md` — figure→image, embedded bytes+SHA-256, FTS caption hit. Acceptance **not** granted; OCR/enrichment/regions/PDF/COG deferred. |
 
 ## References
 
