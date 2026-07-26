@@ -21,6 +21,11 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
 
+Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md`
+(Reader semantic search UI — bundled offline MiniLM/ONNX via `fastembed`, Keyword/Semantic toggle,
+cosine parity verified 1.0000001 vs. Python-built vectors; commit `5018a80`. Agreed next-4 order:
+scanned PDF page-as-image → assembler/RRF → vision embeddings, with SPEC-012 Engine WP0 parallel).
+
 Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`
 (Reader v0.3.4 figure display + inspector + hierarchy scroll; Nature-of-Art sample with external media;
 Engine PR #171 external sidecars).
@@ -80,12 +85,17 @@ Research intake added 2026-07-21:
 - [x] `figure_discourse` + `extraction_context_nodes` (PR [#170](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/170) / `fb8d81cc`).
 - [x] External media sidecars for large rasters (PR [#171](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/171) / `03fa7364` merged 2026-07-26).
 - [x] Reader figure display + inspector + hierarchy navigate (v0.3.4) — see handoff 2026-07-26.
-- [ ] Scanned PDF page-as-image typing (full-page rasters as `figure`/`image`).
+- [x] Reader semantic search UI (2026-07-26): Keyword/Semantic toggle, bundled offline MiniLM/ONNX
+  via `fastembed` (statically linked ONNX Runtime, no dylib bundling needed), cosine scan over
+  paragraph+section `embeddings`. Parity-verified against Python-built vectors (cosine 1.0000001).
+  Commit `5018a80`. Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md`.
+- [ ] Scanned PDF page-as-image typing (full-page rasters as `figure`/`image`). **Next up** — Engine slice.
 - [ ] Assembler/RRF consumption of `figure_discourse` neighbors.
 - [ ] Vision embeddings / richer visual description; regions; GDAL; COG / media-family RFC.
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
-  Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md` (latest);
-  prior arc: `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md`.
+  Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);
+  prior: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`,
+  `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md`.
 
 ## LUNM Runtime Matrix Specs
 
