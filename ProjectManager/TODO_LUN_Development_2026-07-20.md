@@ -2,7 +2,7 @@
 doc_type: ledger
 status: active
 created: 2026-07-20
-updated: 2026-07-25
+updated: 2026-07-26
 tags:
   - lun
   - cartridge
@@ -20,6 +20,10 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 `06_Prototypes/ReaderPrototype/SPEC.md`, `04_Audits/AUDIT_2026-05-22_meditations-v03.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
+
+Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`
+(Reader v0.3.4 figure display + inspector + hierarchy scroll; Nature-of-Art sample with external media;
+Engine PR #171 external sidecars).
 
 Session handoff 2026-07-25: `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md`
 (SPEC-013 spine + enrichment through Engine PRs #164–#170; wiki P5 / `v0.6.0`).
@@ -56,6 +60,7 @@ Research intake added 2026-07-21:
 - [x] Fix Reader baseline-drift round 3: `queries::list_extractions` tests already assert post-M-01 Haiku counts (1204/1056/148 claims, 1418 entities, 145 summaries); `cargo test --lib` 58/58 green 2026-07-23. SPEC.md criteria 3–6 updated to match (was stale 512/532/62/176).
 - [x] Manual visual verification for Reader v0.3.3 acceptance criteria 18 + 19 — automated shelf verify-by-opening tests green (`verify_fts_term_*`, `verify_*_ulid_*`, `verify_entity_surface_*`, `search_finds_virtue_*`). Full Tauri UI chrome smoke remains recommended when a display is available; recorded in SPEC.md Findings + `08_Journal/2026-07-23.md`.
 - [x] Record the manual visual verification result in `06_Prototypes/ReaderPrototype/SPEC.md` and `08_Journal/2026-07-23.md`.
+- [x] Reader v0.3.4 SPEC-013 consumer (2026-07-26): `get_figure_payload`, figure inspector, `image` node type, hierarchy scroll-to-node, figure enrichment tabs in Extractions. Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`.
 
 ## Cartridge Quality And Audits
 
@@ -73,11 +78,14 @@ Research intake added 2026-07-21:
 - [x] Rule `media_classification` / closed `media_kind` (PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168) / `a67e7ee9`).
 - [x] `visual_description` stub from `figure.content` (PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) / `5d39c96e`).
 - [x] `figure_discourse` + `extraction_context_nodes` (PR [#170](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/170) / `fb8d81cc`).
+- [x] External media sidecars for large rasters (PR [#171](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/171) / `01783d69`) — merge to Engine `main` if still open.
+- [x] Reader figure display + inspector + hierarchy navigate (v0.3.4) — see handoff 2026-07-26.
 - [ ] Scanned PDF page-as-image typing (full-page rasters as `figure`/`image`).
 - [ ] Assembler/RRF consumption of `figure_discourse` neighbors.
 - [ ] Vision embeddings / richer visual description; regions; GDAL; COG / media-family RFC.
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
-  Handoff: `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md`.
+  Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md` (latest);
+  prior arc: `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md`.
 
 ## LUNM Runtime Matrix Specs
 

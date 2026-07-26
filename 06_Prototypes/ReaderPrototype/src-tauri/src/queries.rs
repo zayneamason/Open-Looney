@@ -1,11 +1,13 @@
 use crate::error::ReaderError;
 use crate::types::{
     AnchorStatus, ContextNode, DocNode, DocNodeBrief, Extraction, ExtractionCount,
-    ExtractionSource, ExtractionSourcesResult, ExtractionType, LedgerEvent, Meta, NodeType,
-    SearchHit,
+    ExtractionSource, ExtractionSourcesResult, ExtractionType, FigureEnrichment, FigurePayload,
+    LedgerEvent, Meta, NodeType, SearchHit,
 };
+use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 
 /// Escapes HTML metacharacters in `raw`, EXCEPT for the literal sequences
 /// `<mark>` and `</mark>` which are preserved verbatim. The frontend can then
@@ -481,6 +483,183 @@ pub fn get_extraction_sources(
     Ok(ExtractionSourcesResult { sources, context })
 }
 
+fn media_blobs_table_exists(conn: &Connection) -> Result<bool, ReaderError> {
+    let n: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'media_blobs'",
+        [],
+        |r| r.get(0),
+    )?;
+    Ok(n > 0)
+}
+
+fn resolve_external_media_path(
+    cartridge_path: &Path,
+    relative: &str,
+) -> Result<PathBuf, ReaderError> {
+    let base = cartridge_path.parent().ok_or_else(|| ReaderError::IoError {
+        message: "cartridge path has no parent directory".into(),
+    })?;
+    let joined = base.join(relative);
+    let base_canon = base.canonicalize().map_err(|e| ReaderError::IoError {
+        message: format!("cannot resolve cartridge directory: {e}"),
+    })?;
+    let resolved = if joined.exists() {
+        joined.canonicalize().map_err(|e| ReaderError::IoError {
+            message: format!("cannot resolve external media path: {e}"),
+        })?
+    } else {
+        // Keep a normalized absolute path for error reporting / UI.
+        if !joined.is_absolute() {
+            return Ok(base_canon.join(relative));
+        }
+        joined
+    };
+    if !resolved.starts_with(&base_canon) {
+        return Err(ReaderError::IoError {
+            message: format!(
+                "external media path escapes cartridge directory: {}",
+                relative
+            ),
+        });
+    }
+    Ok(resolved)
+}
+
+/// Resolve figure caption, raster bytes (embedded or sidecar), and SPEC-013 enrichments.
+pub fn get_figure_payload(
+    conn: &Connection,
+    cartridge_path: &Path,
+    figure_ulid: &str,
+) -> Result<FigurePayload, ReaderError> {
+    let figure = get_node(conn, figure_ulid)?;
+    if figure.node_type != NodeType::Figure {
+        return Err(ReaderError::SqliteError {
+            message: format!("node {figure_ulid} is not a figure"),
+        });
+    }
+
+    let image_ulid: Option<String> = conn
+        .query_row(
+            "SELECT ulid FROM doc_nodes
+             WHERE parent_ulid = ?1 AND type = 'image'
+             ORDER BY position ASC, ulid ASC
+             LIMIT 1",
+            [figure_ulid],
+            |r| r.get(0),
+        )
+        .optional()?;
+
+    let mut mime_type: Option<String> = None;
+    let mut sha256: Option<String> = None;
+    let mut byte_len: Option<i64> = None;
+    let mut storage: Option<String> = None;
+    let mut external_path_resolved: Option<String> = None;
+    let mut bytes_base64: Option<String> = None;
+
+    if let Some(ref img_ulid) = image_ulid {
+        if media_blobs_table_exists(conn)? {
+            let row: Option<(
+                String,
+                String,
+                String,
+                Option<Vec<u8>>,
+                Option<String>,
+                Option<i64>,
+            )> = conn
+                .query_row(
+                    "SELECT media_type, sha256, storage, bytes, external_path,
+                            CASE WHEN bytes IS NULL THEN NULL ELSE length(bytes) END
+                     FROM media_blobs WHERE node_ulid = ?1",
+                    [img_ulid],
+                    |r| {
+                        Ok((
+                            r.get(0)?,
+                            r.get(1)?,
+                            r.get(2)?,
+                            r.get(3)?,
+                            r.get(4)?,
+                            r.get(5)?,
+                        ))
+                    },
+                )
+                .optional()?;
+
+            if let Some((mt, sha, stor, bytes, ext, len)) = row {
+                mime_type = Some(mt);
+                sha256 = Some(sha);
+                storage = Some(stor.clone());
+                byte_len = len;
+                match stor.as_str() {
+                    "embedded" => {
+                        if let Some(b) = bytes {
+                            byte_len = Some(b.len() as i64);
+                            bytes_base64 = Some(B64.encode(&b));
+                        }
+                    }
+                    "external" => {
+                        if let Some(rel) = ext {
+                            let abs = resolve_external_media_path(cartridge_path, &rel)?;
+                            external_path_resolved =
+                                Some(abs.to_string_lossy().into_owned());
+                            if abs.is_file() {
+                                if let Ok(meta) = std::fs::metadata(&abs) {
+                                    byte_len = Some(meta.len() as i64);
+                                }
+                                // Do not base64 large sidecars — frontend uses convertFileSrc.
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    let mut enrichments = Vec::new();
+    let mut stmt = conn.prepare(
+        "SELECT e.ulid, e.type, e.content, es.anchored_at
+         FROM extractions e
+         JOIN extraction_sources es ON es.extraction_ulid = e.ulid
+         WHERE es.node_ulid = ?1
+           AND e.type IN (
+             'media_classification',
+             'visual_description',
+             'figure_discourse'
+           )
+         ORDER BY e.type ASC, e.ulid ASC",
+    )?;
+    let rows = stmt.query_map([figure_ulid], |r| {
+        Ok((
+            r.get::<_, String>(0)?,
+            r.get::<_, String>(1)?,
+            r.get::<_, String>(2)?,
+            r.get::<_, Option<i64>>(3)?,
+        ))
+    })?;
+    for row in rows {
+        let (ulid, extraction_type, content, anchored_at) = row?;
+        enrichments.push(FigureEnrichment {
+            ulid,
+            extraction_type,
+            content,
+            anchored_at,
+        });
+    }
+
+    Ok(FigurePayload {
+        figure_ulid: figure_ulid.to_string(),
+        caption: figure.content,
+        image_ulid,
+        mime_type,
+        sha256,
+        byte_len,
+        storage,
+        external_path_resolved,
+        bytes_base64,
+        enrichments,
+    })
+}
+
 pub fn search(conn: &Connection, query: &str, limit: i64) -> Result<Vec<SearchHit>, ReaderError> {
     // FTS5 external-content table over doc_nodes(content), with content_rowid='id',
     // so the FTS rowid maps directly to doc_nodes.id. v0.3 keeps doc_nodes.id as
@@ -683,6 +862,7 @@ mod tests {
             "list",
             "list_item",
             "figure",
+            "image",
             "table",
             "row",
             "cell",
@@ -733,7 +913,7 @@ mod tests {
         }
 
         let nodes = list_all_nodes(&conn).unwrap();
-        let types: Vec<NodeType> = nodes.into_iter().map(|n| n.node_type).collect();
+        let types: Vec<_> = nodes.iter().map(|n| n.node_type).collect();
         // Document first (parent_ulid IS NULL), then descendants ordered by parent_ulid + position.
         assert_eq!(types[0], NodeType::Document);
         assert!(types.contains(&NodeType::List));
@@ -743,6 +923,105 @@ mod tests {
         assert!(types.contains(&NodeType::Row));
         assert!(types.contains(&NodeType::Cell));
         assert_eq!(nodes_len_via_count(&conn), 7);
+    }
+
+    #[test]
+    fn get_figure_payload_reads_embedded_bytes_and_enrichments() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE doc_nodes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ulid TEXT NOT NULL UNIQUE,
+                parent_ulid TEXT,
+                type TEXT NOT NULL,
+                position INTEGER NOT NULL,
+                content TEXT,
+                meta_json TEXT
+            );
+            CREATE TABLE media_blobs (
+                node_ulid TEXT PRIMARY KEY,
+                media_type TEXT NOT NULL,
+                width INTEGER,
+                height INTEGER,
+                sha256 TEXT NOT NULL,
+                storage TEXT NOT NULL,
+                bytes BLOB,
+                external_path TEXT
+            );
+            CREATE TABLE extractions (
+                ulid TEXT PRIMARY KEY,
+                type TEXT NOT NULL,
+                content TEXT NOT NULL,
+                anchor_status TEXT NOT NULL DEFAULT 'anchored',
+                anchor_reason TEXT,
+                llm_logprob_sum REAL,
+                llm_token_count INTEGER,
+                extraction_method TEXT NOT NULL DEFAULT 'rule'
+            );
+            CREATE TABLE extraction_sources (
+                extraction_ulid TEXT NOT NULL,
+                node_ulid TEXT NOT NULL,
+                anchor_method TEXT NOT NULL DEFAULT 'auto',
+                anchored_by TEXT,
+                anchored_at INTEGER,
+                event_id TEXT,
+                PRIMARY KEY (extraction_ulid, node_ulid)
+            );",
+        )
+        .unwrap();
+
+        let fig = "01FIG000000000000000000001";
+        let img = "01IMG000000000000000000001";
+        let ext = "01EXT000000000000000000001";
+        conn.execute(
+            "INSERT INTO doc_nodes (ulid, parent_ulid, type, position, content)
+             VALUES ('01DOC000000000000000000001', NULL, 'document', 0, NULL)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO doc_nodes (ulid, parent_ulid, type, position, content)
+             VALUES (?1, '01DOC000000000000000000001', 'figure', 0, 'A diagram')",
+            [fig],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO doc_nodes (ulid, parent_ulid, type, position, content)
+             VALUES (?1, ?2, 'image', 0, NULL)",
+            [img, fig],
+        )
+        .unwrap();
+        let png = b"\x89PNG\r\n\x1a\nfake";
+        conn.execute(
+            "INSERT INTO media_blobs (node_ulid, media_type, width, height, sha256, storage, bytes, external_path)
+             VALUES (?1, 'image/png', 1, 1, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                     'embedded', ?2, NULL)",
+            params![img, png.as_slice()],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO extractions (ulid, type, content, extraction_method)
+             VALUES (?1, 'media_classification', 'diagram', 'rule')",
+            [ext],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO extraction_sources (extraction_ulid, node_ulid, anchored_at)
+             VALUES (?1, ?2, 123)",
+            [ext, fig],
+        )
+        .unwrap();
+
+        let cart = PathBuf::from("/tmp/fake.lun");
+        let payload = get_figure_payload(&conn, &cart, fig).unwrap();
+        assert_eq!(payload.caption, "A diagram");
+        assert_eq!(payload.image_ulid.as_deref(), Some(img));
+        assert_eq!(payload.storage.as_deref(), Some("embedded"));
+        assert_eq!(payload.mime_type.as_deref(), Some("image/png"));
+        assert!(payload.bytes_base64.is_some());
+        assert_eq!(payload.enrichments.len(), 1);
+        assert_eq!(payload.enrichments[0].extraction_type, "media_classification");
+        assert_eq!(payload.enrichments[0].content, "diagram");
     }
 
     fn nodes_len_via_count(conn: &Connection) -> i64 {

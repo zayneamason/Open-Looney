@@ -15,6 +15,7 @@ function TreeNode({ node, depth }: { node: DocNode; depth: number }) {
   const selectedNode = useReader((s) => s.selectedNode);
   const toggleExpand = useReader((s) => s.toggleExpand);
   const selectNode = useReader((s) => s.selectNode);
+  const setView = useReader((s) => s.setView);
 
   const isExpanded = treeExpansion.has(node.ulid);
   const isLeaf = isLeafNodeType(node.node_type);
@@ -29,7 +30,10 @@ function TreeNode({ node, depth }: { node: DocNode; depth: number }) {
           isSelected ? "bg-blue-100 hover:bg-blue-100" : ""
         }`}
         style={{ paddingLeft: `${depth * 12 + 6}px` }}
-        onClick={() => void selectNode(node.ulid)}
+        onClick={() => {
+          void selectNode(node.ulid);
+          setView("document");
+        }}
       >
         {!isLeaf ? (
           <button

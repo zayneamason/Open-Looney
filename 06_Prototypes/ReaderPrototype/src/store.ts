@@ -8,6 +8,7 @@ import type {
   ExtractionCount,
   ExtractionSourcesResult,
   ExtractionType,
+  FigurePayload,
   HandleId,
   LedgerEvent,
   Meta,
@@ -85,6 +86,11 @@ export interface ReaderState {
   ledgerEvents: LedgerEvent[] | null;
   currentClaimTrust: TrustVector | null;
 
+  // SPEC-013 figure inspector
+  selectedFigureUlid: string | null;
+  figurePayload: FigurePayload | null;
+  figureLoading: boolean;
+
   // Per-row trust (SPEC-004 AuthorityBar in ExtractionsPanel)
   trustByExtractionUlid: Record<string, TrustVector>;
 
@@ -108,7 +114,9 @@ export interface ReaderState {
   setExtractionFilters(f: Partial<ExtractionFilters>): Promise<void>;
   reloadExtractions(): Promise<void>;
   selectClaim(claim: Extraction): Promise<void>;
+  selectFigure(figureUlid: string): Promise<void>;
   closeDrawer(): void;
+  closeFigureDrawer(): void;
 
   setSearchQuery(q: string): void;
   runSearch(): Promise<void>;
@@ -138,6 +146,9 @@ const EMPTY_STATE = {
   claimSources: null as ExtractionSourcesResult | null,
   ledgerEvents: null as LedgerEvent[] | null,
   currentClaimTrust: null as TrustVector | null,
+  selectedFigureUlid: null as string | null,
+  figurePayload: null as FigurePayload | null,
+  figureLoading: false,
   trustByExtractionUlid: {} as Record<string, TrustVector>,
   searchQuery: "",
   searchResults: [] as SearchHit[],
@@ -273,7 +284,10 @@ export const useReader = create<ReaderState>((set, get) => ({
       // SPEC-004: batch-compose trust vectors for claim/summary rows.
       // Entities get authority=null per the composer, so skip them.
       const trustTargets = rows
-        .filter((r) => r.extraction_type !== "entity")
+        .filter(
+          (r) =>
+            r.extraction_type === "claim" || r.extraction_type === "summary",
+        )
         .map((r) => r.ulid);
       if (trustTargets.length > 0) {
         try {
@@ -302,6 +316,9 @@ export const useReader = create<ReaderState>((set, get) => ({
       claimSources: null,
       ledgerEvents: null,
       currentClaimTrust: null,
+      selectedFigureUlid: null,
+      figurePayload: null,
+      figureLoading: false,
     });
     try {
       const [sources, events, trust] = await Promise.all([
@@ -315,12 +332,41 @@ export const useReader = create<ReaderState>((set, get) => ({
     }
   },
 
+  async selectFigure(figureUlid: string) {
+    const { cartridge } = get();
+    if (!cartridge) return;
+    set({
+      selectedFigureUlid: figureUlid,
+      figurePayload: null,
+      figureLoading: true,
+      selectedClaim: null,
+      claimSources: null,
+      ledgerEvents: null,
+      currentClaimTrust: null,
+    });
+    try {
+      const payload = await api.getFigurePayload(cartridge.handle, figureUlid);
+      set({ figurePayload: payload, figureLoading: false });
+    } catch (e) {
+      set({ figureLoading: false });
+      get().pushToast("error", errorToText(e));
+    }
+  },
+
   closeDrawer() {
     set({
       selectedClaim: null,
       claimSources: null,
       ledgerEvents: null,
       currentClaimTrust: null,
+    });
+  },
+
+  closeFigureDrawer() {
+    set({
+      selectedFigureUlid: null,
+      figurePayload: null,
+      figureLoading: false,
     });
   },
 

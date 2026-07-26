@@ -8,7 +8,7 @@ function ResultRow({ hit }: { hit: SearchHit }) {
     <button
       onClick={async () => {
         await selectNode(hit.node_ulid);
-        setView("tree");
+        setView("document");
       }}
       className="block w-full text-left border-b border-gray-100 px-4 py-3 hover:bg-gray-50"
     >

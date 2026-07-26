@@ -37,7 +37,7 @@ function SourceRow({ source }: { source: ExtractionSource }) {
       className="border border-gray-200 rounded p-3 cursor-pointer hover:bg-gray-50"
       onClick={() => {
         void selectNode(source.node.ulid);
-        setView("tree");
+        setView("document");
       }}
     >
       <div className="text-xs text-gray-500 flex items-center gap-2 mb-1.5">
@@ -69,7 +69,7 @@ function ContextRow({ ctx }: { ctx: ContextNode }) {
       className="border border-gray-200 rounded p-3 cursor-pointer hover:bg-gray-50"
       onClick={() => {
         void selectNode(ctx.node.ulid);
-        setView("tree");
+        setView("document");
       }}
     >
       <div className="text-xs text-gray-500 flex items-center gap-2 mb-1.5">

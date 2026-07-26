@@ -8,6 +8,7 @@ import type {
   ExtractionCount,
   ExtractionSourcesResult,
   ExtractionType,
+  FigurePayload,
   HandleId,
   LedgerEvent,
   Meta,
@@ -49,6 +50,9 @@ export const api = {
 
   getNode: (handle: HandleId, nodeUlid: string) =>
     call<DocNode>("get_node", { handle, nodeUlid }),
+
+  getFigurePayload: (handle: HandleId, figureUlid: string) =>
+    call<FigurePayload>("get_figure_payload", { handle, figureUlid }),
 
   listExtractions: (
     handle: HandleId,

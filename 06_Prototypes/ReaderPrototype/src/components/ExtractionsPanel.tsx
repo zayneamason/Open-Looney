@@ -1,16 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
-import { useReader } from "../store";
+import { api } from "../api";
+import { useReader, errorToText } from "../store";
 import { AnchorBadge } from "./AnchorBadge";
 import { AuthorityBar } from "./AuthorityBar";
 import type { AnchorStatus, Extraction, ExtractionType } from "../types";
 
-const TYPES: ExtractionType[] = ["claim", "entity", "summary"];
+const TYPES: ExtractionType[] = [
+  "claim",
+  "entity",
+  "summary",
+  "media_classification",
+  "visual_description",
+  "figure_discourse",
+];
 
 const TYPE_LABELS: Record<ExtractionType, string> = {
   claim: "Claims",
   entity: "Entities",
   summary: "Summaries",
+  media_classification: "Media kind",
+  visual_description: "Visual desc",
+  figure_discourse: "Discourse",
 };
+
+const FIGURE_TYPES = new Set<ExtractionType>([
+  "media_classification",
+  "visual_description",
+  "figure_discourse",
+]);
 
 const STATUSES: { value: AnchorStatus | null; label: string }[] = [
   { value: null, label: "all" },
@@ -23,28 +40,64 @@ const STATUSES: { value: AnchorStatus | null; label: string }[] = [
 
 function ExtractionRow({ extraction }: { extraction: Extraction }) {
   const [expanded, setExpanded] = useState(false);
+  const cartridge = useReader((s) => s.cartridge);
   const selectClaim = useReader((s) => s.selectClaim);
+  const selectFigure = useReader((s) => s.selectFigure);
+  const selectNode = useReader((s) => s.selectNode);
+  const setView = useReader((s) => s.setView);
+  const pushToast = useReader((s) => s.pushToast);
   const selectedClaim = useReader((s) => s.selectedClaim);
   const trustByUlid = useReader((s) => s.trustByExtractionUlid);
   const isSelected = selectedClaim?.ulid === extraction.ulid;
   const isClaim = extraction.extraction_type === "claim";
-  const isEntity = extraction.extraction_type === "entity";
-  const authority = isEntity
-    ? null
-    : trustByUlid[extraction.ulid]?.axes.authority ?? null;
+  const isFigureEnrichment = FIGURE_TYPES.has(extraction.extraction_type);
+  const showTrust =
+    extraction.extraction_type === "claim" ||
+    extraction.extraction_type === "summary";
+  const authority = showTrust
+    ? (trustByUlid[extraction.ulid]?.axes.authority ?? null)
+    : null;
 
-  const preview = extraction.content.length > 200 && !expanded
-    ? extraction.content.slice(0, 200) + "…"
-    : extraction.content;
+  const preview =
+    extraction.content.length > 200 && !expanded
+      ? extraction.content.slice(0, 200) + "…"
+      : extraction.content;
+
+  async function openExtraction() {
+    if (isClaim) {
+      void selectClaim(extraction);
+      return;
+    }
+    if (!cartridge) return;
+    try {
+      const sources = await api.getExtractionSources(
+        cartridge.handle,
+        extraction.ulid,
+      );
+      const first = sources.sources[0]?.node;
+      if (!first) {
+        pushToast("info", "No source node linked to this extraction.");
+        return;
+      }
+      if (isFigureEnrichment && first.node_type === "figure") {
+        await selectNode(first.ulid);
+        await selectFigure(first.ulid);
+        setView("document");
+        return;
+      }
+      await selectNode(first.ulid);
+      setView("tree");
+    } catch (e) {
+      pushToast("error", errorToText(e));
+    }
+  }
 
   return (
     <div
-      className={`border-b border-gray-100 px-4 py-3 ${
-        isClaim ? "cursor-pointer hover:bg-gray-50" : ""
-      } ${isSelected ? "bg-blue-50" : ""}`}
-      onClick={() => {
-        if (isClaim) void selectClaim(extraction);
-      }}
+      className={`border-b border-gray-100 px-4 py-3 cursor-pointer hover:bg-gray-50 ${
+        isSelected ? "bg-blue-50" : ""
+      }`}
+      onClick={() => void openExtraction()}
     >
       <div className="flex items-start gap-3">
         <div className="flex flex-col items-center gap-1 mt-0.5 shrink-0">
@@ -53,10 +106,12 @@ function ExtractionRow({ extraction }: { extraction: Extraction }) {
             extractionType={extraction.extraction_type}
             reason={extraction.anchor_reason}
           />
-          {!isEntity && <AuthorityBar value={authority} />}
+          {showTrust && <AuthorityBar value={authority} />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm leading-snug text-gray-900 whitespace-pre-wrap">{preview}</p>
+          <p className="text-sm leading-snug text-gray-900 whitespace-pre-wrap">
+            {preview}
+          </p>
           {extraction.content.length > 200 && (
             <button
               onClick={(e) => {
@@ -108,16 +163,26 @@ export function ExtractionsPanel() {
   }, []);
 
   const totalsByType = useMemo(() => {
-    const t: Record<string, number> = { claim: 0, entity: 0, summary: 0 };
+    const t: Record<string, number> = {};
+    for (const type of TYPES) t[type] = 0;
     for (const c of counts ?? []) {
       t[c.extraction_type] = (t[c.extraction_type] ?? 0) + c.count;
     }
     return t;
   }, [counts]);
 
+  const claimLikeTotal =
+    (totalsByType.claim ?? 0) +
+    (totalsByType.entity ?? 0) +
+    (totalsByType.summary ?? 0);
+  const figureEnrichmentTotal =
+    (totalsByType.media_classification ?? 0) +
+    (totalsByType.visual_description ?? 0) +
+    (totalsByType.figure_discourse ?? 0);
+
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b border-gray-200 px-4 pt-3 flex items-center gap-2">
+      <div className="border-b border-gray-200 px-4 pt-3 flex items-center gap-2 flex-wrap">
         {TYPES.map((t) => (
           <button
             key={t}
@@ -129,12 +194,14 @@ export function ExtractionsPanel() {
             }`}
           >
             {TYPE_LABELS[t]}{" "}
-            <span className="text-gray-400">({totalsByType[t]?.toLocaleString() ?? "—"})</span>
+            <span className="text-gray-400">
+              ({totalsByType[t]?.toLocaleString() ?? "—"})
+            </span>
           </button>
         ))}
       </div>
 
-      <div className="px-4 py-2 border-b border-gray-200 flex items-center gap-2 text-xs text-gray-500">
+      <div className="px-4 py-2 border-b border-gray-200 flex items-center gap-2 text-xs text-gray-500 flex-wrap">
         <span>anchor_status:</span>
         {STATUSES.map((s) => (
           <button
@@ -156,7 +223,23 @@ export function ExtractionsPanel() {
 
       <div className="flex-1 overflow-y-auto">
         {extractions.length === 0 && !loading && (
-          <div className="p-8 text-center text-sm text-gray-400">No extractions match these filters.</div>
+          <div className="p-8 text-center text-sm text-gray-500 space-y-2 max-w-md mx-auto">
+            <p>No extractions match these filters.</p>
+            {claimLikeTotal === 0 &&
+              figureEnrichmentTotal > 0 &&
+              (filters.type === "claim" ||
+                filters.type === "entity" ||
+                filters.type === "summary") && (
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  This cartridge has figure enrichments (
+                  {figureEnrichmentTotal.toLocaleString()}) but no claims /
+                  entities / summaries — it was likely built with{" "}
+                  <code className="font-mono">--no-extract</code>. Switch to
+                  Media kind / Visual desc / Discourse, or rebuild with LLM
+                  extract enabled.
+                </p>
+              )}
+          </div>
         )}
         {extractions.map((e) => (
           <ExtractionRow key={e.ulid} extraction={e} />

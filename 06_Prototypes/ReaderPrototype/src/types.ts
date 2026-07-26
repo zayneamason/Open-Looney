@@ -42,6 +42,7 @@ export type NodeType =
   | "list"
   | "list_item"
   | "figure"
+  | "image"
   | "table"
   | "row"
   | "cell";
@@ -64,7 +65,13 @@ export interface DocNodeBrief {
   content_preview: string;
 }
 
-export type ExtractionType = "claim" | "entity" | "summary";
+export type ExtractionType =
+  | "claim"
+  | "entity"
+  | "summary"
+  | "media_classification"
+  | "visual_description"
+  | "figure_discourse";
 export type AnchorStatus =
   | "anchored"
   | "synthesized"
@@ -158,6 +165,27 @@ export interface LedgerEvent {
   payload: unknown;
   prev_hash: string | null;
   entry_hash: string;
+}
+
+export interface FigureEnrichment {
+  ulid: string;
+  extraction_type: string;
+  content: string;
+  anchored_at: number | null;
+}
+
+/** SPEC-013 figure media + enrichments for DocumentView / inspector. */
+export interface FigurePayload {
+  figure_ulid: string;
+  caption: string;
+  image_ulid: string | null;
+  mime_type: string | null;
+  sha256: string | null;
+  byte_len: number | null;
+  storage: string | null;
+  external_path_resolved: string | null;
+  bytes_base64: string | null;
+  enrichments: FigureEnrichment[];
 }
 
 // --- SPEC-007 SketchedShelf ------------------------------------------------

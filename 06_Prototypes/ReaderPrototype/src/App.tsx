@@ -7,6 +7,7 @@ import { DocTree } from "./components/DocTree";
 import { NodeView } from "./components/NodeView";
 import { ExtractionsPanel } from "./components/ExtractionsPanel";
 import { ProvenanceDrawer } from "./components/ProvenanceDrawer";
+import { FigureInspectorDrawer } from "./components/FigureInspectorDrawer";
 import { TabBar } from "./components/TabBar";
 import { SearchPanel } from "./components/SearchPanel";
 import { DocumentView } from "./components/DocumentView";
@@ -18,6 +19,7 @@ export default function App() {
   const cartridge = useReader((s) => s.cartridge);
   const view = useReader((s) => s.view);
   const selectedClaim = useReader((s) => s.selectedClaim);
+  const selectedFigureUlid = useReader((s) => s.selectedFigureUlid);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 text-gray-900 font-sans">
@@ -61,6 +63,7 @@ export default function App() {
                 </div>
               </div>
               {selectedClaim && <ProvenanceDrawer />}
+              {selectedFigureUlid && <FigureInspectorDrawer />}
             </div>
           </>
         ) : (

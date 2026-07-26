@@ -35,6 +35,7 @@ pub enum NodeType {
     List,
     ListItem,
     Figure,
+    Image,
     Table,
     Row,
     Cell,
@@ -50,6 +51,7 @@ impl NodeType {
             NodeType::List => "list",
             NodeType::ListItem => "list_item",
             NodeType::Figure => "figure",
+            NodeType::Image => "image",
             NodeType::Table => "table",
             NodeType::Row => "row",
             NodeType::Cell => "cell",
@@ -65,6 +67,7 @@ impl NodeType {
             "list" => Some(NodeType::List),
             "list_item" => Some(NodeType::ListItem),
             "figure" => Some(NodeType::Figure),
+            "image" => Some(NodeType::Image),
             "table" => Some(NodeType::Table),
             "row" => Some(NodeType::Row),
             "cell" => Some(NodeType::Cell),
@@ -101,6 +104,9 @@ pub enum ExtractionType {
     Claim,
     Entity,
     Summary,
+    MediaClassification,
+    VisualDescription,
+    FigureDiscourse,
 }
 
 impl ExtractionType {
@@ -109,6 +115,9 @@ impl ExtractionType {
             ExtractionType::Claim => "claim",
             ExtractionType::Entity => "entity",
             ExtractionType::Summary => "summary",
+            ExtractionType::MediaClassification => "media_classification",
+            ExtractionType::VisualDescription => "visual_description",
+            ExtractionType::FigureDiscourse => "figure_discourse",
         }
     }
 
@@ -117,6 +126,9 @@ impl ExtractionType {
             "claim" => Some(ExtractionType::Claim),
             "entity" => Some(ExtractionType::Entity),
             "summary" => Some(ExtractionType::Summary),
+            "media_classification" => Some(ExtractionType::MediaClassification),
+            "visual_description" => Some(ExtractionType::VisualDescription),
+            "figure_discourse" => Some(ExtractionType::FigureDiscourse),
             _ => None,
         }
     }
@@ -239,4 +251,30 @@ pub struct LedgerEvent {
     pub payload: serde_json::Value,
     pub prev_hash: Option<String>,
     pub entry_hash: String,
+}
+
+/// One figure enrichment row (media_classification, visual_description, figure_discourse, …).
+#[derive(Serialize, Clone, Debug)]
+pub struct FigureEnrichment {
+    pub ulid: String,
+    pub extraction_type: String,
+    pub content: String,
+    pub anchored_at: Option<i64>,
+}
+
+/// Resolved figure media + enrichments for Reader display / inspector.
+#[derive(Serialize, Clone, Debug)]
+pub struct FigurePayload {
+    pub figure_ulid: String,
+    pub caption: String,
+    pub image_ulid: Option<String>,
+    pub mime_type: Option<String>,
+    pub sha256: Option<String>,
+    pub byte_len: Option<i64>,
+    pub storage: Option<String>,
+    /// Absolute path when storage is external (resolved beside the .lun).
+    pub external_path_resolved: Option<String>,
+    /// Raw bytes as base64 (embedded blob, or file read for external).
+    pub bytes_base64: Option<String>,
+    pub enrichments: Vec<FigureEnrichment>,
 }

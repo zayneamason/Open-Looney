@@ -15,7 +15,7 @@ use std::sync::Mutex;
 use tauri::State;
 use types::{
     AnchorStatus, DocNode, Extraction, ExtractionCount, ExtractionSourcesResult, ExtractionType,
-    HandleId, LedgerEvent, Meta, NodeType, SearchHit, TrustVector,
+    FigurePayload, HandleId, LedgerEvent, Meta, NodeType, SearchHit, TrustVector,
 };
 
 pub struct AppState {
@@ -96,6 +96,19 @@ fn get_node(
         .get(&handle)
         .ok_or(ReaderError::InvalidHandle { handle })?;
     queries::get_node(&h.conn, &node_ulid)
+}
+
+#[tauri::command]
+fn get_figure_payload(
+    state: State<'_, AppState>,
+    handle: HandleId,
+    figure_ulid: String,
+) -> Result<FigurePayload, ReaderError> {
+    let guard = state.handles.lock().unwrap();
+    let h = guard
+        .get(&handle)
+        .ok_or(ReaderError::InvalidHandle { handle })?;
+    queries::get_figure_payload(&h.conn, &h.path, &figure_ulid)
 }
 
 #[tauri::command]
@@ -309,6 +322,7 @@ pub fn run() {
             list_nodes,
             list_all_nodes,
             get_node,
+            get_figure_payload,
             list_extractions,
             get_extraction,
             find_extraction_by_content,

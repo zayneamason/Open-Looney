@@ -20,3 +20,12 @@ gen/
 10_Builder/config/intergalactic_hub/drive_credentials.json
 .claude-flow/
 **/.claude-flow/
+
+# Reader / Tauri build artifacts
+06_Prototypes/ReaderPrototype/src-tauri/target/
+06_Prototypes/ReaderPrototype/src-tauri/src-tauri/
+/lun-reader
+/lun-reader.app/
+
+# SPEC-013 external media sidecars (large; keep beside .lun locally)
+**/*.media/

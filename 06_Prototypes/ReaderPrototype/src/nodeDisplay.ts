@@ -8,6 +8,7 @@ export const NODE_TYPE_LABEL: Record<NodeType, string> = {
   list: "LIST",
   list_item: "LI",
   figure: "FIG",
+  image: "IMG",
   table: "TABLE",
   row: "ROW",
   cell: "CELL",
@@ -21,6 +22,7 @@ export const NODE_TYPE_COLOR: Record<NodeType, string> = {
   list: "text-emerald-700",
   list_item: "text-emerald-600",
   figure: "text-amber-700",
+  image: "text-amber-600",
   table: "text-cyan-700",
   row: "text-cyan-600",
   cell: "text-cyan-500",
@@ -58,11 +60,18 @@ export function nodePreview(node: DocNode): string {
   if (node.node_type === "row") return `Row ${node.position + 1}`;
   if (node.node_type === "cell") return `Cell ${node.position + 1}`;
   if (node.node_type === "figure") return "Figure";
+  if (node.node_type === "image") return "Image";
   if (node.node_type === "list_item") return `Item ${node.position + 1}`;
   return "(empty)";
 }
 
 export function isLeafNodeType(type: NodeType): boolean {
-  return type === "sentence" || type === "cell" || type === "figure" || type === "list_item";
+  return (
+    type === "sentence" ||
+    type === "cell" ||
+    type === "figure" ||
+    type === "image" ||
+    type === "list_item"
+  );
 }
 
