@@ -21,6 +21,11 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
 
+Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_figure-vision.md`
+(Real vision `visual_description` — Engine PR #174 / `c70d8937`. Bundled ledger line
+split into four; next is SPEC-014 vision embeddings, GDAL/COG RFC parked on its
+recorded trigger.)
+
 Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_figure-retrieval.md`
 (Enrichment hits promote to figure results — Engine PR #173 / `b7c02cff`. Next: vision
 embeddings, with SPEC-012 Engine WP0 parallel.)
@@ -111,7 +116,33 @@ Research intake added 2026-07-21:
   First runtime read of `extraction_context_nodes`. Engine PR
   [#173](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/173) merge `b7c02cff`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_figure-retrieval.md`.
-- [ ] Vision embeddings / richer visual description; regions; GDAL; COG / media-family RFC. **Next up.**
+- [x] Richer `visual_description` (2026-07-26): `--figure-vision` sends each figure to
+  the Claude vision API and stores the result as the extraction content, falling back to
+  the caption rollup stub when unavailable. Opt-in (one API call per figure). Oversize
+  rasters downscaled via the new optional `vision` extra (Pillow) — coverage 12/26 → 26/26
+  on the Nature-of-Art cartridge. Scanned page-image figures filtered *before* the call.
+  Gain is **lexical** (extraction FTS + #173 promotion), not semantic — a description is
+  an extraction and never enters `nodes_fts` or the MiniLM embeddings. Engine PR
+  [#174](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/174) merge `c70d8937`.
+  Handoff: `02_Handoffs/HANDOFF_2026-07-26_figure-vision.md`.
+- [ ] **SPEC-014 — vision embeddings.** Format-blocked, spec first. `LUN-FORMAT v0.3:317`
+  is a MUST (`length(vector) == embedding_dim * 4`) against a single cartridge-wide
+  `embedding_dim`, so image vectors make a cartridge fail its own validation checklist.
+  Fork to resolve: separate table (additive, SPEC-013 precedent) vs new meta keys plus
+  relaxing that MUST (wiki MAJOR) vs v0.4. ⚠ Prerequisite: `_v03_vec_search` scans
+  `embeddings` with no `level` filter and cosines via `zip(a, b)`, which truncates rather
+  than raising — a 512-dim vector would score on its first 384 components, silently.
+  ⚠ Vision-only search was already **rejected** as a sole strategy
+  (`08_Journal/2026-07-24_research-searchable-figures.md:88`) — do not re-propose it.
+- [ ] Regions (`region` node under `image`). Reserved but undefined; needs both a producer
+  (PDF bboxes are computed then discarded) and a consumer before the type is worth defining.
+- [ ] **GDAL / COG media-family RFC — parked, trigger not met.** The survey is already
+  written (`08_Journal/2026-07-24_design-intimate-searchable-figures.md:122-160`: GDAL
+  pattern-transfer table + open-source GIS survey), and the research brief records the
+  condition: *"Do not open media-family / COG RFC unless maps/artifacts are the workload"*
+  (`…_research-searchable-figures.md:246`). Open only when that becomes true; if opened,
+  it must not duplicate the existing survey or overload the `LUNM` name (see intake item
+  under Looney Data Research Intake).
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);
   prior: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`,
