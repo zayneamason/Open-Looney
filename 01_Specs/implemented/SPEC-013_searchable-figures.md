@@ -56,7 +56,7 @@ Additive side table keyed by `image` node ULID:
 - `storage` ∈ {`embedded`, `external`} with XOR discriminant (embedded ⇒ bytes; external ⇒ path)
 - `media_type`, optional width/height
 
-**v1 builder policy (accepted):** book/document figures **embed** bytes in-cartridge for portability (spike forced embedded). Schema retains `external` for a later size/kind policy; do not write absolute build-machine paths into shipped cartridges without an explicit later RFC.
+**v1 builder policy (updated 2026-07-25):** rasters **≤ 256 KiB** embed in-cartridge; larger figures use `storage=external` with a **relative** sidecar under `{lun_stem}.media/{sha256}.{ext}` (sha256 still on the row). Absolute build-machine paths MUST NOT be written. `--force-embed-media` restores all-embedded.
 
 **MIME allowlist (builder):** `image/png`, `image/jpeg`, `image/gif`, `image/webp`. Other types: skip insert + warn, do not fail the whole build.
 
@@ -153,7 +153,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | ID | Resolution |
 |---|---|
 | R1 FTS placement | `figure.content` is the v1 FTS carrier; not dual undefined rollup |
-| R2 Storage default | Embed for v1 book figures; `external` reserved; no abs build paths in shipped cartridges |
+| R2 Storage default | ≤256 KiB embed; larger → relative `{stem}.media/` sidecar (2026-07-25); `--force-embed-media` for all-embedded |
 | R3 Markdown linguistic | Alt/caption only; OCR not required for spine |
 | R4 Thumbnail | Optional, non-validating |
 | R5 Discourse | Frozen as `figure_discourse` + `extraction_context_nodes` (prev/next paragraph); Engine PR #170 |
@@ -161,7 +161,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 
 ## Still deferred (follow-on)
 
-1. External size/kind thresholds when `external` is re-enabled  
+1. External size/kind thresholds when `external` is re-enabled — **done** (256 KiB default; Engine PR [#171](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/171)): large rasters → `{stem}.media/` sidecars  
 2. Local OCR stack — **done** Engine PR [#167](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/167) merge `840db392`: optional `--figure-ocr` / `figure_ocr=True` rolls pytesseract text into `figure.content` (needs `.[ocr]` + tesseract; non-fatal when absent)  
 3. Extraction type strings + discourse representation — **done** for figure enrichment trio (`media_classification`, `visual_description`, `figure_discourse`); style tags / richer discourse still open  
 4. SPEC-007 sketches + figure terms  
