@@ -38,6 +38,15 @@ pub enum ReaderError {
 
     #[error("io: {message}")]
     IoError { message: String },
+
+    #[error("unsupported embedding model: {actual_model:?} dim {actual_dim:?}")]
+    UnsupportedEmbeddingModel {
+        actual_model: Option<String>,
+        actual_dim: Option<i64>,
+    },
+
+    #[error("embedding: {message}")]
+    EmbeddingError { message: String },
 }
 
 impl From<rusqlite::Error> for ReaderError {

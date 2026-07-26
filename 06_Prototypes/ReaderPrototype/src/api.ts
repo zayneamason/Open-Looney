@@ -99,10 +99,8 @@ export const api = {
   search: (handle: HandleId, query: string, limit: number) =>
     call<SearchHit[]>("search", { handle, query, limit }),
 
-  /** v2 hook: semantic search backend. v1 always falls back to `search` (FTS5). */
-  semanticSearch: undefined as
-    | undefined
-    | ((handle: HandleId, query: string, limit: number) => Promise<SearchHit[]>),
+  semanticSearch: (handle: HandleId, query: string, limit: number) =>
+    call<SearchHit[]>("semantic_search", { handle, query, limit }),
 
   // --- SPEC-007 SketchedShelf ---------------------------------------------
 

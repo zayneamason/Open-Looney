@@ -50,6 +50,10 @@ export function errorToText(e: unknown): string {
         return `Invalid cartridge handle ${err.handle}. Reopen the file.`;
       case "io_error":
         return `I/O error: ${err.message}.`;
+      case "unsupported_embedding_model":
+        return `This cartridge's embeddings were built with a different model (${err.actual_model ?? "none"}, dim ${err.actual_dim ?? "?"}) than the bundled query model. Semantic search is unavailable for this cartridge.`;
+      case "embedding_error":
+        return `Semantic search embedding failed: ${err.message}.`;
     }
   }
   return String(e);
@@ -57,6 +61,7 @@ export function errorToText(e: unknown): string {
 
 export type Toast = { id: string; level: "error" | "info"; text: string };
 export type View = "document" | "tree" | "extractions" | "search";
+export type SearchMode = "keyword" | "semantic";
 
 export interface ExtractionFilters {
   type: ExtractionType;
@@ -95,6 +100,7 @@ export interface ReaderState {
   trustByExtractionUlid: Record<string, TrustVector>;
 
   // Search
+  searchMode: SearchMode;
   searchQuery: string;
   searchResults: SearchHit[];
   searchLoading: boolean;
@@ -119,6 +125,7 @@ export interface ReaderState {
   closeFigureDrawer(): void;
 
   setSearchQuery(q: string): void;
+  setSearchMode(mode: SearchMode): void;
   runSearch(): Promise<void>;
 
   /** SPEC-007 v0.3.3: open `path` and per-kind navigate to `item`. Used by
@@ -160,6 +167,7 @@ export const useReader = create<ReaderState>((set, get) => ({
   cartridge: null,
   toasts: [],
   view: "document",
+  searchMode: "keyword",
   ...EMPTY_STATE,
 
   async openCartridge(path: string) {
@@ -374,8 +382,15 @@ export const useReader = create<ReaderState>((set, get) => ({
     set({ searchQuery: q });
   },
 
+  setSearchMode(mode: SearchMode) {
+    set({ searchMode: mode });
+    if (get().searchQuery.trim()) {
+      void get().runSearch();
+    }
+  },
+
   async runSearch() {
-    const { cartridge, searchQuery } = get();
+    const { cartridge, searchQuery, searchMode } = get();
     if (!cartridge) return;
     const query = searchQuery.trim();
     if (!query) {
@@ -384,8 +399,7 @@ export const useReader = create<ReaderState>((set, get) => ({
     }
     set({ searchLoading: true, searchError: null });
     try {
-      // v2 hook: prefer semantic if configured; v1 always falls back to FTS5.
-      const fn = api.semanticSearch ?? api.search;
+      const fn = searchMode === "semantic" ? api.semanticSearch : api.search;
       const results = await fn(cartridge.handle, query, 50);
       set({ searchResults: results, searchLoading: false });
     } catch (e) {
@@ -407,7 +421,7 @@ export const useReader = create<ReaderState>((set, get) => ({
 
     switch (kind) {
       case "fts_term": {
-        set({ searchQuery: item, view: "search" });
+        set({ searchQuery: item, searchMode: "keyword", view: "search" });
         await get().runSearch();
         return;
       }

@@ -40,8 +40,9 @@ pub fn safe_snippet(raw: &str) -> String {
     out
 }
 
-// Note: the `embeddings` table exists in v0.3 cartridges but stores BLOBs.
-// v1 never reads it. Do not SELECT * from any table — always enumerate columns.
+// Note: the `embeddings` table exists in v0.3 cartridges and stores raw
+// little-endian f32 BLOBs (see `unpack_f32_le` / `semantic_search` below).
+// Do not SELECT * from any table — always enumerate columns.
 
 pub fn get_meta(conn: &Connection) -> Result<Meta, ReaderError> {
     let mut stmt = conn.prepare("SELECT key, value FROM meta")?;
@@ -689,9 +690,110 @@ pub fn search(conn: &Connection, query: &str, limit: i64) -> Result<Vec<SearchHi
             snippet_html: safe_snippet(&raw_snippet),
             rank,
             source: "fts".to_string(),
+            level: None,
         });
     }
     Ok(out)
+}
+
+/// Unpacks a raw little-endian f32 array blob (as written by the cartridge
+/// builder's `struct.pack(f"{len(vector)}f", *vector)` — no header).
+fn unpack_f32_le(blob: &[u8]) -> Vec<f32> {
+    blob.chunks_exact(4)
+        .map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]]))
+        .collect()
+}
+
+fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
+    let dot: f32 = a.iter().zip(b).map(|(x, y)| x * y).sum();
+    let norm_a: f32 = a.iter().map(|x| x * x).sum::<f32>().sqrt();
+    let norm_b: f32 = b.iter().map(|x| x * x).sum::<f32>().sqrt();
+    if norm_a == 0.0 || norm_b == 0.0 {
+        return 0.0;
+    }
+    dot / (norm_a * norm_b)
+}
+
+/// Reconstructs display text for a paragraph/section node, whose own
+/// `doc_nodes.content` column is NULL by schema design (text lives on
+/// descendant `sentence`/`list_item`/`cell` nodes). Mirrors the same text
+/// the cartridge builder's `embedder.py` concatenated when generating the
+/// stored vector, so the snippet reflects what was actually embedded.
+fn reconstruct_node_text(conn: &Connection, node_ulid: &str, level: &str) -> Result<String, ReaderError> {
+    let sql = if level == "paragraph" {
+        "SELECT COALESCE(GROUP_CONCAT(content, ' '), '') FROM (
+            SELECT content FROM doc_nodes
+            WHERE parent_ulid = ?1 AND type = 'sentence'
+            ORDER BY id
+        )"
+    } else {
+        "WITH RECURSIVE subtree AS (
+            SELECT ulid FROM doc_nodes WHERE ulid = ?1
+            UNION ALL
+            SELECT d.ulid FROM doc_nodes d JOIN subtree s ON d.parent_ulid = s.ulid
+        )
+        SELECT COALESCE(GROUP_CONCAT(content, ' '), '') FROM (
+            SELECT content FROM doc_nodes
+            WHERE ulid IN (SELECT ulid FROM subtree)
+              AND type IN ('sentence', 'list_item', 'cell')
+              AND content IS NOT NULL AND content != ''
+            ORDER BY id
+        )"
+    };
+    Ok(conn.query_row(sql, params![node_ulid], |r| r.get(0))?)
+}
+
+/// Semantic search: brute-force cosine scan over the cartridge's stored
+/// `embeddings` (paragraph + section level, merged into one ranked list).
+/// Vector counts per cartridge are small (dozens to low hundreds), so no
+/// ANN index is needed. `rank = 1.0 - cosine_similarity` (lower is better),
+/// matching the FTS bm25 "lower is better" convention `search()` uses.
+pub fn semantic_search(
+    conn: &Connection,
+    query_vector: &[f32],
+    limit: i64,
+) -> Result<Vec<SearchHit>, ReaderError> {
+    let mut stmt = conn.prepare("SELECT node_ulid, level, vector FROM embeddings")?;
+    let rows = stmt.query_map([], |r| {
+        Ok((
+            r.get::<_, String>(0)?,
+            r.get::<_, String>(1)?,
+            r.get::<_, Vec<u8>>(2)?,
+        ))
+    })?;
+
+    let mut scored: Vec<(f32, String, String)> = Vec::new();
+    for row in rows {
+        let (node_ulid, level, blob) = row?;
+        let vector = unpack_f32_le(&blob);
+        if vector.len() != query_vector.len() {
+            // Defends against a stray malformed/legacy-dim row rather than
+            // failing the whole search.
+            continue;
+        }
+        let sim = cosine_similarity(query_vector, &vector);
+        scored.push((sim, node_ulid, level));
+    }
+    scored.sort_by(|a, b| b.0.total_cmp(&a.0));
+    scored.truncate(limit.max(0) as usize);
+
+    scored
+        .into_iter()
+        .map(|(sim, node_ulid, level)| {
+            let content = reconstruct_node_text(conn, &node_ulid, &level)?;
+            let mut snippet: String = content.chars().take(220).collect();
+            if content.chars().count() > 220 {
+                snippet.push('…');
+            }
+            Ok(SearchHit {
+                node_ulid,
+                snippet_html: safe_snippet(&snippet),
+                rank: 1.0 - sim as f64,
+                source: "semantic".to_string(),
+                level: Some(level),
+            })
+        })
+        .collect()
 }
 
 /// SPEC-005 read-path helper: full event history for a single target ULID.
@@ -1187,6 +1289,76 @@ mod tests {
         for w in hits.windows(2) {
             assert!(w[0].rank <= w[1].rank, "results not in rank order");
         }
+    }
+
+    #[test]
+    fn unpack_f32_le_roundtrip() {
+        let original: Vec<f32> = vec![0.5, -1.25, 3.0, 0.0, -0.000123];
+        let mut blob = Vec::new();
+        for v in &original {
+            blob.extend_from_slice(&v.to_le_bytes());
+        }
+        assert_eq!(unpack_f32_le(&blob), original);
+    }
+
+    #[test]
+    fn cosine_similarity_identical_is_one() {
+        let a = [1.0f32, 2.0, 3.0];
+        assert!((cosine_similarity(&a, &a) - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn cosine_similarity_orthogonal_is_zero() {
+        let a = [1.0f32, 0.0];
+        let b = [0.0f32, 1.0];
+        assert!(cosine_similarity(&a, &b).abs() < 1e-6);
+    }
+
+    #[test]
+    fn semantic_search_returns_ranked_hits_with_level() {
+        let Some(h) = meditations() else { return };
+        let query_vector = crate::embedder::embed_query("virtue").expect("embed_query");
+        let hits = semantic_search(&h.conn, &query_vector, 10).unwrap();
+        assert!(!hits.is_empty(), "should find semantic matches for 'virtue'");
+        for hit in &hits {
+            assert_eq!(hit.source, "semantic");
+            assert!(matches!(hit.level.as_deref(), Some("paragraph") | Some("section")));
+            assert_eq!(hit.node_ulid.len(), 26);
+        }
+        for w in hits.windows(2) {
+            assert!(w[0].rank <= w[1].rank, "results not in rank order");
+        }
+    }
+
+    /// Correctness check: the bundled Rust/ONNX pipeline must reproduce the
+    /// same vector space the Python `SentenceTransformer` pipeline used to
+    /// build the cartridge. Without this, semantic search could compile and
+    /// run while silently returning meaningless rankings.
+    #[test]
+    fn embedding_space_matches_stored_vectors() {
+        let Some(h) = meditations() else { return };
+        // A known paragraph node + its exact source text (reconstructed the
+        // same way the builder's embedder.py does: sentence children joined
+        // by ' ', in id order).
+        let node_ulid = "01KSCJC7Z3NW52390CZG8V3WPS";
+        let text = "Marcus Aurelius' Meditations - tr. Casaubon v. 8.16, uploaded to www.philaletheians.co.uk, 14 July 2013 Page 1 of 128";
+
+        let blob: Vec<u8> = h
+            .conn
+            .query_row(
+                "SELECT vector FROM embeddings WHERE node_ulid = ?1 AND level = 'paragraph'",
+                params![node_ulid],
+                |r| r.get(0),
+            )
+            .unwrap();
+        let stored = unpack_f32_le(&blob);
+
+        let query_vector = crate::embedder::embed_query(text).expect("embed_query");
+        let sim = cosine_similarity(&query_vector, &stored);
+        assert!(
+            sim > 0.95,
+            "expected near-identical vectors for the same text, got cosine similarity {sim}"
+        );
     }
 
     #[test]

@@ -1,4 +1,5 @@
 mod cartridge;
+mod embedder;
 mod error;
 mod queries;
 mod shelf;
@@ -244,6 +245,30 @@ fn search(
     queries::search(&h.conn, &query, limit)
 }
 
+#[tauri::command]
+fn semantic_search(
+    state: State<'_, AppState>,
+    handle: HandleId,
+    query: String,
+    limit: i64,
+) -> Result<Vec<SearchHit>, ReaderError> {
+    let guard = state.handles.lock().unwrap();
+    let h = guard
+        .get(&handle)
+        .ok_or(ReaderError::InvalidHandle { handle })?;
+    let meta = queries::get_meta(&h.conn)?;
+    if meta.embedding_model.as_deref() != Some(embedder::EXPECTED_MODEL_NAME)
+        || meta.embedding_dim != Some(embedder::EXPECTED_DIM)
+    {
+        return Err(ReaderError::UnsupportedEmbeddingModel {
+            actual_model: meta.embedding_model,
+            actual_dim: meta.embedding_dim,
+        });
+    }
+    let query_vector = embedder::embed_query(&query)?;
+    queries::semantic_search(&h.conn, &query_vector, limit)
+}
+
 // --- SPEC-007 shelf commands -----------------------------------------------
 
 #[tauri::command]
@@ -333,6 +358,7 @@ pub fn run() {
             compose_trust_vector,
             compose_trust_vectors_batch,
             search,
+            semantic_search,
             open_shelf,
             close_shelf,
             shelf_filter_candidates,

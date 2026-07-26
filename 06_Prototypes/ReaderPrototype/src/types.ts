@@ -11,7 +11,13 @@ export type ReaderError =
   | { kind: "ledger_integrity"; detail: string }
   | { kind: "sqlite_error"; message: string }
   | { kind: "invalid_handle"; handle: number }
-  | { kind: "io_error"; message: string };
+  | { kind: "io_error"; message: string }
+  | {
+      kind: "unsupported_embedding_model";
+      actual_model: string | null;
+      actual_dim: number | null;
+    }
+  | { kind: "embedding_error"; message: string };
 
 export interface Meta {
   title: string | null;
@@ -118,8 +124,10 @@ export interface SearchHit {
   node_ulid: string;
   snippet_html: string;
   rank: number;
-  /** Source discriminator. Always "fts" in v1; v2 may add "semantic" / "hybrid". */
+  /** Source discriminator: "fts" (keyword) or "semantic". */
   source: string;
+  /** Embedding granularity that matched. Only set for source === "semantic". */
+  level?: "paragraph" | "section";
 }
 
 export interface TrustAxes {

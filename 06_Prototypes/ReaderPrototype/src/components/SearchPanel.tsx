@@ -1,4 +1,5 @@
 import { useReader } from "../store";
+import { isSemanticSearchAvailable } from "../semanticSearch";
 import type { SearchHit } from "../types";
 
 function ResultRow({ hit }: { hit: SearchHit }) {
@@ -16,6 +17,11 @@ function ResultRow({ hit }: { hit: SearchHit }) {
         <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 uppercase">
           {hit.source}
         </span>
+        {hit.level && (
+          <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 uppercase">
+            {hit.level}
+          </span>
+        )}
         <span>rank {hit.rank.toFixed(3)}</span>
         <span className="truncate" title={hit.node_ulid}>node {hit.node_ulid.slice(-8)}</span>
       </div>
@@ -28,16 +34,45 @@ function ResultRow({ hit }: { hit: SearchHit }) {
 }
 
 export function SearchPanel() {
+  const cartridge = useReader((s) => s.cartridge);
   const query = useReader((s) => s.searchQuery);
+  const searchMode = useReader((s) => s.searchMode);
   const results = useReader((s) => s.searchResults);
   const loading = useReader((s) => s.searchLoading);
   const error = useReader((s) => s.searchError);
   const setSearchQuery = useReader((s) => s.setSearchQuery);
+  const setSearchMode = useReader((s) => s.setSearchMode);
   const runSearch = useReader((s) => s.runSearch);
+
+  const semanticAvailable = cartridge ? isSemanticSearchAvailable(cartridge.meta) : false;
 
   return (
     <div className="h-full flex flex-col">
       <div className="border-b border-gray-200 px-4 py-3 flex items-center gap-2">
+        <div className="flex rounded border border-gray-200 overflow-hidden text-xs">
+          <button
+            onClick={() => setSearchMode("keyword")}
+            className={`px-3 py-2 ${
+              searchMode === "keyword" ? "bg-gray-900 text-white" : "bg-white text-gray-600"
+            }`}
+          >
+            Keyword
+          </button>
+          <button
+            onClick={() => setSearchMode("semantic")}
+            disabled={!semanticAvailable}
+            title={
+              semanticAvailable
+                ? undefined
+                : "This cartridge's embeddings were built with a different model — semantic search unavailable."
+            }
+            className={`px-3 py-2 border-l border-gray-200 ${
+              searchMode === "semantic" ? "bg-gray-900 text-white" : "bg-white text-gray-600"
+            } disabled:opacity-40 disabled:cursor-not-allowed`}
+          >
+            Semantic
+          </button>
+        </div>
         <input
           type="text"
           value={query}
@@ -45,7 +80,11 @@ export function SearchPanel() {
           onKeyDown={(e) => {
             if (e.key === "Enter") void runSearch();
           }}
-          placeholder="FTS5 query — try 'virtue' or 'death OR mortal'"
+          placeholder={
+            searchMode === "semantic"
+              ? "Describe a concept — try a paraphrase, not exact words"
+              : "FTS5 query — try 'virtue' or 'death OR mortal'"
+          }
           className="flex-1 text-sm px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-gray-500"
           autoFocus
         />
@@ -67,15 +106,22 @@ export function SearchPanel() {
       <div className="flex-1 overflow-y-auto">
         {!loading && results.length === 0 && query.trim() && !error && (
           <div className="p-8 text-center text-sm text-gray-400">
-            No matches. Try different terms or use FTS5 operators (AND, OR, NEAR, "quoted phrase").
+            No matches.{" "}
+            {searchMode === "semantic"
+              ? "Try a different phrasing or concept."
+              : 'Try different terms or use FTS5 operators (AND, OR, NEAR, "quoted phrase").'}
           </div>
         )}
         {!loading && results.length === 0 && !query.trim() && (
           <div className="p-8 text-center text-sm text-gray-400">
-            <p>Full-text search over <code className="font-mono">doc_nodes.content</code> via FTS5.</p>
-            <p className="mt-2 text-xs text-gray-400">
-              v2 will add semantic search using the cartridge's stored MiniLM vectors.
-            </p>
+            {searchMode === "semantic" ? (
+              <p>
+                Natural-language search over the cartridge's stored MiniLM embeddings — try a
+                paraphrase or concept instead of exact words.
+              </p>
+            ) : (
+              <p>Full-text search over <code className="font-mono">doc_nodes.content</code> via FTS5.</p>
+            )}
           </div>
         )}
         {results.map((hit) => (

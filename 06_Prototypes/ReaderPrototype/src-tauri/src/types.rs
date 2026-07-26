@@ -212,8 +212,12 @@ pub struct SearchHit {
     pub node_ulid: String,
     pub snippet_html: String,
     pub rank: f64,
-    /// Source discriminator. Always `"fts"` in v1. v2 may add `"semantic"` / `"hybrid"`.
+    /// Source discriminator: `"fts"` (keyword) or `"semantic"`.
     pub source: String,
+    /// Embedding granularity that matched ("paragraph" / "section"). Only
+    /// set for `source == "semantic"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub level: Option<String>,
 }
 
 #[derive(Serialize)]
