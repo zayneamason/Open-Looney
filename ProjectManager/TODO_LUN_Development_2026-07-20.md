@@ -78,7 +78,7 @@ Research intake added 2026-07-21:
 - [x] Rule `media_classification` / closed `media_kind` (PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168) / `a67e7ee9`).
 - [x] `visual_description` stub from `figure.content` (PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) / `5d39c96e`).
 - [x] `figure_discourse` + `extraction_context_nodes` (PR [#170](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/170) / `fb8d81cc`).
-- [x] External media sidecars for large rasters (PR [#171](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/171) / `01783d69`) — merge to Engine `main` if still open.
+- [x] External media sidecars for large rasters (PR [#171](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/171) / `03fa7364` merged 2026-07-26).
 - [x] Reader figure display + inspector + hierarchy navigate (v0.3.4) — see handoff 2026-07-26.
 - [ ] Scanned PDF page-as-image typing (full-page rasters as `figure`/`image`).
 - [ ] Assembler/RRF consumption of `figure_discourse` neighbors.

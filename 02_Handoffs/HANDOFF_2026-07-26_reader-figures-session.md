@@ -7,8 +7,8 @@
 ## What landed this session
 
 ### Engine
-- PR [#171](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/171) — external `media_blobs` sidecars (`{stem}.media/`, `--embed-max`, `--force-embed-media`). Merge if still open when you pick up.
-- Live Engine code: `/Users/zayneamason/_HeyLuna_BETA/_LunaEngine_BetaProject_V2.0_Root` (not `10_Builder/`).
+- PR [#171](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/171) **merged** `03fa73645e99ce26f6da14d8a158966f2cc69b83` — external `media_blobs` sidecars (`{stem}.media/`, `--embed-max`, `--force-embed-media`).
+- Live Engine code: `/Users/zayneamason/_HeyLuna_BETA/_LunaEngine_BetaProject_V2.0_Root` (not `10_Builder/`). Checkout/pull `main` before next Engine work.
 
 ### Reader (`06_Prototypes/ReaderPrototype/`) — **v0.3.4**
 - `get_figure_payload` — `media_blobs` + enrichments; embedded → base64; external → resolved path + `convertFileSrc` / asset protocol
