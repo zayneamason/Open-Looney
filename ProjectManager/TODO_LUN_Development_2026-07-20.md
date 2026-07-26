@@ -21,6 +21,10 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
 
+Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_figure-retrieval.md`
+(Enrichment hits promote to figure results — Engine PR #173 / `b7c02cff`. Next: vision
+embeddings, with SPEC-012 Engine WP0 parallel.)
+
 Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_scanned-page-images.md`
 (Scanned PDF page-as-image typing — Engine PR #172 / `465b784c`. Remaining order:
 assembler/RRF → vision embeddings, SPEC-012 Engine WP0 parallel.)
@@ -98,8 +102,16 @@ Research intake added 2026-07-21:
   (`--no-page-images` / `--page-image-dpi=N`). All three figure enrichments skip page images;
   `media_kind` vocab untouched. Engine PR [#172](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/172)
   merge `465b784c`. Handoff: `02_Handoffs/HANDOFF_2026-07-26_scanned-page-images.md`.
-- [ ] Assembler/RRF consumption of `figure_discourse` neighbors. **Next up.**
-- [ ] Vision embeddings / richer visual description; regions; GDAL; COG / media-family RFC.
+- [x] Assembler/RRF consumption of `figure_discourse` neighbors (2026-07-26): enrichment
+  hits promote to **figure results** rather than being returned as themselves — a hit resolves
+  through `extraction_sources` to the figure it anchors, carrying caption + kind + description
+  + capped neighbour context. Kills the duplicated-prose evidence rows (29,590 chars of
+  `figure_discourse` against 44,503 chars of sentence nodes on the Nature-of-Art cartridge)
+  while keeping neighbour prose and `src_hint`-derived `media_kind` as live retrieval paths.
+  First runtime read of `extraction_context_nodes`. Engine PR
+  [#173](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/173) merge `b7c02cff`.
+  Handoff: `02_Handoffs/HANDOFF_2026-07-26_figure-retrieval.md`.
+- [ ] Vision embeddings / richer visual description; regions; GDAL; COG / media-family RFC. **Next up.**
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);
   prior: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`,
