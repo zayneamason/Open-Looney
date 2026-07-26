@@ -1,7 +1,8 @@
 # HANDOFF: Cartridge vector reads fail loud on a dimension mismatch
 
 **Date:** 2026-07-26
-**Status:** Implemented, tested, smoked — Engine branch `fix/vec-dim-mismatch-guard`
+**Status:** Implemented, tested, live-smoked, merged — Engine PR
+[#175](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/175) / `c4d60b6a`
 **Continue in:** Claude Code
 **Repo:** `_LunaEngine_BetaProject_V2.0_Root` (Engine slice — not this repo)
 **Discharges:** SPEC-014 prerequisite, named as follow-up 3 in
@@ -102,7 +103,40 @@ are audible despite the DEBUG swallow.
   only way it can be correct. Real blobs, real meta, real node index, real cosine; only
   the query *vector* is a deterministic stub, and that sits entirely upstream of the
   changed code.
-- No live backend restart, no plist change, no flag. Pure reader-side correctness.
+**Live smoke on the running backend.** Parity first: 18 probes (3 mounted v0.3 cartridges
+x 3 search types x 2 queries, real MiniLM) captured before the restart on the old code and
+again after — byte-identical, twice.
+
+Parity alone proves nothing, though: "the guard is invisible" and "the new code never
+loaded" produce the same output. So a corrupted copy of `constitution.lun` went into the
+cartridge dropbox (a supported feature, not a hack) and was mounted:
+
+| search type | result |
+|---|---|
+| `hybrid` | HTTP 200, 5 results, `search_type` values include `keyword` |
+| `semantic` | HTTP 404 carrying the guard's message |
+| `keyword` | unaffected |
+
+`_rrf_fuse` relabels everything it fuses as `hybrid`, so a surviving `keyword` label is
+positive evidence the fallback ran rather than fusion. Both log lines landed in
+`Logs/backend.err.log` naming the offending node. Probe cartridge then unmounted,
+forgotten and deleted; the collection set is back to its original six.
+
+The live run also caught a defect the unit tests could not: the WARNING repeated the
+collection key and the whole guard message the preceding ERROR already carried, plus a
+doubled period. The test asserted on substrings and passed happily. Only a real log shows
+log noise.
+
+- No plist change and no flag. Pure reader-side correctness.
+
+## Process note
+
+This PR was merged with **zero human reviews**. The review recorded on #175 was produced
+by subagents at the authoring agent's own request and posted as its own comment — a
+self-review, however adversarially structured. The evidence behind it is real (23 tests, 5
+mutations, live smoke), and the review did change the code: it caught the hybrid blast
+radius that the first cut shipped with. It is still not a second pair of human eyes, and
+the record should not be read as if it were.
 
 ## What review caught: the guard's blast radius
 
@@ -145,10 +179,12 @@ Two things about this are worth carrying forward:
 2. **`validate_cartridge_open` never inspects `embeddings`.** It checks `application_id`,
    `user_version`, `logprob_base`, `logprob_attribution`, `ledger_hash_algorithm` —
    nothing about vector byte length. So this guard is **search-time only**: a corrupt
-   cartridge still opens cleanly and only fails when someone runs a semantic query. If the
-   goal becomes "the reader enforces the format MUST", it belongs in open-time validation
-   or an fsck path as well. Query-time was a deliberate choice (open-time costs a table
-   scan per connection), not an oversight.
+   cartridge still opens cleanly and only fails when someone runs a semantic query.
+   Confirmed on the live backend, not just argued: the corrupt probe cartridge came back
+   from `/api/cartridges/discovered` as `"validation_status": "valid"` and mounted without
+   complaint. If the goal becomes "the reader enforces the format MUST", it belongs in
+   open-time validation or an fsck path as well. Query-time was a deliberate choice
+   (open-time costs a table scan per connection), not an oversight.
 3. **Nothing reconciles config `embedding_dim` with `meta.embedding_dim`.** The guard
    turns the divergence into a hard error instead of silent truncation, which is strictly
    better, but a cartridge whose width differs from the collection config is now

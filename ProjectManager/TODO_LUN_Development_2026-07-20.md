@@ -134,7 +134,11 @@ Research intake added 2026-07-21:
   agreement with `meta.embedding_dim`. Guard covers all three, logs at ERROR before
   raising. Also found: config `embedding_dim` (YAML, default 384) and the cartridge's own
   `meta.embedding_dim` were never cross-checked, so a non-384 cartridge already truncated
-  silently — this was never purely latent. Engine branch `fix/vec-dim-mismatch-guard`.
+  silently — this was never purely latent. Live-smoked on the running backend: a corrupt
+  cartridge mounted through the dropbox reports `validation_status: "valid"` (open-time
+  validation never inspects `embeddings`), then hybrid search returns keyword results
+  while explicit semantic fails, both audible in `Logs/backend.err.log`. Engine PR
+  [#175](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/175) merge `c4d60b6a`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_vec-dim-guard.md`.
 - [ ] **SPEC-014 — vision embeddings.** Format-blocked, spec first. `LUN-FORMAT v0.3:317`
   is a MUST (`length(vector) == embedding_dim * 4`) against a single cartridge-wide
