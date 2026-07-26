@@ -125,13 +125,25 @@ Research intake added 2026-07-21:
   an extraction and never enters `nodes_fts` or the MiniLM embeddings. Engine PR
   [#174](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/174) merge `c70d8937`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_figure-vision.md`.
+- [x] **SPEC-014 prerequisite — dim-mismatch guard (2026-07-26).** The `zip(a, b)` cosine
+  truncation is fixed in both cartridge readers. It was worse than truncation: `dot` ran
+  over the zipped prefix while both norms ran over the *full* vectors, so the result was
+  an arbitrary depressed float, not a partial cosine. Two further faults found while
+  fixing it, each fatal alone: `struct.error` is not a `ValueError`, so a ragged blob
+  escaped any data-fault handler; and stored-vs-query agreement does **not** imply
+  agreement with `meta.embedding_dim`. Guard covers all three, logs at ERROR before
+  raising. Also found: config `embedding_dim` (YAML, default 384) and the cartridge's own
+  `meta.embedding_dim` were never cross-checked, so a non-384 cartridge already truncated
+  silently — this was never purely latent. Engine branch `fix/vec-dim-mismatch-guard`.
+  Handoff: `02_Handoffs/HANDOFF_2026-07-26_vec-dim-guard.md`.
 - [ ] **SPEC-014 — vision embeddings.** Format-blocked, spec first. `LUN-FORMAT v0.3:317`
   is a MUST (`length(vector) == embedding_dim * 4`) against a single cartridge-wide
   `embedding_dim`, so image vectors make a cartridge fail its own validation checklist.
   Fork to resolve: separate table (additive, SPEC-013 precedent) vs new meta keys plus
-  relaxing that MUST (wiki MAJOR) vs v0.4. ⚠ Prerequisite: `_v03_vec_search` scans
-  `embeddings` with no `level` filter and cosines via `zip(a, b)`, which truncates rather
-  than raising — a 512-dim vector would score on its first 384 components, silently.
+  relaxing that MUST (wiki MAJOR) vs v0.4. ⚠ The `level` filter is now explicitly this
+  spec's to decide — `_v03_vec_search` still scans `embeddings` with no `level` filter,
+  deliberately left alone because one level population exists today and an allow-list
+  would be dead code against an undecided schema.
   ⚠ Vision-only search was already **rejected** as a sole strategy
   (`08_Journal/2026-07-24_research-searchable-figures.md:88`) — do not re-propose it.
 - [ ] Regions (`region` node under `image`). Reserved but undefined; needs both a producer
