@@ -21,6 +21,10 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
 
+Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_scanned-page-images.md`
+(Scanned PDF page-as-image typing — Engine PR #172 / `465b784c`. Remaining order:
+assembler/RRF → vision embeddings, SPEC-012 Engine WP0 parallel.)
+
 Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md`
 (Reader semantic search UI — bundled offline MiniLM/ONNX via `fastembed`, Keyword/Semantic toggle,
 cosine parity verified 1.0000001 vs. Python-built vectors; commit `5018a80`. Agreed next-4 order:
@@ -89,8 +93,12 @@ Research intake added 2026-07-21:
   via `fastembed` (statically linked ONNX Runtime, no dylib bundling needed), cosine scan over
   paragraph+section `embeddings`. Parity-verified against Python-built vectors (cosine 1.0000001).
   Commit `5018a80`. Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md`.
-- [ ] Scanned PDF page-as-image typing (full-page rasters as `figure`/`image`). **Next up** — Engine slice.
-- [ ] Assembler/RRF consumption of `figure_discourse` neighbors.
+- [x] Scanned PDF page-as-image typing (2026-07-26): scanned pages emit `figure`→`image`
+  + `media_blobs` at 150 dpi marked `meta.page_image`; OCR unchanged at 300 dpi. Default on
+  (`--no-page-images` / `--page-image-dpi=N`). All three figure enrichments skip page images;
+  `media_kind` vocab untouched. Engine PR [#172](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/172)
+  merge `465b784c`. Handoff: `02_Handoffs/HANDOFF_2026-07-26_scanned-page-images.md`.
+- [ ] Assembler/RRF consumption of `figure_discourse` neighbors. **Next up.**
 - [ ] Vision embeddings / richer visual description; regions; GDAL; COG / media-family RFC.
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);

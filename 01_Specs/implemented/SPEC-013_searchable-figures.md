@@ -166,7 +166,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 3. Extraction type strings + discourse representation — **done** for figure enrichment trio (`media_classification`, `visual_description`, `figure_discourse`); style tags / richer discourse still open  
 4. SPEC-007 sketches + figure terms  
 5. Reader bbox UX  
-6. Scanned PDF page-as-image typing  
+6. Scanned PDF page-as-image typing — **done** Engine PR [#172](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/172) merge `465b784c`: scanned pages (under 50 chars of extractable text) emit `figure`→`image` + `media_blobs` at 150 dpi, marked `meta.page_image`; OCR still reads at 300 dpi. Default on (`--no-page-images` / `--page-image-dpi=N`). `figure.content` is a bare label — page words stay in `sentence` nodes — and all three enrichments skip page images (see Decision log 2026-07-26)  
 7. Vision embedding flag  
 8. `media_kind` enrichment pass + validators — **done** Engine PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168) merge `a67e7ee9`: rule-based `media_classification` extraction; closed kinds `photo|diagram|chart|map|painting|schematic|screenshot|other`  
 9. PDF image extraction slice — **done** Engine PR [#165](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/165) merge `fa78da70`  
@@ -190,6 +190,7 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 | 2026-07-25 | Froze extraction type `media_classification` and closed `media_kind` set; Engine PR #168 merged (`a67e7ee9`) (rule heuristics, always-on). |
 | 2026-07-25 | Froze extraction type `visual_description` as figure.content rollup stub; Engine PR #169 merged (`5d39c96e`). |
 | 2026-07-25 | Froze extraction type `figure_discourse`; prev/next paragraph via `extraction_context_nodes`; Engine PR #170 merged (`fb8d81cc`). |
+| 2026-07-26 | Scanned pages typed as `page_image` figures; Engine PR #172 merged (`465b784c`). **A page-image figure legally carries no enrichment extractions of any of the three types** — `media_kind` would regex-match a page that merely mentions "the map of Europe", `visual_description` would manufacture a description off a page label, and `figure_discourse` would quote the page's own OCR paragraphs back at it. `media_kind` vocabulary **unchanged** — no forced `other` row, no new kind, no amendment needed. |
 
 ## Implementation notes
 
@@ -200,7 +201,13 @@ Figures may carry higher sensitivity. Classification/consent metadata and ledger
 - Engine PR [#168](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/168) merged 2026-07-25 as `a67e7ee9` (rule-based `media_classification` / `media_kind`).
 - Engine PR [#169](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/169) merged 2026-07-25 as `5d39c96e` (`visual_description` stub from `figure.content`).
 - Engine PR [#170](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/170) merged 2026-07-25 as `fb8d81cc` (`figure_discourse` + `extraction_context_nodes`).
-- Promoted `accepted → implemented` after #164; #165–#170 extend the same SPEC spine.
+- Engine PR [#172](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/172) merged 2026-07-26 as `465b784c` (scanned PDF page-as-image typing). `PAGE_IMAGE_DPI = 150` and `PAGE_IMAGE_META_KEY` live in `luna/cartridge/media.py` alongside `DEFAULT_EMBED_MAX`; `is_page_image` / `is_page_image_meta` are the shared predicates (dict form for the builder's in-memory nodes, JSON form for enrichments reading back out of SQLite).
+- Promoted `accepted → implemented` after #164; #165–#170 and #172 extend the same SPEC spine.
+
+**Reader note (#172):** sidecar file count for a scanned cartridge is
+`count(DISTINCT sha256)`, **not** page count — `materialize_external` is
+content-addressed, so identical pages (blank versos) share one file while each
+keeps its own `media_blobs` row. Do not assume a 1:1 page↔file mapping.
 
 ## References
 
