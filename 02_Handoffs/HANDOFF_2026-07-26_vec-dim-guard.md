@@ -67,33 +67,34 @@ only fault 1 covered.
 `logger.debug`. That is left alone deliberately (follow-up 1), which makes the guard's own
 `logger.error` at the raise site the only thing keeping a corrupt cartridge visible in the
 path that actually runs. Smoked against a copy of the Nature-of-Art cartridge with one
-vector re-packed to 512 dims, at an INFO logging floor:
+vector re-packed to 512 dims, at an INFO logging floor, covering both search types:
 
 ```
-dataroom_search returned 0 results (collection dropped by the swallow)
-ERROR records captured at INFO floor: 1
-  corrupt-art: stored vector has 512 dims but this cartridge declares
-  meta.embedding_dim=384 at node 01KYEHRGP3W1RBXK5D3CV7KWWD — … Cartridge violates
-  LUN-FORMAT length(vector) == embedding_dim * 4; refusing to score rather than
-  return an arbitrary similarity.
+hybrid   (default)  -> 1 results  [keyword survives]
+semantic (explicit) -> 0 results  [nothing to fall back to]
+ERROR records at INFO floor: 2 (naming the node: 2)
+WARNING 'semantic leg dropped': 1
 ```
 
-The `0 results` is the point: the collection vanishes from the fan-out and only the ERROR
-says why.
+Both halves matter. Hybrid keeps the keyword hit instead of losing the whole collection;
+explicit semantic still returns nothing, because there is nothing honest to return. Both
+are audible despite the DEBUG swallow.
 
 ## Verification
 
-- **17 targeted tests**; 236 in the substrate/figure sweep; 408 in the
-  cartridge/aibrarian/nexus/dataroom sweep. One failure, `test_streaming_seam_parity`,
+- **23 targeted tests** (6 added after review); 242 in the substrate/figure sweep; 414 in
+  the cartridge/aibrarian/nexus/dataroom sweep. One failure, `test_streaming_seam_parity`,
   re-verified pre-existing by stashing the change and re-running.
-- **All three guard clauses mutation-checked** — each reverted in turn, each caught by
-  exactly its own test, nothing else:
+- **All five guard clauses mutation-checked** — each reverted in turn, each caught by
+  exactly its own tests, nothing else:
 
   | mutation | failing tests |
   |---|---|
   | drop the length raise (restore `zip`) | `cosine_refuses_ragged`, `cosine_refuses_a_strict_prefix`, `v03_stored_query_mismatch` |
   | drop the `meta.embedding_dim` check | `v03_conflicts_with_meta_embedding_dim` |
   | strict decoder → `_blob_to_vector` | `v03_malformed_blob` (as `struct.error`, uncaught) |
+  | remove the hybrid fallback | the 4 hybrid tests |
+  | route explicit semantic through the fallback | `explicit_semantic_still_raises`, `v03_mismatch_surfaces_through_search` |
 
 - **Behavioural parity on real cartridges.** 90 scored rows — 3 queries × 10 results ×
   {Meditations v0.3, Meditations v0.2, Nature-of-Art} — byte-identical before and after.
@@ -102,6 +103,37 @@ says why.
   the query *vector* is a deterministic stub, and that sits entirely upstream of the
   changed code.
 - No live backend restart, no plist change, no flag. Pure reader-side correctness.
+
+## What review caught: the guard's blast radius
+
+The first cut failed the whole collection on a bad row. Both hybrid branches
+compute `extraction_results` and `kw` *before* calling the vec search, and
+nothing inside `_v0X_search` caught the guard's `ValueError` — so one bad row
+discarded the already-computed keyword and extraction results too.
+`dataroom_search` defaults to `search_type="hybrid"`, so in practice a single bad
+row silently removed an entire collection from every default search.
+
+Git history made the case sharper than the code alone. The `sem_alive` filter in
+those branches came from `c6834321` with the comment *"Filter dead semantics
+(score <= 0.01 = noise from bad embeddings)"* — that branch exists precisely so
+bad embedding signal degrades rather than fails. The guard had repurposed it into
+a hard failure without noticing.
+
+`_hybrid_semantic_leg` (shared by both readers) now catches the guard's
+`ValueError`, logs a WARNING that the *query* degraded — a separate fact from the
+ERROR naming the node — and returns an empty semantic list so the existing
+fallback takes over. **Only hybrid degrades.** An explicit
+`search_type="semantic"` still raises: there is nothing to fall back to, and
+returning `[]` would be exactly the silent failure this guard exists to remove.
+
+Two things about this are worth carrying forward:
+
+- **The original smoke used `search_type="semantic"`** and so never exercised the
+  path real callers take. It was correct and still under-measured the thing it
+  was testing. None of the 17 original tests referenced `hybrid` at all.
+- **"Fail loud" and "discard good results" are separable.** Refusing to return an
+  invented cosine was the actual goal; keyword hits are not invented and had no
+  reason to die with it.
 
 ## Named follow-ups
 
