@@ -4,7 +4,7 @@
 **Status:** Implemented and reviewed on a branch. **Merge is an open decision.**
 **Continue in:** Claude Code
 **Repo:** `_LunaEngine_BetaProject_V2.0_Root`, branch `feat/spec-014-vision-embeddings`
-**Size:** 21 commits, 11 files, +1835 / −120
+**Size:** 22 commits, 11 files, +1845 / −120
 **Spec:** `01_Specs/active/SPEC-014_vision-embeddings.md`
 **Plan:** `Docs/Plans/2026-07-26-spec-014-vision-embeddings.md` (Engine repo)
 **SDD ledger:** `.superpowers/sdd/2026-07-26-spec-014-vision-embeddings/progress.md` (Engine repo, git-ignored — every fix round and deferred minor is in it)
@@ -81,8 +81,8 @@ whole-branch pass as a real step rather than a formality.
 - **`sentence-transformers` is NOT a core dependency.** It lives in the `hub`
   extra; the design rationale "adds no new heavy dependency" was false. Ruling:
   it is now also in the **`vision`** extra beside Pillow, so one
-  `pip install '.[vision]'` covers the feature. **The spec still says "core" and
-  needs correcting.**
+  `pip install '.[vision]'` covers the feature. The spec body and implementation
+  notes now record this.
 - **No pre-SPEC-014 cartridge has an `image_embeddings` table.** All four in
   `data/user/cartridges/` lack it, including the three mounted live. Reads must
   check `sqlite_master` first; an absent table is a normal old cartridge, not a
@@ -105,14 +105,14 @@ whole-branch pass as a real step rather than a formality.
 
 ## Owed
 
-**At or before merge — record 3 deviations in the spec's Implementation notes:**
+**Closed in Open-Looney docs at `419a31d` + working-tree correction: record 3
+deviations in the spec body and Implementation notes.**
 
-1. `sentence-transformers` is in the `vision` extra, not core. Spec line ~127
-   still claims core.
+1. `sentence-transformers` is in the `vision` extra, not core.
 2. The spec's `similar()` branch "declared model is not loadable → warn and
    return `[]`" is **unreachable by design** — image-to-image uses the stored
    vector as the query vector, so no model is ever loaded. Better than spec, but
-   the spec asserts a branch the code cannot have.
+   the original spec asserted a branch the code cannot have.
 3. Build-time loud failure is now delivered via `_preflight_vision_dependencies()`
    rather than the spec's literal `BuildError` sketch.
 
@@ -123,10 +123,9 @@ worth doing soon:
   fault** — `meta.embedding_dim`, `config dim`, `model` are all MiniLM/384 even
   when a 512-dim image vector is the problem. Re-rated from cosmetic to
   misleading. Fix: pass a `space` label through.
-- **Nothing excludes `slow` from the default run.** `pyproject.toml` has no
-  `addopts`, so a plain `pytest tests/` downloads ~600 MB of CLIP and runs two
-  37 MB builds on any machine where the sample PDF exists. The plan, the commit
-  message and the test docstring all claim otherwise.
+- **Closed at Engine `83d8c20`: slow tests are excluded from the default run.**
+  `pyproject.toml` now has `addopts = ["-m", "not slow"]` and declares the
+  `slow` marker.
 
 Lower priority: `vision_score` is stamped only on enrichment-promoted rows, so a
 fused-but-unpromoted figure loses the visible signal; missing meta is loud in the

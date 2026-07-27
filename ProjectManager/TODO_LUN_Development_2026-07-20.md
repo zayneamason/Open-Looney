@@ -141,7 +141,8 @@ Research intake added 2026-07-21:
   [#175](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/175) merge `c4d60b6a`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_vec-dim-guard.md`.
 - [~] **SPEC-014 — vision embeddings. IMPLEMENTED, NOT MERGED.** Branch
-  `feat/spec-014-vision-embeddings` (21 commits, +1835/-120), zero human review.
+  `feat/spec-014-vision-embeddings` (22 commits, +1845/-120, tip `83d8c20`),
+  zero human review.
   **The format fork needed no governance step after all:** `LUN-FORMAT v0.3:317` reads
   "`embeddings.vector`" and sits under that heading, so its scope was always that one
   table. A second additive `image_embeddings` table is *outside* the invariant, not a
@@ -155,8 +156,10 @@ Research intake added 2026-07-21:
   defects invisible to ten green per-task reviews: a ~60x score inflation when a lone
   semantic leg was returned unfused, and a missing `.[vision]` install producing a
   *successful* build with zero vectors. Both fixed and re-reviewed.
-  ⚠ `sentence-transformers` was never a core dependency — now in the `vision` extra;
-  **the spec still says core and needs correcting**, along with two other deviations.
+  ✅ Spec text corrected for the three implementation deviations:
+  `sentence-transformers` is in the `vision` extra rather than core; `similar()`
+  image-to-image does not load the CLIP text model; build-time loud failure is
+  delivered by `_preflight_vision_dependencies()`.
   ⚠ Vision-only search stays **rejected** as a sole strategy
   (`08_Journal/2026-07-24_research-searchable-figures.md:88`).
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_spec-014-vision-embeddings.md`.
