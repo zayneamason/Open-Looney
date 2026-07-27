@@ -147,10 +147,38 @@ side remains a named follow-up because it touches every existing collection.
 CLIP is lazy-loaded on the first vision-eligible query, never at connect, so
 text-only cartridges pay nothing.
 
-`_rrf_fuse` (`aibrarian_engine.py:2365`) becomes variadic over result lists. RRF
-generalises to N lists for free; fusing pairwise twice would introduce an
+**`_rrf_fuse` becomes variadic *and* normalised** (`aibrarian_engine.py:2365`).
+RRF generalises to N lists for free; fusing pairwise twice would introduce an
 ordering artefact. The two-list signature was never a design decision — just the
 number of legs that existed.
+
+Normalisation is not tidiness, it is required for correctness. `_rrf_fuse`
+**sums** one reciprocal-rank contribution per list a document appears in, so the
+achievable score ceiling scales with leg count. At `k=60` a top-ranked document
+scores `1/61 = 0.0164` per leg: `0.0328` with two legs today, `0.0492` with a
+third. `tools/dataroom_tools.py:124` then sorts merged results **across
+collections** on that raw score. Without normalisation, a vision-enabled
+cartridge's results would outrank a text-only cartridge's by up to 50% **for
+having more legs, not for being more relevant** — and the fan-out is the default
+path, so every `dataroom_search` caller would hit it.
+
+`_rrf_fuse` therefore divides the summed score by the number of **non-empty**
+legs fused. Non-empty matters: a vision leg skipped for a missing model
+contributes nothing and must not become a divisor, or the collection that could
+not run it would be penalised for that fact.
+
+Two properties follow, and both are the point:
+
+- **Ordering inside a collection is unchanged.** For a given fusion the divisor
+  is a constant, so this is a monotonic transform. It is a normalisation, not a
+  ranking change, and no existing single-collection result reorders.
+- **Optional vision support stops being an accidental cross-collection score
+  boost.** Scores land in a comparable range whatever legs a cartridge happens to
+  support.
+
+One deliberate semantic consequence: a document matching 1 of 3 legs now scores
+below one matching 1 of 2, because it satisfied a smaller share of the available
+signals. That is the intended reading of a normalised fusion, not an artefact.
 
 Missing-model handling reuses `_hybrid_semantic_leg`, generalised from "the
 semantic leg" to "an optional leg" taking the leg's name. That helper already
@@ -169,7 +197,24 @@ rank to the fusion; `vision_score` exists so a consumer can *see* that it did.
 **Image-to-image similarity.** `similar()` currently refuses v0.2/v0.3 outright
 (`aibrarian_engine.py:2397`). SPEC-014 implements it for v0.3 **only when the
 ULID names a `figure` or `image` node** — cosine against `image_embeddings`,
-resolve up, same figure-result shape. Text-node `similar()` stays unimplemented.
+resolve up, same figure-result shape.
+
+`similar()` therefore stays half-implemented for v0.3, which is acceptable only
+because the supported input is sharply guarded and the unsupported input behaves
+**consistently rather than pretending**. Normative:
+
+- ULID resolves to a `figure` or `image` node, cartridge has image vectors and
+  the model is loadable → figure results.
+- ULID resolves to any other node type → the **existing** behaviour is preserved
+  unchanged: log the current "not implemented for this cartridge type" warning
+  and return `[]`. It does not silently fall through to a text-embedding path
+  that does not exist, and it does not raise.
+- ULID resolves to a `figure`/`image` but the cartridge has no image vectors →
+  same warn-and-return-`[]` path. A cartridge built without `--figure-embed` is
+  not defective, so this is not an error.
+
+The guard is on **node type**, not on "did we find anything", so a caller can
+always tell which of these it hit from the log line.
 
 ### Migration path
 
@@ -230,10 +275,13 @@ distinction is recorded here so a future reader does not "fix" it into a raise.
   assertions, and generate no annotation events.
 - **Multi-axis imprint weights:** N/A.
 - **Actor roles:** N/A.
-- **Cross-cartridge traversal:** a vision leg is only comparable across
-  cartridges that declare the *same* `image_embedding_model`. Cross-cartridge
-  vision ranking is therefore **out of scope** for this spec; per-cartridge
-  results fuse as they do today.
+- **Cross-cartridge traversal:** visual *similarity* is only meaningful between
+  cartridges that declare the same `image_embedding_model` — vectors from
+  different encoders are not comparable, so no cross-model visual comparison is
+  defined. Ordinary fan-out is **not** excluded: `dataroom_search` continues to
+  merge across collections, and merges **normalised** scores (see the reader
+  section), so a cartridge that supports vision does not outrank one that does
+  not simply for having an extra leg.
 - **Memory Matrix integration:** N/A. No promotion of image vectors to LUNM.
 
 ## Alternatives considered
@@ -293,7 +341,42 @@ Stated explicitly so scope does not drift during implementation:
    follow-up 3). This spec builds the vision side correctly; changing the text
    side touches every existing collection.
 4. **No second embedding space beyond images.**
-5. **No cross-cartridge vision ranking.**
+5. **No cross-model visual comparability.** Vectors from different
+   `image_embedding_model` values are not comparable and no cross-model visual
+   similarity is defined. This is *not* a claim that fan-out excludes
+   vision-enabled cartridges — ordinary multi-collection search still merges
+   them, on normalised scores.
+6. **No global retrieval-scoring reform.** SPEC-014 normalises RRF across legs
+   because its own change would otherwise distort ranking. It does not attempt to
+   reconcile scoring across *result kinds* — see follow-up 1.
+
+## Named follow-ups
+
+1. **Extraction BM25 scores and fused RRF scores are already incomparable, and
+   already sorted together.** `_v0X_search` returns
+   `extraction_results + node_results`; extraction rows carry `abs(bm25)`
+   magnitudes while fused node rows carry RRF magnitudes, and
+   `tools/dataroom_tools.py:124` sorts the merged fan-out on that raw `score`.
+   Measured on the live backend against `cartridge.Marcus-Aurelius-Meditations.v03`:
+
+   ```
+   extraction:entity  5.1933542272
+   hybrid             0.0163934426
+   ```
+
+   Roughly 300x apart, so extraction rows structurally dominate any
+   cross-collection merge today. This **predates SPEC-014** and is not caused by
+   it. SPEC-014 normalises across *legs* because its own change would otherwise
+   add a second distortion; reconciling scale across *result kinds* is a
+   retrieval-scoring change touching every collection and every caller, and it
+   needs its own spec. Recorded here so nobody reads SPEC-014's normalisation as
+   having fixed global scoring.
+
+2. **Text-path config-vs-cartridge width** (Engine #175 follow-up 3).
+   `_get_generator(conn.config)` sizes the text query vector from local config and
+   ignores `meta.embedding_dim`. SPEC-014 builds the vision side from the
+   cartridge's declaration instead, which demonstrates the correct pattern but
+   deliberately does not retrofit it.
 
 ## Acceptance test
 
