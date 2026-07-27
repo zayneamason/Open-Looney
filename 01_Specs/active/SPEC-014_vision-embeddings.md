@@ -169,9 +169,12 @@ not run it would be penalised for that fact.
 
 Two properties follow, and both are the point:
 
-- **Ordering inside a collection is unchanged.** For a given fusion the divisor
-  is a constant, so this is a monotonic transform. It is a normalisation, not a
-  ranking change, and no existing single-collection result reorders.
+- **Normalisation alone does not reorder a fixed fusion.** For a given set of
+  legs the divisor is a constant, so the transform is monotonic. Adding the
+  vision leg **may** reorder results inside a vision-enabled collection, and that
+  is the point of adding it. The two effects are separable and only the first is
+  a no-op: a text-only cartridge sees identical ordering, while a vision-enabled
+  one sees the reordering the new signal was introduced to produce.
 - **Optional vision support stops being an accidental cross-collection score
   boost.** Scores land in a comparable range whatever legs a cartridge happens to
   support.
@@ -205,16 +208,24 @@ because the supported input is sharply guarded and the unsupported input behaves
 
 - ULID resolves to a `figure` or `image` node, cartridge has image vectors and
   the model is loadable → figure results.
-- ULID resolves to any other node type → the **existing** behaviour is preserved
-  unchanged: log the current "not implemented for this cartridge type" warning
-  and return `[]`. It does not silently fall through to a text-embedding path
-  that does not exist, and it does not raise.
-- ULID resolves to a `figure`/`image` but the cartridge has no image vectors →
-  same warn-and-return-`[]` path. A cartridge built without `--figure-embed` is
-  not defective, so this is not an error.
+- ULID resolves to any other node type → warn and return `[]`. It does not
+  silently fall through to a text-embedding path that does not exist, and it does
+  not raise.
+- ULID resolves to a `figure`/`image` but the cartridge has no image vectors, or
+  the declared model is not loadable → warn and return `[]`. A cartridge built
+  without `--figure-embed` is not defective, so this is not an error.
 
-The guard is on **node type**, not on "did we find anything", so a caller can
-always tell which of these it hit from the log line.
+**The warning message is updated, not preserved.** Today `similar()` emits one
+generic string for all v0.2/v0.3 calls
+(`"similar() is not implemented for %s cartridge collections yet"`), which cannot
+distinguish these cases — and an undistinguishable log is the "pretending"
+this section exists to avoid. Each branch names its own cause: the unsupported
+node type, the absent `image_embeddings`, or the unloadable model. The **shape**
+of the response is unchanged (warn, return `[]`, never raise); only the message
+becomes specific enough to act on.
+
+The guard is on **node type**, not on "did we find anything", so an empty result
+never has to be interpreted — the log says which branch produced it.
 
 ### Migration path
 
