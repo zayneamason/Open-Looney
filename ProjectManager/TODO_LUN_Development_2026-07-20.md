@@ -140,16 +140,26 @@ Research intake added 2026-07-21:
   while explicit semantic fails, both audible in `Logs/backend.err.log`. Engine PR
   [#175](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/175) merge `c4d60b6a`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_vec-dim-guard.md`.
-- [ ] **SPEC-014 — vision embeddings.** Format-blocked, spec first. `LUN-FORMAT v0.3:317`
-  is a MUST (`length(vector) == embedding_dim * 4`) against a single cartridge-wide
-  `embedding_dim`, so image vectors make a cartridge fail its own validation checklist.
-  Fork to resolve: separate table (additive, SPEC-013 precedent) vs new meta keys plus
-  relaxing that MUST (wiki MAJOR) vs v0.4. ⚠ The `level` filter is now explicitly this
-  spec's to decide — `_v03_vec_search` still scans `embeddings` with no `level` filter,
-  deliberately left alone because one level population exists today and an allow-list
-  would be dead code against an undecided schema.
-  ⚠ Vision-only search was already **rejected** as a sole strategy
-  (`08_Journal/2026-07-24_research-searchable-figures.md:88`) — do not re-propose it.
+- [~] **SPEC-014 — vision embeddings. IMPLEMENTED, NOT MERGED.** Branch
+  `feat/spec-014-vision-embeddings` (21 commits, +1835/-120), zero human review.
+  **The format fork needed no governance step after all:** `LUN-FORMAT v0.3:317` reads
+  "`embeddings.vector`" and sits under that heading, so its scope was always that one
+  table. A second additive `image_embeddings` table is *outside* the invariant, not a
+  workaround — no relaxation, no wiki MAJOR, no v0.4, `user_version` stays 3.
+  Opt-in `--figure-embed` (local CLIP, no API cost); vision leg inside the default
+  `hybrid` search fused through a leg-count-normalised `_rrf_fuse`; `similar()` for
+  `figure`/`image` ULIDs only. Proven end-to-end on the real 37 MB Nature-of-Art PDF:
+  the vision leg's top hit and the hybrid `vision_score` row are the same node
+  (`01KYGRXXA5NQ4THX4Z4GN6CXKX`, cosine 0.2637), 26/26 vectors vs 0 on the control.
+  ⚠ Two merge-blockers were found only by the **whole-branch** review, both seam
+  defects invisible to ten green per-task reviews: a ~60x score inflation when a lone
+  semantic leg was returned unfused, and a missing `.[vision]` install producing a
+  *successful* build with zero vectors. Both fixed and re-reviewed.
+  ⚠ `sentence-transformers` was never a core dependency — now in the `vision` extra;
+  **the spec still says core and needs correcting**, along with two other deviations.
+  ⚠ Vision-only search stays **rejected** as a sole strategy
+  (`08_Journal/2026-07-24_research-searchable-figures.md:88`).
+  Handoff: `02_Handoffs/HANDOFF_2026-07-26_spec-014-vision-embeddings.md`.
 - [ ] Regions (`region` node under `image`). Reserved but undefined; needs both a producer
   (PDF bboxes are computed then discarded) and a consumer before the type is worth defining.
 - [ ] **GDAL / COG media-family RFC — parked, trigger not met.** The survey is already
