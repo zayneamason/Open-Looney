@@ -409,9 +409,23 @@ first assertion could pass for a reason nobody checked.
 
 ## Implementation notes
 
-(Filled in when status moves to `implemented`)
+Implemented on Engine branch `feat/spec-014-vision-embeddings` at `875e4663`.
+Not merged as of 2026-07-26.
 
-- Commit/PR reference:
-- Implementation date:
+- Commit/PR reference: Engine branch `feat/spec-014-vision-embeddings`
+  (`875e4663`), local-only pending human merge review.
+- Implementation date: 2026-07-26.
 - Deviations from spec:
-- Follow-up issues created:
+  1. `sentence-transformers` is not a core dependency; it is included in the
+     `[vision]` extra with Pillow so `pip install '.[vision]'` covers
+     `--figure-embed`.
+  2. The `similar()` missing-model branch is unreachable by design:
+     image-to-image similarity uses the stored image vector as the query vector,
+     so no CLIP text model is loaded for that path.
+  3. Build-time loud failure is implemented via a one-time vision dependency
+     preflight before the batch, not by the literal `BuildError` sketch in this
+     spec. The behavior is the same: a missing `[vision]` install fails the
+     requested build instead of silently producing zero vectors.
+- Follow-up issues created: See
+  `02_Handoffs/HANDOFF_2026-07-26_spec-014-vision-embeddings.md` and the Engine
+  SDD ledger for the deferred scoring, message-quality and slow-test follow-ups.
