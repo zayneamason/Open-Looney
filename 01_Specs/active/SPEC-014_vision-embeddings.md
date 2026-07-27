@@ -124,8 +124,9 @@ code has a downscale path and copying it would be cargo-culting.
 
 Pillow is needed only to decode pixels for the encoder and rides the existing
 optional `vision` extra (`pyproject.toml:89`) rather than adding one.
-`sentence-transformers` (5.5.1) is already a core dependency and ships
-`clip-ViT-B-32`, so this adds **no new heavy dependency**.
+`sentence-transformers` is **not** a core dependency; it is included in the same
+`vision` extra as Pillow, so one `pip install '.[vision]'` covers
+`--figure-embed`.
 
 Meta keys are written from the encoder actually loaded, never hardcoded, at the
 time the first row is written. Zero rows produced means neither key is written.
@@ -206,14 +207,15 @@ resolve up, same figure-result shape.
 because the supported input is sharply guarded and the unsupported input behaves
 **consistently rather than pretending**. Normative:
 
-- ULID resolves to a `figure` or `image` node, cartridge has image vectors and
-  the model is loadable → figure results.
+- ULID resolves to a `figure` or `image` node and cartridge has image vectors →
+  figure results. Image-to-image similarity uses the stored image vector as the
+  query vector, so it does not load the CLIP text model.
 - ULID resolves to any other node type → warn and return `[]`. It does not
   silently fall through to a text-embedding path that does not exist, and it does
   not raise.
-- ULID resolves to a `figure`/`image` but the cartridge has no image vectors, or
-  the declared model is not loadable → warn and return `[]`. A cartridge built
-  without `--figure-embed` is not defective, so this is not an error.
+- ULID resolves to a `figure`/`image` but the cartridge has no image vectors →
+  warn and return `[]`. A cartridge built without `--figure-embed` is not
+  defective, so this is not an error.
 
 **The warning message is updated, not preserved.** Today `similar()` emits one
 generic string for all v0.2/v0.3 calls
@@ -253,8 +255,9 @@ and a missing model must not cost them their other results.
 ```python
 # --- Build time: fail loud, the user asked for this explicitly ---
 if figure_embed_requested:
-    if not pillow_available or not encoder_loadable:
-        raise BuildError(...)          # never silently emit a cartridge without vectors
+    # Fail before the batch if `.[vision]` is missing; never silently emit a
+    # cartridge without the vectors the user explicitly requested.
+    preflight_vision_dependencies()
 
 # --- Cartridge validation (added to the v0.3:1003 checklist) ---
 for row in image_embeddings:
@@ -409,11 +412,11 @@ first assertion could pass for a reason nobody checked.
 
 ## Implementation notes
 
-Implemented on Engine branch `feat/spec-014-vision-embeddings` at `875e4663`.
+Implemented on Engine branch `feat/spec-014-vision-embeddings` at `83d8c20`.
 Not merged as of 2026-07-26.
 
 - Commit/PR reference: Engine branch `feat/spec-014-vision-embeddings`
-  (`875e4663`), local-only pending human merge review.
+  (`83d8c20`), local-only pending human merge review.
 - Implementation date: 2026-07-26.
 - Deviations from spec:
   1. `sentence-transformers` is not a core dependency; it is included in the
@@ -428,4 +431,4 @@ Not merged as of 2026-07-26.
      requested build instead of silently producing zero vectors.
 - Follow-up issues created: See
   `02_Handoffs/HANDOFF_2026-07-26_spec-014-vision-embeddings.md` and the Engine
-  SDD ledger for the deferred scoring, message-quality and slow-test follow-ups.
+  SDD ledger for the deferred scoring and message-quality follow-ups.
