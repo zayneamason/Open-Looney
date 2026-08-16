@@ -2,7 +2,7 @@
 doc_type: ledger
 status: active
 created: 2026-07-20
-updated: 2026-07-26
+updated: 2026-08-15
 tags:
   - lun
   - cartridge
@@ -20,6 +20,12 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 `06_Prototypes/ReaderPrototype/SPEC.md`, `04_Audits/AUDIT_2026-05-22_meditations-v03.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
+
+Session handoff 2026-08-15: `02_Handoffs/HANDOFF_2026-08-15_spec-014-merged-closeout.md`
+(SPEC-014 closeout — merged 2026-07-27 without a PR, so the ledger claimed
+"NOT MERGED" for three weeks. Spec promoted to `implemented/`; LUNM Inspector MVP
+finally committed; source PDFs gitignored. Two Engine defects found while
+verifying and logged in the Engine ledger, not here.)
 
 Session handoff 2026-07-26: `02_Handoffs/HANDOFF_2026-07-26_figure-vision.md`
 (Real vision `visual_description` — Engine PR #174 / `c70d8937`. Bundled ledger line
@@ -140,9 +146,18 @@ Research intake added 2026-07-21:
   while explicit semantic fails, both audible in `Logs/backend.err.log`. Engine PR
   [#175](https://github.com/zayneamason/LunaEngineBetaV2.0/pull/175) merge `c4d60b6a`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_vec-dim-guard.md`.
-- [~] **SPEC-014 — vision embeddings. IMPLEMENTED, NOT MERGED.** Branch
-  `feat/spec-014-vision-embeddings` (22 commits, +1845/-120, tip `83d8c20`),
-  zero human review.
+- [x] **SPEC-014 — vision embeddings. MERGED 2026-07-27** via Engine merge commit
+  `ad3be249` ("Merge SPEC-014 vision embeddings"), 11 files, +1844/−120, from branch
+  `feat/spec-014-vision-embeddings` (tip `83d8c20`, now an ancestor of `main`).
+  ⚠ **Merged directly to `main` with no PR** — that is why this line sat at `[~]`
+  for three weeks. The repo rhythm (Engine PR → merge → ledger + spec + handoff)
+  has no trigger when a merge skips the PR. Watch for this on any future
+  no-PR merge. Verified 2026-08-15 by `git merge-base --is-ancestor 83d8c20 main`
+  and independently by a fresh cartridge build carrying an `image_embeddings`
+  table. Still **zero human review** — merging did not change that.
+  Follow-up `a377a327` ("Keep slow tests in default pytest run") resolved the
+  owed `slow`-marker question by decision: the ~600 MB CLIP download stays in
+  the default `pytest tests/` run rather than being excluded.
   **The format fork needed no governance step after all:** `LUN-FORMAT v0.3:317` reads
   "`embeddings.vector`" and sits under that heading, so its scope was always that one
   table. A second additive `image_embeddings` table is *outside* the invariant, not a
