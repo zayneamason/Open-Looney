@@ -4,7 +4,7 @@ Tauri 2 + React 19 + Rust desktop reader for `.lun` v0.3 cartridges. The
 canonical document for this project is [`SPEC.md`](./SPEC.md) — current
 version, contract, acceptance criteria, factoring notes.
 
-**Status:** v0.3.2 (2026-05-23). Incubates here in `06_Prototypes/ReaderPrototype/`
+**Status:** v0.3.4 (2026-07-26). Incubates here in `06_Prototypes/ReaderPrototype/`
 until Luna's Tauri shell exists; will be absorbed as a tab / feature module
 within Luna's main surface (a "Nexus"). Code is factored to migrate cleanly:
 Rust modules are library-shaped (`rlib + staticlib + cdylib`); React
@@ -21,7 +21,7 @@ npm run tauri dev    # opens the desktop window
 **Tests:**
 
 ```bash
-cd src-tauri && cargo test    # 49 Rust tests
+cd src-tauri && cargo test
 npm run build                 # tsc + vite build (no JS tests yet)
 ```
 

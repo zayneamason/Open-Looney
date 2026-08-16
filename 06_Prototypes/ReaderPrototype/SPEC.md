@@ -1,11 +1,12 @@
 # `.lun` Reader Prototype — Spec
 
-**Status:** implemented (reader app v0.3.3, 2026-05-24 — v0.3 schema support + SPEC-005 ledger display + SPEC-004 reference composer + SPEC-007 SketchedShelf consumer with verify-by-opening + click-through to Reader)
-**Date:** 2026-05-24
+**Status:** implemented (reader app v0.3.4, 2026-07-26 - v0.3 schema support + SPEC-005 ledger display + SPEC-004 reference composer + SPEC-007 SketchedShelf consumer with verify-by-opening + click-through to Reader + SPEC-013 figure display/inspector + offline MiniLM semantic search)
+**Date:** 2026-07-26
 **Owner:** Ahab
 **Validates:** v0.3 cartridge family (`application_id = 0x4C554E43`, `'LUNC'`, `PRAGMA user_version = 3`)
-**Reference cartridge:** `07_Sample_Cartridges/Marcus-Aurelius-Meditations.v03.lun` (3813 nodes, 1106 extractions, 459 embeddings, 1 ledger genesis row)
-**Implementation:** Tauri 2 + React 19 + rusqlite 0.32 (bundled) + chrono 0.4 + murmur3 0.5 + unicode-normalization 0.1. 57 Rust tests cover the 7-step open contract (LUNM/unknown family, v0.1 / v0.2 rejection with migrate hint, missing/unsupported ledger algorithm, missing append-only triggers, head pointer mismatch), full-tree reconstruction, rich Markdown node-type compatibility, ULID-keyed list_nodes / get_node / list_extractions / get_extraction_counts / get_extraction_sources / search / get_ledger_events / get_latest_event_ts, the SPEC-004 reference composer (anchored claim → Authority 0.75, match_failed → 0.20, entity → None, manual-anchor → 0.90, determinism, batch parity, axis ranges), the SPEC-007 SketchedShelf consumer (MurmurHash3 byte split, LSB-first bitset layout, NFKC+casefold normalization, sketch membership with OOB guard, multi-cartridge filter against fixture), and the v0.3.3 verify-by-opening roundtrip per `SketchKind` (extraction_ulid / node_ulid / fts_term / entity_surface — confirmed + false_positive paths against a populated fixture). Three pre-existing `queries::list_extractions` tests fail with baseline drift since the 2026-05-23 Meditations rebuild against engine `24c19c2` (Haiku 4.5 produces different counts than the v0.2 audit baseline of 512/532/458); these failures pre-date v0.3.3 and are tracked as a carry-forward.
+**Reference cartridge:** `07_Sample_Cartridges/Marcus-Aurelius-Meditations.v03.lun` (3803 nodes, 2767 extractions, 459 embeddings, 1 ledger genesis row)
+**Figure reference cartridge:** `07_Sample_Cartridges/The-Nature-Of-Art-And-Creativity.lun` (542 nodes, 548 extractions, 72 embeddings, 26 figures, 26 images, 26 rows in each SPEC-013 enrichment family)
+**Implementation:** Tauri 2 + React 19 + rusqlite 0.32 (bundled) + chrono 0.4 + murmur3 0.5 + unicode-normalization 0.1 + fastembed 5. 64 Rust tests cover the 7-step open contract (LUNM/unknown family, v0.1 / v0.2 rejection with migrate hint, missing/unsupported ledger algorithm, missing append-only triggers, head pointer mismatch), full-tree reconstruction, rich Markdown node-type compatibility, ULID-keyed list_nodes / get_node / list_extractions / get_extraction_counts / get_extraction_sources / search / semantic_search / get_figure_payload / get_ledger_events / get_latest_event_ts, the SPEC-004 reference composer (anchored claim -> Authority 0.75, match_failed -> 0.20, entity -> None, manual-anchor -> 0.90, determinism, batch parity, axis ranges), the SPEC-007 SketchedShelf consumer (MurmurHash3 byte split, LSB-first bitset layout, NFKC+casefold normalization, sketch membership with OOB guard, multi-cartridge filter against fixture), and the v0.3.3 verify-by-opening roundtrip per `SketchKind` (extraction_ulid / node_ulid / fts_term / entity_surface - confirmed + false_positive paths against a populated fixture). The current tests also cover SPEC-013 figure payload resolution from embedded media bytes and semantic-search ranking over stored paragraph/section embeddings. Earlier `queries::list_extractions` baseline-drift failures were resolved on 2026-07-23; the post-M-01 counts are now the expected fixture truth.
 
 **v0.3 carryover:** v0.2 cartridges are no longer supported. Open contract step 3 raises `UnsupportedVersion(2)` with a migrate-first hint pointing at `python -m luna.cartridge.migrate`. The reader does not migrate. v0.2 → v0.3 history lives in [REPORT_2026-05-22_reader-v0.2-tauri-document-reconstruction.md](REPORT_2026-05-22_reader-v0.2-tauri-document-reconstruction.md) and in [`08_Journal/2026-05-22.md`](../../08_Journal/2026-05-22.md).
 
@@ -21,8 +22,16 @@ Secondary purpose: give v0.3 audit work a real UI to look at, so spec illustrati
 
 ## Current app version
 
-**Reader app v0.3.3** is a prototype-app version, not a `.lun` file-format version.
+**Reader app v0.3.4** is a prototype-app version, not a `.lun` file-format version.
 The file-format target is `.lun` cartridge v0.3 (`PRAGMA user_version = 3`).
+
+v0.3.4 adds (over v0.3.3):
+
+- **SPEC-013 figure/image consumer.** The reader accepts the new `image` node type, resolves each figure's first child image, and reads raster payload metadata from `media_blobs`. Embedded media is returned as base64; external sidecars are resolved relative to the cartridge path and guarded against path escape before being handed to Tauri's `convertFileSrc`. The Document view renders figure images inline when bytes/sidecars are present and falls back to the caption or a "No image payload" affordance when not.
+- **Figure inspector drawer.** Clicking a rendered figure or a figure enrichment row opens `FigureInspectorDrawer`, showing the caption, image preview, storage/mime/byte/hash metadata, sidecar path when applicable, and the three SPEC-013 enrichment families (`media_classification`, `visual_description`, `figure_discourse`) sourced through `extraction_sources`.
+- **Hierarchy scroll-to-node.** `selectNode` expands the parent chain, and the Document view gives each rendered node a stable DOM anchor. Search hits, figure enrichment rows, and tree selections can land the user on the selected node or nearest rendered ancestor in the reconstructed document.
+- **Offline semantic search over stored MiniLM embeddings.** The Rust backend embeds the query with a vendored fp32 ONNX export of `sentence-transformers/all-MiniLM-L6-v2` and scans the cartridge's stored `embeddings` table with cosine similarity across paragraph and section rows. The model and tokenizer files are compiled into the binary with `include_bytes!`; ONNX Runtime is statically linked through fastembed's `ort-download-binaries` feature. There is no runtime model download and no separate model resource to bundle.
+- **Keyword/Semantic search toggle.** `SearchPanel` keeps the existing FTS5 keyword path and adds a Semantic mode when `meta.embedding_model = all-MiniLM-L6-v2` and `meta.embedding_dim = 384`. Mismatched or missing embeddings disable semantic mode and surface a specific unsupported-embedding error if invoked from the backend.
 
 v0.3.3 adds (over v0.3.2):
 
@@ -52,17 +61,16 @@ v0.2.0 carryover (the document-reconstruction surface, unchanged in shape):
 
 - `Document` tab loads the full `doc_nodes` tree through `list_all_nodes`.
 - Recursive renderer reconstructs reading order from `parent_ulid` + `position`.
-- Renderer handles sections, page markers, paragraphs, blockquotes, lists, figures, tables, rows, and cells.
-- Rust and TypeScript node-type models accept every node type emitted by the current builder (`document`, `section`, `paragraph`, `sentence`, `list`, `list_item`, `figure`, `table`, `row`, `cell`).
+- Renderer handles sections, page markers, paragraphs, blockquotes, lists, figures, images, tables, rows, and cells.
+- Rust and TypeScript node-type models accept every node type emitted by the current builder (`document`, `section`, `paragraph`, `sentence`, `list`, `list_item`, `figure`, `image`, `table`, `row`, `cell`).
 - Tree labels derive useful titles from `content` or `meta_json` before falling back to generic labels.
 
-## Out of scope (v0.3.0)
+## Out of scope (v0.3.4)
 
 The prototype is deliberately small. Explicitly deferred:
 
-- **Semantic search.** The 459 stored MiniLM vectors stay unused. A future hook is left open at the search API surface — see § Open hooks.
-- **Annotation writes.** Reading the ledger is in scope (this version); writing ledger events from the reader is not. SPEC-005 ambassador-upgrade wiring is engine-side work (slice #2). The reader displays whatever the engine has written.
-- **SPEC-004 composer.** TrustVector composition is its own slice (#3), depending on this reader being live. The annotation list is the raw event stream; a composer would derive Authority / Contestation / Temporal / Resonance from it.
+- **Annotation writes.** Reading the ledger is in scope; writing ledger events from the reader is not. SPEC-005 ambassador-upgrade wiring is engine-side work. The reader displays whatever the engine has written.
+- **Cross-cartridge semantic fusion.** v0.3.4 searches one cartridge's stored text embeddings. Cross-cartridge hybrid ranking and figure-vision embedding fusion are engine/search-assembler work, not Reader UI work in this slice.
 - **Cross-cartridge navigation.** `nexus_refs` is now an active table in v0.3 but currently empty in the Meditations reference cartridge. The reader does not display the table.
 - **Migration.** The reader refuses pre-v0.3 cartridges with a clear error pointing at `python -m luna.cartridge.migrate`. It does not perform the migration itself.
 - **Multi-cartridge libraries.** One cartridge open at a time.
@@ -114,25 +122,27 @@ Incubation continues here until Luna's Tauri shell exists; migration happens the
 │       ├── main.rs                  # tauri::Builder, command registry
 │       ├── lib.rs                   # Tauri command surface
 │       ├── cartridge.rs             # CartridgeHandle, open/validate (7-step gate incl. ledger)
-│       ├── queries.rs               # SQL helpers (doc_nodes, extractions, FTS, annotation_ledger)
+│       ├── queries.rs               # SQL helpers (doc_nodes, extractions, figures, FTS, semantic search, annotation_ledger)
+│       ├── embedder.rs              # vendored MiniLM query embedding via include_bytes! ONNX/tokenizer files
 │       ├── types.rs                 # ULID-keyed Rust types mirrored in src/types.ts
 │       └── error.rs                 # ReaderError enum, mapped to JS
 └── src/
     ├── main.tsx
     ├── App.tsx
-    ├── store.ts                     # zustand: openCartridge, currentNode, search
+    ├── store.ts                     # zustand: openCartridge, currentNode, figures, search
     ├── api.ts                       # invoke() wrappers, types
     ├── nodeDisplay.ts               # shared node labels, colors, preview helpers
     ├── types.ts                     # shared shape with Rust serde
     ├── components/
     │   ├── FilePicker.tsx
     │   ├── Header.tsx               # title, source, word_count, build date
-    │   ├── DocumentView.tsx         # full document reconstruction view
+    │   ├── DocumentView.tsx         # full document reconstruction view incl. figures/images
     │   ├── DocTree.tsx              # collapsible document-node tree
     │   ├── ExtractionsPanel.tsx     # claim/entity/summary tabs + filters
-    │   ├── SearchPanel.tsx          # FTS5 input + result list
+    │   ├── SearchPanel.tsx          # Keyword/Semantic input + result list
     │   ├── AnchorBadge.tsx          # status pill per LUN-FORMAT v0.2 display contract
-    │   └── ProvenanceDrawer.tsx     # claim → claim_sources → doc_nodes nav
+    │   ├── FigureInspectorDrawer.tsx# figure media + SPEC-013 enrichments
+    │   └── ProvenanceDrawer.tsx     # claim -> extraction_sources -> doc_nodes nav
     └── styles.css
 ```
 
@@ -161,6 +171,7 @@ The frontend talks to Rust exclusively through these commands. All are read-only
 | `list_nodes` | `handle, parent_ulid: Option<String>, type_filter: Option<NodeType>, limit, offset` | `Vec<DocNode>` |
 | `list_all_nodes` | `handle` | `Vec<DocNode>` for full document reconstruction |
 | `get_node` | `handle, node_ulid: String` | `DocNode` (with parent chain + children counts) |
+| `get_figure_payload` (v0.3.4) | `handle, figure_ulid: String` | `FigurePayload` — validates that the target is a `figure`, resolves the first child `image`, returns embedded media bytes as base64 or a guarded sidecar path, and joins SPEC-013 enrichment rows anchored to the figure. |
 | `list_extractions` | `handle, type_filter: Option<ExtractionType>, anchor_status_filter: Option<AnchorStatus>, limit, offset` | `Vec<Extraction>` |
 | `get_extraction` (v0.3.3) | `handle, extraction_ulid: String` | `Option<Extraction>` — single-row lookup by ULID; `None` means not in cartridge (the SPEC-007 verify-by-opening false-positive signal). |
 | `find_extraction_by_content` (v0.3.3) | `handle, content: String` | `Option<Extraction>` — first `type='entity'` row where `LOWER(TRIM(content))` matches the NFKC-normalized needle. Backs the `entity_surface` verify-by-opening path. |
@@ -168,13 +179,16 @@ The frontend talks to Rust exclusively through these commands. All are read-only
 | `get_ledger_events` | `handle, target_ulid: String` | `Vec<LedgerEvent>` (SPEC-005, joined to `annotation_actors` for `display_name`) |
 | `get_latest_event_ts` | `handle, target_ulid: String` | `Option<i64>` (SPEC-004 Temporal-axis input; None when target has no events) |
 | `search` | `handle, query: String, limit` | `Vec<SearchHit>` (FTS5 joined to `doc_nodes.ulid`) |
+| `semantic_search` (v0.3.4) | `handle, query: String, limit` | `Vec<SearchHit>` (`source = "semantic"`, `level = paragraph \| section`) after checking that cartridge embeddings match the bundled `all-MiniLM-L6-v2` / 384-dim query model. |
 | `close_cartridge` | `handle: HandleId` | `()` |
 | `open_shelf` (SPEC-007, v0.3.2) | `paths: Vec<String>` | `ShelfSummary { count, paths, sketches_per_cartridge }`; atomic — fails the whole shelf if any cartridge fails the 7-step contract |
 | `shelf_filter_candidates` (SPEC-007, v0.3.2) | `item: String, kind: SketchKind` | `Vec<CandidateResult { path, status: probable \| unknown }>` — definite misses omitted; verify-by-opening pass upgrades these to `confirmed` / `false_positive` (v0.3.3) |
 | `shelf_verify_candidate` (SPEC-007 § 7.3.3, v0.3.3) | `path: String, item: String, kind: SketchKind` | `CandidateStatus` (`confirmed` or `false_positive`); opens the cartridge, runs the precise query per kind, closes — independent of any open shelf |
 | `close_shelf` (SPEC-007, v0.3.2) | — | `()` |
 
-**Search implementation.** `SELECT n.ulid, snippet(nodes_fts, 0, '<mark>', '</mark>', '…', 32) AS snippet, rank FROM nodes_fts JOIN doc_nodes n ON n.id = nodes_fts.rowid WHERE nodes_fts MATCH ? ORDER BY rank LIMIT ?` — uses FTS5's built-in snippet and rank, with a join to surface the user-facing ULID rather than the FTS-only integer rowid (Strategy A; see [LUN-FORMAT_v0.3.md](../../03_Format_Spec/LUN-FORMAT_v0.3.md) § "Open questions" Q1). No query embedding, no cosine math. A future version will add a parallel `semantic_search` command that takes the same `query: String` shape so the frontend can swap or merge sources.
+**Keyword search implementation.** `SELECT n.ulid, snippet(nodes_fts, 0, '<mark>', '</mark>', '…', 32) AS snippet, rank FROM nodes_fts JOIN doc_nodes n ON n.id = nodes_fts.rowid WHERE nodes_fts MATCH ? ORDER BY rank LIMIT ?` — uses FTS5's built-in snippet and rank, with a join to surface the user-facing ULID rather than the FTS-only integer rowid (Strategy A; see [LUN-FORMAT_v0.3.md](../../03_Format_Spec/LUN-FORMAT_v0.3.md) § "Open questions" Q1).
+
+**Semantic search implementation.** `semantic_search` rejects cartridges whose `meta.embedding_model` / `meta.embedding_dim` do not match `all-MiniLM-L6-v2` / `384`, embeds the query through `embedder.rs`, scans `embeddings(node_ulid, level, vector)`, computes cosine similarity over raw little-endian f32 blobs, and returns the top K hits as `SearchHit { source: "semantic", level }`. It reconstructs paragraph/section display text from descendant content so snippets reflect the text that was embedded. `rank = 1.0 - cosine_similarity`, keeping the UI's "lower is better" rank convention consistent with FTS5.
 
 ## UI surfaces (v1)
 
@@ -208,12 +222,12 @@ Pulled directly from `meta`:
 
 Hierarchical view of `doc_nodes`. Lazy-loaded children (each section/paragraph fetches its children only on expand). Click selects → main pane shows the node's content + outgoing FTS context.
 
-Node-type chips: `document`, `section`, `paragraph`, `sentence`, `list`, `list_item`, `figure`, `table`, `row`, `cell`. Section depth via `meta_json.level` (markdown sources) or just hierarchy (PDF sources, where level is NULL — Meditations case).
+Node-type chips: `document`, `section`, `paragraph`, `sentence`, `list`, `list_item`, `figure`, `image`, `table`, `row`, `cell`. Section depth via `meta_json.level` (markdown sources) or just hierarchy (PDF sources, where level is NULL — Meditations case). Selecting a node expands its parent chain and, when the Document tab is active, scrolls to the rendered node or nearest rendered ancestor.
 
 ### Document view (main pane, tab)
 
 The `Document` tab is the default view in reader app v0.2.0. It calls
-`list_all_nodes`, groups rows by `parent_id`, sorts siblings by `position`, and
+`list_all_nodes`, groups rows by `parent_ulid`, sorts siblings by `position`, and
 recursively renders the tree back into document reading order.
 
 This is not pixel-perfect PDF layout. It is structural reconstruction: headings,
@@ -221,9 +235,14 @@ page sections, paragraphs, blockquotes, lists, figures, and tables are rendered
 from the cartridge's semantic node tree. Paragraph containers with NULL content
 are reconstructed from sentence children.
 
+Figure nodes render inline. For SPEC-013 cartridges, `FigureBlock` calls
+`get_figure_payload`, displays embedded image bytes or guarded external
+sidecars, and opens the Figure inspector on click. Figure captions remain
+readable even when no raster payload is available.
+
 ### Extractions panel (main pane, tab)
 
-Three sub-tabs: **Claims**, **Entities**, **Summaries** (counts in tab labels).
+Six sub-tabs: **Claims**, **Entities**, **Summaries**, **Media kind**, **Visual desc**, **Discourse** (counts in tab labels).
 
 Each row shows: anchor-status pill, extraction content (truncated, expandable), extraction_method, claim ULID (mono font, click to copy).
 
@@ -231,9 +250,17 @@ Filters: anchor_status (multi-select), extraction_method, "has source" / "no sou
 
 Click a claim → opens Provenance drawer.
 
+Click a figure enrichment row → follows its first `extraction_sources` figure,
+selects the figure in the Document view, and opens the Figure inspector.
+
 ### Search panel (main pane, tab)
 
-Single text input. Hitting Enter calls `search`. Results are FTS5 hits with rank-ordered snippets (`<mark>`-highlighted matches). Click a result → tree expands to the parent path and selects the matching node.
+Keyword/Semantic segmented control plus one text input. Hitting Enter calls
+`search` in Keyword mode or `semantic_search` in Semantic mode. Keyword results
+are FTS5 hits with rank-ordered snippets (`<mark>`-highlighted matches).
+Semantic results are stored-embedding matches with `source = "semantic"` and
+`level = paragraph | section`. Click a result → tree expands to the parent path,
+selects the matching node, and switches to the Document view.
 
 ### Anchor badge (component)
 
@@ -257,6 +284,15 @@ Slides in when a claim is selected. Three sections, top to bottom:
 
 For `match_failed` claims the drawer also displays the raw `anchor_reason` above the Sources section.
 
+### Figure inspector (right rail)
+
+Slides in when a figure is selected. The drawer displays the figure ULID,
+caption, image preview when available, media storage/mime/byte/hash metadata,
+guarded external path when applicable, and SPEC-013 enrichment rows anchored to
+the figure. It shares the right-rail slot with the Provenance drawer; selecting
+a claim closes the Figure inspector and selecting a figure closes claim
+provenance.
+
 ## State management (Zustand)
 
 ```ts
@@ -266,8 +302,11 @@ type ReaderState = {
   selectedClaim: Extraction | null;
   claimSources: ExtractionSourcesResult | null;
   ledgerEvents: LedgerEvent[] | null;       // SPEC-005, loaded with claimSources
+  selectedFigureUlid: string | null;         // SPEC-013 figure inspector
+  figurePayload: FigurePayload | null;
   treeExpansion: Set<string>;               // ULID keys; was Set<number> in v0.2
   childrenByParent: Record<string, DocNode[]>;  // ULID keys; was Record<number,_> in v0.2
+  searchMode: 'keyword' | 'semantic';
   search: { query: string; results: SearchHit[]; loading: boolean };
   view: 'document' | 'tree' | 'extractions' | 'search';
 
@@ -276,13 +315,18 @@ type ReaderState = {
   closeCartridge: () => Promise<void>;
   selectNode: (ulid: string) => Promise<void>;
   selectClaim: (claim: Extraction) => Promise<void>;
+  selectFigure: (figureUlid: string) => Promise<void>;
+  setSearchMode: (mode: 'keyword' | 'semantic') => void;
   runSearch: () => Promise<void>;
 };
 ```
 
-One global store; no per-component state stores. Matches Luna's pattern. v0.3
-selectClaim loads `extraction_sources` and `annotation_ledger` events in parallel
-via `Promise.all`.
+One global reader store plus the separate Shelf mode/store added in v0.3.2.
+Matches Luna's pattern. `selectClaim` loads `extraction_sources`,
+`annotation_ledger`, and TrustVector data in parallel. `selectFigure` loads
+`get_figure_payload` and clears claim provenance so the right rail has one
+active inspector at a time. `runSearch` dispatches to FTS5 or semantic search
+based on `searchMode`.
 
 ## Error UX
 
@@ -300,9 +344,11 @@ Rust `ReaderError` → JS error type → toast banner with mitigation text:
 | `MissingRequiredMeta(key)` | "Cartridge missing required `meta.{key}`. Build may be incomplete or the SPEC-005 ledger genesis row was not inserted." |
 | `UnsupportedHashAlgorithm(s)` | "meta.ledger_hash_algorithm = `{s}`. v0.3 reader only supports `sha256`." |
 | `LedgerIntegrity(detail)` | "Ledger integrity check failed: {detail}. Run `lun fsck --ledger` against this cartridge for diagnostics." |
+| `UnsupportedEmbeddingModel(model, dim)` | "This cartridge's embeddings were built with a different model ({model}, dim {dim}) than the bundled query model. Semantic search is unavailable for this cartridge." |
+| `EmbeddingError(message)` | "Semantic search embedding failed: {message}." |
 | `SqliteError(e)` | Show raw error, suggest opening in `sqlite3` CLI for diagnostics. |
 
-## Acceptance criteria (v0.3.0 done)
+## Acceptance criteria (v0.3.4 done)
 
 A v0.3 prototype is shipped when, against `07_Sample_Cartridges/Marcus-Aurelius-Meditations.v03.lun`:
 
@@ -314,7 +360,7 @@ A v0.3 prototype is shipped when, against `07_Sample_Cartridges/Marcus-Aurelius-
 6. **Extractions: Summaries tab.** Shows **145** rows.
 7. **Provenance.** Selecting an anchored claim shows the source node(s) from `extraction_sources` in the right drawer. Selecting a `match_failed` claim shows the `anchor_reason` text.
 8. **Annotation ledger display.** Selecting any claim renders an "Annotations" section in the drawer. For a v0.3 cartridge built by engine `407122f`, the per-claim event list is empty (no ambassador upgrades have been written yet) and shows the "Ambassador upgrades will appear here once the engine writes them" placeholder. Once slice #2 lands, the same surface displays each `claim_anchored` / `claim_disputed` / etc. event with color-coded badge, actor, timestamp, and collapsible payload.
-9. **Search.** Query "virtue" returns FTS5 hits ranked by relevance, with `<mark>`-highlighted snippets; each hit surfaces the user-facing ULID (last 8 chars in the hit row, full ULID in the title attribute); clicking a result navigates the tree to the parent path and selects the matching node.
+9. **Keyword search.** Query "virtue" in Keyword mode returns FTS5 hits ranked by relevance, with `<mark>`-highlighted snippets; each hit surfaces the user-facing ULID (last 8 chars in the hit row, full ULID in the title attribute); clicking a result navigates the tree to the parent path, selects the matching node, and lands in the Document view.
 10. **Rejection paths.**
     - Opening a non-SQLite file → `NotASqliteFile` banner.
     - Opening a `LUNM` runtime matrix → `WrongFamily(LUNM)` banner.
@@ -330,31 +376,31 @@ A v0.3 prototype is shipped when, against `07_Sample_Cartridges/Marcus-Aurelius-
 17. **Shelf doesn't break single-cartridge mode.** Switching from Shelf → Reader and opening a single cartridge via the existing FilePicker still works; ProvenanceDrawer + TrustBadges + AuthorityBar all render against the open cartridge. The two modes share no state and don't interfere.
 18. **Verify-by-opening upgrades + downgrades badges (SPEC-007 § 7.3.3, v0.3.3).** Against the rebuilt Meditations cartridge: filtering `fts_term = "virtue"` first shows the candidate badged "probable" with a "verifying…" indicator, then within a second the badge upgrades to green "confirmed" and the indicator disappears. Filtering `extraction_ulid = "01ZZZZZZZZZZZZZZZZZZZZZZZZ"` (a ULID not in the cartridge but accepted as "probable" by the bloom filter sketch with low FPR) shows the candidate downgrading to gray "false positive" after verify completes. The aggregate count line reflects the post-verify effective status (e.g., "1 confirmed" instead of "1 probable").
 19. **Click-through per kind (v0.3.3).** Clicking a confirmed `fts_term` row switches to the Reader tab, opens the cartridge through the standard 7-step contract, selects the Search view, populates the query input, and renders the FTS5 results with `<mark>`-highlighted snippets. Clicking a confirmed `node_ulid` row opens to the Tree view with `selectNode` auto-expanding the parent chain. Clicking a confirmed `extraction_ulid` row opens to the Extractions tab, fetches the row via `get_extraction`, selects it, and opens the Provenance drawer with sources, ledger events, and trust composed. Clicking a confirmed `entity_surface` row opens to the Extractions tab filtered to entities, finds the row via `find_extraction_by_content`, selects it, and opens the Provenance drawer.
+20. **Figure display + inspector (SPEC-013, v0.3.4).** Opening `The-Nature-Of-Art-And-Creativity.lun` renders inline figures from the `figure` -> `image` hierarchy. Clicking a figure opens the Figure inspector, displays the image payload or guarded external media URL, shows storage/mime/byte/hash metadata, and lists the figure's `media_classification`, `visual_description`, and `figure_discourse` enrichments. The Extractions panel exposes the three enrichment tabs; clicking an enrichment row navigates to the source figure and opens the inspector.
+21. **Semantic search (v0.3.4).** On any cartridge whose meta advertises `embedding_model = all-MiniLM-L6-v2` and `embedding_dim = 384`, the Semantic mode embeds the user's query offline through the bundled ONNX model, scans stored paragraph/section embeddings, and returns `SearchHit` rows with `source = "semantic"` and `level = paragraph | section`. A cartridge with missing or mismatched embedding metadata disables the Semantic button in the UI and returns `UnsupportedEmbeddingModel` from the backend if called directly.
 
 ## Near-term improvements (v1.x)
 
 Concrete data-structure-grounded improvements that fit within the v1 prototype's architecture and could land without bumping to v2. Listed in approximate UX-payoff order. Surfaced 2026-05-22.
 
 - **Search autocomplete via a trie.** `SearchPanel` is currently type-then-submit. A trie built once at `open_cartridge` time from the FTS5 vocabulary (or from `doc_nodes` titles + extraction terms) enables live prefix completion as the user types — "vir" → virtue / virtuous / virtues. The same trie powers a Cmd+K command palette for jumping straight to sections by title, which is especially useful given the Meditations title-truncation case. Build cost is one full-table scan at open; memory is bounded by the cartridge's term count.
-- **Node and extraction LRU caches.** `DocTree` re-queries on every expand; `ExtractionsPanel` re-fetches on tab switch. A standard hashmap-plus-doubly-linked-list LRU keyed by `node_id` (and another by `extraction_id`) makes re-navigation instant. Lands in `src/api.ts` as a memoization layer between Zustand and `invoke()`. Bounded memory; no eviction issues for Meditations-scale cartridges. Pairs naturally with a `Map<parent_id, DocNode[]>` already implicit in `DocumentView`'s group-by pass.
+- **Node and extraction LRU caches.** `DocTree` re-queries on every expand; `ExtractionsPanel` re-fetches on tab switch. A standard hashmap-plus-doubly-linked-list LRU keyed by `node_ulid` (and another by `extraction_ulid`) makes re-navigation instant. Lands in `src/api.ts` as a memoization layer between Zustand and `invoke()`. Bounded memory; no eviction issues for Meditations-scale cartridges. Pairs naturally with a `Map<parent_ulid, DocNode[]>` already implicit in `DocumentView`'s group-by pass.
 - **Navigation history (back / forward).** No browser-style nav today. A deque of `selectedNode` history with a cursor (or two stacks — "back" stack and "forward" stack, with selection clearing forward) gives back/forward. Header has room per the three-panel layout.
 - **Explicit set types for UI state.** `DocTree` expanded-nodes, `ExtractionsPanel` filter pills (multi-select on `anchor_status` + `extraction_method`), and history visited-nodes are all sets, not arrays. Standard React `Set<T>` state pattern; mostly cleanup with a small clarity payoff in the codebase.
 
 ## Open hooks for next slices
 
-These are explicitly out of scope for v0.3.0, but the current design should not foreclose them:
+These are explicitly out of scope for v0.3.4, but the current design should not foreclose them:
 
-- **Semantic search.** A future version will add a `semantic_search(handle, query, limit)` command. Implementation choice (Rust-native via `candle-transformers` ONNX vs Python sidecar) is a later decision. v0.3 search UI takes `query: String` so the existing component can dispatch to either backend.
-- **Hybrid search.** Result list will need a `source: 'fts' | 'semantic'` discriminator on each row. Already wired (always `'fts'` in v0.3) so future versions can merge sources without refactoring the row shape.
-- **SPEC-004 composer (slice #3).** The Annotations section in the Provenance drawer is the raw event stream. Slice #3 layers a TrustVector composer on top — Authority / Contestation / Temporal / Resonance axes computed from the ledger + raw signals — and renders a four-axis affordance next to the existing anchor_status badge. `get_latest_event_ts` is already exposed for the Temporal axis.
-- **Ambassador-upgrade writes (slice #2, engine-side).** Reader does not write. Once the engine's 3-statement transactional upgrade flow ships, the existing Annotations surface lights up automatically — no reader change required.
+- **Hybrid search.** Keyword and semantic search are both implemented, but result merging is not. `SearchHit.source` already distinguishes `"fts"` from `"semantic"`, so a future hybrid mode can merge the two ranked streams without reshaping result rows.
+- **Ambassador-upgrade writes (engine-side).** Reader does not write. Once the engine's transactional upgrade flow ships, the existing Annotations and TrustVector surfaces light up automatically — no reader mutation path required.
 - **Cross-cartridge promotion (`nexus_refs`).** Active table in v0.3 but currently empty. Reader continues to ignore it; a dedicated surface lands when cross-cartridge events start populating the table.
-- **Multi-cartridge shelf.** First surface landed in v0.3.2 as the SPEC-007 `SketchedShelf` consumer (read-only, no click-through to single-cartridge view yet). The full shelf UI — per-cartridge tabs, click-through to a Reader view from any candidate, persistent shelf state across sessions — is still v2.
+- **Multi-cartridge shelf persistence.** The SPEC-007 `SketchedShelf` consumer, verify-by-opening pass, and click-through are implemented. Per-cartridge tabs and persistent shelf state across sessions are still v2.
 - **Title-debug overlay.** A power-user toggle that surfaces the title parser-artifact blocklist's decision tree, useful for the Meditations title-truncation case. Could land in v1 if cheap.
-- **Bloom-filter cartridge sketches (multi-cartridge-shelf consumer).** Landed v0.3.2 as the SPEC-007 SketchedShelf consumer. Engine populates 4 sketch kinds (`extraction_ulid`, `node_ulid`, `entity_surface`, `fts_term`) at build time per SPEC-007 § 7.2; reader's `shelf::filter_candidates` answers membership queries across N cartridges without scanning. Follow-ups: click-through to single-cartridge view from a candidate; verify-by-opening pass that runs the precise query (FTS5 / ULID lookup) per SPEC-007 § 7.3.3.
-- **Top-K result merging via min-heap (hybrid-search consumer).** When `semantic_search` lands alongside the existing FTS5 search and the hybrid-search hook fires (`SearchHit.source` discriminator already wired in v1), merging two ranked streams into a top-K is the textbook merge-K-sorted-streams problem; a min-heap is the standard tool. Implementation detail when hybrid search ships; no v1 code change.
+- **Figure-vision embeddings.** v0.3.4 text semantic search only scans `embeddings`; image/vision vectors belong to the separate SPEC-014 `image_embeddings` work and are not consumed by Reader semantic mode.
+- **Top-K result merging via min-heap (hybrid-search consumer).** When a hybrid-search mode fires, merging FTS5 and semantic ranked streams into a top-K is the textbook merge-K-sorted-streams problem; a min-heap is the standard tool. Implementation detail when hybrid search ships; no v0.3.4 code change.
 - **Related-claims clustering via disjoint-set.** Claims that share at least one source node are structurally connected (the claim ↔ source bipartite graph has natural connected components). Computing connected components with union-find at cartridge-open lets the reader highlight "related claims" instantly when one is selected. Specialist feature; only worth building if claim-clustering becomes a UX surface. Also becomes load-bearing for the cross-cartridge `nexus_refs` surface, where union-find answers "are these two local nodes the same nexus concept across cartridges?"
-- **Provenance graph view.** The `ProvenanceDrawer` shows claim → sources structurally as a list. A force-directed or SVG node-edge render of the full provenance subgraph (claim + sources + context nodes, with annotation edges added once SPEC-005 lands) is a natural extension. Pure UI surface; no backend change beyond the existing `get_claim_sources`.
+- **Provenance graph view.** The `ProvenanceDrawer` shows claim -> sources structurally as a list. A force-directed or SVG node-edge render of the full provenance subgraph (claim + sources + context nodes, with annotation edges added once SPEC-005 lands) is a natural extension. Pure UI surface; no backend change beyond the existing `get_extraction_sources`.
 
 ## Validation against the format spec
 
@@ -385,9 +431,11 @@ No new format-spec findings surfaced during the v0.3 reader build — the schema
   ```
   Note: earlier draft of this bullet reported `local_node_id INTEGER` and `promoted_at INTEGER` without the index — that was wrong. The TEXT/TIMESTAMP types reflect cross-schema compatibility with the aibrarian `.db` family (which uses TEXT UUIDs as local identifiers). Zero rows in the v0.2 reference cartridge (SPEC-005 placeholder). Resolution: `LUN-FORMAT_v0.2.md` § "`nexus_refs` — cross-cartridge promotion placeholder (SPEC-005)".
 - **Section nesting — RESOLVED.** Acceptance criterion §3 correctly reads "128 direct section children and 166 sections total" (post-M-01; was 176). The hierarchy claim in the format spec's `doc_nodes` section originally read `document → section → paragraph → sentence` which suggested strict 4-level depth. Resolution: `LUN-FORMAT_v0.2.md` § "`doc_nodes` — document tree" now states "Sections may nest under other sections; the diagram describes node-type ordering, not strict depth."
-- **`doc_nodes.content` is nullable — RESOLVED.** Canonical reference cartridge has 439 of 3813 rows (~11.5%) with NULL content — predominantly `document` and `section` rows, plus paragraph rows whose text lives in `sentence` children. Reader reads `content` as `Option<String>` and defaults to empty string. Resolution: `LUN-FORMAT_v0.2.md` § "`doc_nodes` — document tree" → Content nullability paragraph; also the documented FTS triggers were corrected to use `COALESCE(content, '')` to match the canonical builder schema.
-- **anchor_status distribution (post-M-01 reference cartridge).** Claims: 1056 anchored / 148 match_failed / 0 unknown. Entities: 1418 all `unknown` (per SPEC-001). Summaries: 145 anchored. `claim_context_nodes` is empty (no synthesized claims). Reader UI handles all five anchor_status variants but only three are exercised by this cartridge. (Cartridge-specific record; not a format-spec finding. Historical v0.2 audit baseline was 458/54/532/62.)
+- **`doc_nodes.content` is nullable — RESOLVED.** Canonical reference cartridge has 439 of 3803 rows (~11.5%) with NULL content — predominantly `document` and `section` rows, plus paragraph rows whose text lives in `sentence` children. Reader reads `content` as `Option<String>` and defaults to empty string. Resolution: `LUN-FORMAT_v0.2.md` § "`doc_nodes` — document tree" -> Content nullability paragraph; also the documented FTS triggers were corrected to use `COALESCE(content, '')` to match the canonical builder schema.
+- **anchor_status distribution (post-M-01 reference cartridge).** Claims: 1056 anchored / 148 match_failed / 0 unknown. Entities: 1418 all `unknown` (per SPEC-001). Summaries: 145 anchored. `extraction_context_nodes` is empty (no synthesized claims). Reader UI handles all five anchor_status variants but only three are exercised by this cartridge. (Cartridge-specific record; not a format-spec finding. Historical v0.2 audit baseline was 458/54/532/62.)
 - **Visual verify 18–19 (2026-07-23).** Logic covered green by Rust shelf tests (`verify_fts_term_confirmed` / `verify_fts_term_false_positive`, `verify_extraction_ulid_*`, `verify_node_ulid_*`, `verify_entity_surface_*`) and `search_finds_virtue_and_surfaces_ulid` — 58/58 `cargo test --lib` passed. Full Tauri UI click-through (Shelf badge chrome + tab navigation) remains a recommended human smoke when a display is available; no regression signal from the automated verify-by-opening roundtrip.
+- **Figure fixture shape (2026-07-26).** `The-Nature-Of-Art-And-Creativity.lun` is the v0.3.4 figure smoke fixture: 26 `figure` nodes, 26 child `image` nodes, 26 `media_classification`, 26 `visual_description`, and 26 `figure_discourse` extraction rows. Reader figure display/inspector acceptance should be checked against this cartridge rather than Meditations, which has no figure/image nodes.
+- **Semantic embedding fixture shape (2026-07-26).** Both reference cartridges advertise `embedding_model = all-MiniLM-L6-v2` and `embedding_dim = 384`. Meditations carries 459 text embeddings; Nature-of-Art carries 72. Semantic search is therefore expected to be enabled for both.
 
 ### Implementation notes
 
@@ -396,8 +444,9 @@ No new format-spec findings surfaced during the v0.3 reader build — the schema
 - **Read-only enforcement.** Both `SQLITE_OPEN_READ_ONLY` (OS-level fd) and `PRAGMA query_only = 1` (SQL parser) are applied, per the plan's defense-in-depth rationale.
 - **FTS5 `<mark>` safety.** Backend `safe_snippet()` state machine escapes HTML metacharacters in source content while preserving the literal `<mark>` / `</mark>` tokens we passed to `snippet()`. Unit-tested with adversarial inputs including `<script>` and uppercase `<MARK>` (which must be escaped, not preserved). Frontend uses `dangerouslySetInnerHTML` on the resulting string.
 - **FTS5 Strategy A coupling.** v0.3 keeps `doc_nodes.id INTEGER` as FTS5's `content_rowid`. The reader never exposes that integer to the UI — `queries::search` joins `nodes_fts.rowid → doc_nodes.id` and returns `n.ulid` instead. If a future version moves to Strategy B (drop `doc_nodes.id`, rebuild FTS5), only the search query body needs to change — types and UI are already ULID-keyed.
+- **Offline semantic model bundling.** `embedder.rs` uses `include_bytes!` for `model.onnx` and tokenizer/config files under `src-tauri/models/all-MiniLM-L6-v2/`; fastembed links ONNX Runtime through `ort-download-binaries`. That makes semantic search self-contained at runtime, but it also means release binaries are expected to be much larger than the pre-semantic-search 11 MB app.
 - **Soft-covenant honesty.** Step 7 of the open contract verifies that the two append-only triggers exist on `annotation_ledger`. This is a soft covenant per [SPEC-005](../../01_Specs/implemented/SPEC-005_annotation-ledger.md): an admin with `sqlite3` CLI access can drop the triggers and tamper with the ledger. The reader cannot prevent that; it can only refuse to open a cartridge whose triggers are visibly missing. Full chain re-verification (`validate_ledger()`) is the engine's `lun fsck --ledger` job; the reader stops at the head-pointer check to keep open latency O(1).
-- **Future hooks already wired.** `SearchHit.source` discriminator field (always `"fts"`), `api.semanticSearch` slot (undefined currently, dispatched via `api.semanticSearch ?? api.search`), and the `get_latest_event_ts` Tauri command (for SPEC-004 Temporal axis) are all in place. Future slices can plug in without reshaping types.
+- **Hybrid-search hooks now partially real.** `SearchHit.source` is `"fts"` for Keyword results and `"semantic"` for Semantic results; `level` is set for semantic paragraph/section hits. `get_latest_event_ts` remains exposed for SPEC-004 Temporal-axis work.
 
 ## Cross-references
 
