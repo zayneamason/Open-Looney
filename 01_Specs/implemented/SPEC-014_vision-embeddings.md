@@ -1,10 +1,14 @@
 # SPEC-014: Vision embeddings
 
-**Status:** active
+**Status:** implemented
 **Severity:** medium
 **Author:** Ahab
 **Created:** 2026-07-26
-**Last updated:** 2026-07-26
+**Last updated:** 2026-08-15
+**Implemented:** 2026-07-27 — Engine merge commit `ad3be249` ("Merge SPEC-014
+vision embeddings"), 11 files, +1844/−120. Merged to `main` directly, **without
+a PR**, which is why the closeout below lagged three weeks: this repo's rhythm
+keys off an Engine PR event, and there was none.
 **Affects format version:** v0.3 (additive — no version bump)
 
 ---
