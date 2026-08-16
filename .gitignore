@@ -29,3 +29,11 @@ gen/
 
 # SPEC-013 external media sidecars (large; keep beside .lun locally)
 **/*.media/
+
+# Source PDFs are build inputs, not repo content. This repo is PUBLIC, and
+# 09_Sample_Sources/ holds in-copyright books (commercial translations, art
+# monographs) used to build sample cartridges. Keep them local; commit the
+# spec and the audit, not the source text. Already-tracked files are NOT
+# affected by this rule — untracking those is a separate, deliberate decision.
+09_Sample_Sources/*.pdf
+09_Sample_Sources/**/*.pdf
