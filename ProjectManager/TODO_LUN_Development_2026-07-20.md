@@ -221,6 +221,26 @@ Research intake added 2026-07-21:
   smoke wrote `/tmp/cross-project-sync.json` and `/tmp/cross-project-sync.md`,
   returned warn-level exit code `1`, reported `mutation_performed=false`, and left
   both repo `git status --short` snapshots byte-identical before/after.
+- [x] **SPEC-016 watcher noise reduction — completed 2026-08-17.**
+  Adopted the ledger-first source policy in `ProjectManager/cross_project_sync.json`:
+  canonical ledgers and the current SPEC-016 plan remain `warn`; historical handoffs,
+  reports, and broad Engine plan globs are preserved in `reference_summary` instead of
+  flooding normal findings. Current live baseline after commit `4ec6350`: 31 findings
+  total (`30 warn`, `1 info`), no `native_version_disagreement`, `mutation_performed=false`,
+  and byte-identical Open-Looney/Engine `git status --short` snapshots before/after smoke.
+  Remaining warnings are now intentionally concentrated in canonical-ledger evidence:
+  Engine ledger stale/missing commit or file references, Engine ledger untracked report/probe
+  evidence, Open-Looney ledger untracked local build artifacts, and two Open-Looney
+  cross-boundary review candidates. Baseline report:
+  `ProjectManager/Reports/REPORT_2026-08-17_spec-016_noise_reduction_baseline.md`.
+  Cleanup plan: `ProjectManager/Plans/PLAN_2026-08-17_spec-016_remaining-warning-cleanup.md`.
+- [x] **SPEC-016 Open-Looney warning cleanup — completed 2026-08-17.**
+  Rewrote the canonical ledger's local `.app`/`.dmg` build-output references as
+  historical build records instead of concrete generated artifact paths. Slice 1 smoke
+  wrote `/tmp/cross-project-sync-open-looney-cleanup.json` and
+  `/tmp/cross-project-sync-open-looney-cleanup.md`; Open-Looney untracked artifact
+  warnings dropped from `2` to `0`, `mutation_performed=false`, and before/after
+  status snapshots for both repos were byte-identical.
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);
   prior: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`,
@@ -251,7 +271,11 @@ Research intake added 2026-07-21:
 - [x] Draft SPEC-009 (2026-07-21) — **rescoped**. Full DDL ratification was not attempted: the surface is 24 DDL-declaring files, not the 6 assumed, so SPEC-009 became *LUNM schema ownership and the table manifest* (single owner per table, static manifest, four-way classification, one conformance test). Per-family DDL ratification defers to SPEC-011+. Original scope note retained: **enlarged by SPEC-008's resolutions:** `schema.sql` declares 47 tables while the live matrix holds 89, so the audit must first inventory the 6+ DDL owners outside `luna/substrate/`. Inherits from Q5 — audit ad-hoc `conversation_turns` writers before ratifying any `sessions` FK; dispose of the vestigial `consciousness_snapshots`; reconcile the v0.3 spec's `nexus_refs` description against the engine's master-pointer-only behaviour for sealed cartridges.
 - [x] Draft SPEC-010 (2026-07-21) — *LUNM migration discipline*, centred on fail-loud tiered by SPEC-009 classification. 22 of the engine's 25 migrations wrap DDL in `except Exception` + `logger.debug`, including the one that creates `profile_config`, a format invariant. Original scope note retained: **narrowed:** Q4's bump *triggers* are settled in SPEC-008 § 4.1; SPEC-010 carries the *mechanics* — chiefly that a bump needs an explicit migration branch and must never edit the `user_version` literal, which would fork production matrices at the old value with no detector.
 - [x] LUNM Inspector MVP (2026-07-27): new read-only Tauri prototype at `06_Prototypes/LunmReaderPrototype/` with LUNM-only open contract, SPEC-008/SPEC-011 health checks, FI table inspection tabs, docs, and local validation (`cargo test` 9/9 green; `npm run build` green). It remains separate from the LUNC Reader, which still rejects LUNM.
-- [x] LUNM Inspector bundle/smoke pass (2026-07-27): debug `.app` bundle now builds app-only at `06_Prototypes/LunmReaderPrototype/src-tauri/target/debug/bundle/macos/lunm-reader.app`; GUI smoke launched the bundle, opened the live Engine LUNM read-only, and rendered real Memory/Conversations rows. `lsof` showed the main DB handle opened read-only by `lunm-reader`. DMG packaging is not part of the default MVP target.
+- [x] LUNM Inspector bundle/smoke pass (2026-07-27): debug `.app` bundle built app-only
+  from the LUNM Inspector Tauri target tree; generated bundle output is intentionally
+  local/untracked. GUI smoke launched the bundle, opened the live Engine LUNM read-only,
+  and rendered real Memory/Conversations rows. `lsof` showed the main DB handle opened
+  read-only by `lunm-reader`. DMG packaging is not part of the default MVP target.
 - [x] LUNM Inspector copied-matrix smoke (2026-07-27): added drag/drop and paste-path open affordances because the native file picker was impractical for `/private/tmp`; rebuilt the `.app` after a package clean so current frontend assets embedded correctly. Paste-path smoke opened `/private/tmp/lunm-reader-smoke/data/user/memory_matrix.lun`, Overview reported `0x4C554E4D` / `user_version 2` / `format 0.1`, and `lsof` confirmed `lunm-reader` held the `/private/tmp` matrix read-only.
 - [x] LUNM Inspector conversation usability pass (2026-07-27): Sessions now report computed `actual_turns` from `conversation_turns` instead of the stale `sessions.turns_count`; selecting a session renders chronological role/content turn cards so stored conversation text is directly readable.
 
@@ -268,8 +292,8 @@ Research intake added 2026-07-21:
 
 ## Distribution
 
-- [x] Optional: build a v0.3.x `.dmg` for the Reader now that u64-overflow, bare-name, verify-by-opening, click-through, M-01, SPEC-013 figure display, and semantic search fixes are baked into source. **Built 2026-07-27**: `06_Prototypes/ReaderPrototype/src-tauri/target/release/bundle/dmg/lun-reader_0.3.4_aarch64.dmg`.
-- [x] Reader `.dmg` build record (2026-07-27): source commit `c616de6` (code clean; docs dirty from this session), artifact `06_Prototypes/ReaderPrototype/src-tauri/target/release/bundle/dmg/lun-reader_0.3.4_aarch64.dmg`, SHA-256 `5b01b783027f5043e04c4e86bf4d059216f5f3ee428d9224e69866325ccaa0c5`, smoke `cargo test` 64/64 green, `npm run build` green, release binary/app 125M, installed `/Applications/lun-reader.app` binary SHA-256 matches bundled app (`a9e3bf217c60e7bf3cbb4e2e2f684046f5873b1c3e47d01bc211bfe7af786ec1`).
+- [x] Optional: build a v0.3.x `.dmg` for the Reader now that u64-overflow, bare-name, verify-by-opening, click-through, M-01, SPEC-013 figure display, and semantic search fixes are baked into source. **Built 2026-07-27** as generated local release output for Reader v0.3.4; build artifacts are intentionally untracked.
+- [x] Reader `.dmg` build record (2026-07-27): source commit `c616de6` (code clean; docs dirty from this session), Reader v0.3.4 aarch64 DMG SHA-256 `5b01b783027f5043e04c4e86bf4d059216f5f3ee428d9224e69866325ccaa0c5`, smoke `cargo test` 64/64 green, `npm run build` green, release binary/app 125M, installed `/Applications/lun-reader.app` binary SHA-256 matches bundled app (`a9e3bf217c60e7bf3cbb4e2e2f684046f5873b1c3e47d01bc211bfe7af786ec1`).
 
 ## Repo Hygiene
 
