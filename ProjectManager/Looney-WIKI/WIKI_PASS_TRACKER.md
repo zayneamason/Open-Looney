@@ -28,7 +28,7 @@ Wiki version baseline:
 
 Wiki current version:
 
-- `v0.7.0`
+- `v0.7.1`
 
 Wiki target version:
 
@@ -46,6 +46,7 @@ Wiki target version:
 | P4 | SPEC-012 accepted | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.5.0]`; `02_Handoffs/HANDOFF_2026-07-24_spec-012-accepted.md` |
 | P5 | SPEC-013 searchable figures (spine + enrichment) | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.6.0]`; `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md` |
 | P6 | SPEC-014/SPEC-015 closeout + SPEC-016 watcher | Codex | done | pass | `WIKI_CHANGELOG.md` `[v0.7.0]`; `ProjectManager/TODO_LUN_Development_2026-07-20.md` |
+| P7 | SPEC-016 watcher implementation | Codex | done | pass | `WIKI_CHANGELOG.md` `[v0.7.1]`; `scripts/cross_project_sync.py` |
 
 ## Gate Rule
 
@@ -68,6 +69,14 @@ state, live processes, or `.lun` / WAL / SHM files.
 
 The generated wiki home now reflects two active specs: SPEC-015 retrieval score
 comparability and SPEC-016 cross-project sync watcher.
+
+### P7 — SPEC-016 watcher implementation
+
+Implemented the read-only cross-project sync watcher as an Open-Looney-owned
+stdlib Python tool with JSON manifest configuration, unit tests, JSON/Markdown
+report output, conservative reference extraction, and a no-mutation live smoke.
+
+The pass leaves SPEC-016 active for any separate lifecycle promotion decision.
 
 ### P0 — Baseline
 

@@ -208,13 +208,19 @@ Research intake added 2026-07-21:
   (`…_research-searchable-figures.md:246`). Open only when that becomes true; if opened,
   it must not duplicate the existing survey or overload the `LUNM` name (see intake item
   under Looney Data Research Intake).
-- [ ] **SPEC-016 — read-only cross-project sync watcher. DRAFTED 2026-08-17, needs acceptance.**
+- [x] **SPEC-016 — read-only cross-project sync watcher. IMPLEMENTED 2026-08-17.**
   Scope: a local watcher that inspects Open-Looney and Luna Engine ledgers, version
   surfaces, cross-references, git baselines, and dirty/untracked evidence; emits findings
   with owner/severity/suggested native bump; and explicitly never edits ledgers, specs,
   version files, changelogs, pass trackers, git state, live processes, or `.lun`/WAL/SHM
   files. File: `01_Specs/active/SPEC-016_cross-project-sync-watcher.md`. Plan:
   `ProjectManager/Plans/PLAN_2026-08-17_spec-016_cross-project-sync-watcher.md`.
+  Implementation files: `ProjectManager/cross_project_sync.json`,
+  `scripts/cross_project_sync.py`, and `scripts/tests/test_cross_project_sync.py`.
+  Verification: `py_compile`, stdlib `unittest`, and live read-only smoke passed;
+  smoke wrote `/tmp/cross-project-sync.json` and `/tmp/cross-project-sync.md`,
+  returned warn-level exit code `1`, reported `mutation_performed=false`, and left
+  both repo `git status --short` snapshots byte-identical before/after.
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);
   prior: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`,

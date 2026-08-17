@@ -1,0 +1,123 @@
+{
+  "schema_version": "v0.1.0",
+  "recent_commit_limit": 20,
+  "projects": {
+    "open_looney": {
+      "display_name": "Open-Looney",
+      "path": "/Users/zayneamason/_HeyLuna_BETA/Apps/lun Development",
+      "canonical_ledger": "ProjectManager/TODO_LUN_Development_2026-07-20.md",
+      "spec_glob": "01_Specs/*/SPEC-*.md",
+      "reference_sources": [
+        "ProjectManager/TODO_LUN_Development_2026-07-20.md",
+        "ProjectManager/Plans/*.md",
+        "02_Handoffs/*.md"
+      ],
+      "version_surfaces": {
+        "wiki_versioning": {
+          "path": "ProjectManager/Looney-WIKI/WIKI_VERSIONING.md",
+          "parser": "wiki_versioning",
+          "group": "wiki"
+        },
+        "wiki_home": {
+          "path": "ProjectManager/Looney-WIKI/WIKI_HOME.md",
+          "parser": "wiki_home",
+          "group": "wiki"
+        },
+        "pass_tracker": {
+          "path": "ProjectManager/Looney-WIKI/WIKI_PASS_TRACKER.md",
+          "parser": "pass_tracker",
+          "group": "wiki"
+        },
+        "changelog": {
+          "path": "ProjectManager/Looney-WIKI/WIKI_CHANGELOG.md",
+          "parser": "changelog",
+          "group": "wiki"
+        },
+        "format_readme": {
+          "path": "00_README/README.md",
+          "parser": "format_readme",
+          "group": "format"
+        }
+      },
+      "watched_terms": [
+        "SPEC-",
+        "Engine PR",
+        "LUNM",
+        "LUNC",
+        "cartridge",
+        "Reader",
+        "image_embeddings",
+        "aibrarian",
+        "MCP",
+        "Nexus"
+      ]
+    },
+    "luna_engine": {
+      "display_name": "Luna Engine",
+      "path": "/Users/zayneamason/_HeyLuna_BETA/_LunaEngine_BetaProject_V2.0_Root",
+      "canonical_ledger": "ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md",
+      "spec_glob": "Docs/Design/Architecture/SPEC*.md",
+      "reference_sources": [
+        "ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md",
+        "Docs/Handoffs/**/*.md",
+        "Docs/Reports/**/*.md",
+        "Docs/Plans/**/*.md"
+      ],
+      "version_surfaces": {
+        "wiki_versioning": {
+          "path": "Docs/Design/SystemsArchitecture/WIKI_VERSIONING.md",
+          "parser": "wiki_versioning",
+          "group": "wiki"
+        },
+        "wiki_home": {
+          "path": "Docs/Design/SystemsArchitecture/WIKI_HOME.md",
+          "parser": "wiki_home",
+          "group": "wiki"
+        },
+        "pass_tracker": {
+          "path": "Docs/Design/SystemsArchitecture/WIKI_PASS_TRACKER.md",
+          "parser": "pass_tracker",
+          "group": "wiki"
+        },
+        "changelog": {
+          "path": "Docs/Design/SystemsArchitecture/WIKI_CHANGELOG.md",
+          "parser": "changelog",
+          "group": "wiki"
+        }
+      },
+      "watched_terms": [
+        "cartridge",
+        "image_embeddings",
+        "aibrarian",
+        "MCP",
+        "Nexus",
+        "Reader",
+        "LUNM",
+        "LUNC",
+        "SPEC-"
+      ]
+    }
+  },
+  "cross_boundary_rules": [
+    {
+      "project": "luna_engine",
+      "review_owner": "open_looney",
+      "paths": [
+        "src/luna/cartridge/",
+        "src/luna/substrate/aibrarian",
+        "src/luna/substrate/nexus",
+        "src/luna/substrate/nexus_registry.py",
+        "src/luna_mcp/tools/aibrarian.py"
+      ]
+    },
+    {
+      "project": "open_looney",
+      "review_owner": "luna_engine",
+      "paths": [
+        "01_Specs/active/",
+        "01_Specs/accepted/",
+        "01_Specs/implemented/"
+      ]
+    }
+  ]
+}

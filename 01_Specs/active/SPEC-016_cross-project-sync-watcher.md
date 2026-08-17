@@ -103,53 +103,40 @@ Each project remains authoritative for its own state.
 ### 2. Cross-project manifest
 
 The watcher reads a small manifest that declares projects and surfaces. The
-manifest is configuration, not governance state. It may live in Open-Looney
-under `ProjectManager/cross_project_sync.yaml` or in a neutral root under
-`/Users/zayneamason/_HeyLuna_BETA/ProjectSync/`; acceptance must choose one.
+manifest is configuration, not governance state. For v1 it lives in Open-Looney
+under `ProjectManager/cross_project_sync.json` so the tool remains governed by
+the Open-Looney ProjectManager ledger and can stay Python standard-library only.
 
 Sketch:
 
-```yaml
-sync_report_version: v0.1.0
-projects:
-  open_looney:
-    path: /Users/zayneamason/_HeyLuna_BETA/Apps/lun Development
-    canonical_ledger: ProjectManager/TODO_LUN_Development_2026-07-20.md
-    version_surfaces:
-      wiki_versioning: ProjectManager/Looney-WIKI/WIKI_VERSIONING.md
-      wiki_home: ProjectManager/Looney-WIKI/WIKI_HOME.md
-      pass_tracker: ProjectManager/Looney-WIKI/WIKI_PASS_TRACKER.md
-      changelog: ProjectManager/Looney-WIKI/WIKI_CHANGELOG.md
-      format_readme: 00_README/README.md
-    watched_terms:
-      - SPEC-
-      - Engine PR
-      - LUNM
-      - LUNC
-      - cartridge
-      - Reader
-      - image_embeddings
-      - aibrarian
-      - MCP
-      - Nexus
-  luna_engine:
-    path: /Users/zayneamason/_HeyLuna_BETA/_LunaEngine_BetaProject_V2.0_Root
-    canonical_ledger: ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md
-    version_surfaces:
-      wiki_versioning: Docs/Design/SystemsArchitecture/WIKI_VERSIONING.md
-      wiki_home: Docs/Design/SystemsArchitecture/WIKI_HOME.md
-      pass_tracker: Docs/Design/SystemsArchitecture/WIKI_PASS_TRACKER.md
-      changelog: Docs/Design/SystemsArchitecture/WIKI_CHANGELOG.md
-    watched_terms:
-      - cartridge
-      - image_embeddings
-      - aibrarian
-      - MCP
-      - Nexus
-      - Reader
-      - LUNM
-      - LUNC
-      - SPEC-
+```json
+{
+  "schema_version": "v0.1.0",
+  "projects": {
+    "open_looney": {
+      "path": "/Users/zayneamason/_HeyLuna_BETA/Apps/lun Development",
+      "canonical_ledger": "ProjectManager/TODO_LUN_Development_2026-07-20.md",
+      "version_surfaces": {
+        "wiki_versioning": {
+          "path": "ProjectManager/Looney-WIKI/WIKI_VERSIONING.md",
+          "parser": "wiki_versioning",
+          "group": "wiki"
+        }
+      }
+    },
+    "luna_engine": {
+      "path": "/Users/zayneamason/_HeyLuna_BETA/_LunaEngine_BetaProject_V2.0_Root",
+      "canonical_ledger": "ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md",
+      "version_surfaces": {
+        "wiki_versioning": {
+          "path": "Docs/Design/SystemsArchitecture/WIKI_VERSIONING.md",
+          "parser": "wiki_versioning",
+          "group": "wiki"
+        }
+      }
+    }
+  }
+}
 ```
 
 The watcher may support additional projects later, but v1 is exactly two
@@ -329,8 +316,10 @@ JSON reports should preserve the same fields for future automation.
 
 The watcher has its own schema/rules version, independent from both projects.
 
-```yaml
-sync_report_version: v0.1.0
+```json
+{
+  "schema_version": "v0.1.0"
+}
 ```
 
 Watcher version bump rules:
@@ -381,16 +370,12 @@ None to `.lun` cartridges or LUNM matrices.
 
 Optional project file in implementation:
 
-```yaml
-# ProjectManager/cross_project_sync.yaml
-sync_report_version: v0.1.0
-projects: ...
-detectors:
-  native_version_disagreement: true
-  cross_reference_target_missing: true
-  cross_boundary_change_without_peer_mention: true
-  ledger_stale_date_suspicion: true
-  dirty_worktree_context: true
+```json
+{
+  "schema_version": "v0.1.0",
+  "projects": {},
+  "cross_boundary_rules": []
+}
 ```
 
 ## Behavioral changes
@@ -495,37 +480,31 @@ the risk model. GitHub Actions may be added later for remote-only checks.
 monitor and should not start Luna, hit live APIs, or inspect DB contents. Runtime
 health belongs to Engine diagnostics.
 
-## Open questions
+## Acceptance decisions
 
-These block acceptance.
+Resolved for v1:
 
-1. **Manifest location.** Should the manifest live in Open-Looney, Luna Engine,
-   or a neutral `_HeyLuna_BETA/ProjectSync/` home? Neutral is cleanest, but may
-   fall outside both repos' existing governance.
-2. **Report destination.** Should reports be generated only to stdout/temp paths,
-   or may a human run write them under `Docs/Reports/` / `ProjectManager/`?
-3. **Scheduling.** Should scheduled runs use local `launchd`, a repo pre-commit
-   warning hook, GitHub Actions, or remain manual until detector quality is
-   proven?
-4. **Baseline memory.** Should the watcher store the previous run's baseline, or
-   remain stateless and derive all findings from the current checkouts?
-5. **Severity thresholds.** Which findings are `warn` versus `fail`? Proposed:
-   missing ledger/config/version surface is `fail`; disagreement, dirty state,
-   untracked referenced files, and peer-review candidates are `warn` or `info`.
-6. **Cross-boundary path set.** Which Engine paths are strong enough to imply
-   Open-Looney review? Start conservative: cartridge builders/readers,
-   `aibrarian`, Nexus hydration, MCP `aibrarian_*`, Reader-facing contract
-   routes.
-7. **No-network rule.** Should the watcher ever verify GitHub PR state, or is
-   local git state sufficient? v1 should be local-only.
+1. **Manifest location and format.** Open-Looney owns
+   `ProjectManager/cross_project_sync.json`; JSON is used to keep v1
+   standard-library only.
+2. **Report destination.** `check` writes to stdout; `report --out PATH` writes
+   only to the explicit path supplied by the caller.
+3. **Scheduling.** Manual only.
+4. **Baseline memory.** Stateless; every finding derives from current checkouts.
+5. **Severity thresholds.** Missing project/ledger/version surface is `fail`;
+   version disagreement, untracked referenced files, and peer-review candidates
+   are `warn`; dirty worktree context is `info`.
+6. **Cross-boundary path set.** Start conservative: cartridge builders/readers,
+   `aibrarian`, Nexus hydration, MCP `aibrarian_*`, and Open-Looney spec
+   lifecycle paths.
+7. **No-network rule.** Local-only; no GitHub or remote verification in v1.
 
 ## Dependencies
 
 - Open-Looney ProjectManager canonical ledger and wiki control plane.
 - Luna Engine ProjectManager canonical ledger.
 - Local git metadata for both repos.
-- Python 3 standard library only for v1, unless acceptance explicitly approves a
-  dependency.
+- Python 3 standard library only for v1.
 
 ## Non-goals
 
@@ -540,9 +519,13 @@ These block acceptance.
 
 ## Implementation notes
 
-(Filled in when status moves to `implemented`)
+Filled for the local implementation; lifecycle promotion remains a separate
+governance action.
 
-- Commit/PR reference:
-- Implementation date:
-- Deviations from spec:
-- Follow-up issues created:
+- Commit/PR reference: local uncommitted implementation.
+- Implementation date: 2026-08-17.
+- Deviations from spec: v1 uses `ProjectManager/cross_project_sync.json`
+  instead of YAML so the watcher remains Python standard-library only; commit
+  and path extraction are conservative to reduce false positives.
+- Follow-up issues created: none. Live smoke currently reports warn-level
+  cross-reference/version/dirty-context findings and no fail-level findings.

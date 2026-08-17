@@ -14,6 +14,40 @@ tags:
 Reverse-chronological. Every entry states what changed and why the bump was that
 size. Policy: `WIKI_VERSIONING.md`.
 
+## [v0.7.1] - 2026-08-17
+
+Pass: P7 — SPEC-016 watcher implementation
+Type: patch
+
+Changes:
+
+- `01_Specs/active/SPEC-016_cross-project-sync-watcher.md` — accepted v1
+  decisions, JSON manifest shape, standard-library-only dependency posture, and
+  implementation notes recorded.
+- `ProjectManager/TODO_LUN_Development_2026-07-20.md` — SPEC-016 implementation
+  result and live smoke evidence recorded.
+- `ProjectManager/Plans/PLAN_2026-08-17_spec-016_cross-project-sync-watcher.md`
+  — checklist closed and implementation result recorded.
+- `ProjectManager/cross_project_sync.json`, `scripts/cross_project_sync.py`,
+  and `scripts/tests/test_cross_project_sync.py` — local read-only watcher,
+  manifest, and stdlib test suite added.
+- `ProjectManager/Looney-WIKI/WIKI_HOME.md`,
+  `ProjectManager/Looney-WIKI/WIKI_VERSIONING.md`, and
+  `ProjectManager/Looney-WIKI/WIKI_PASS_TRACKER.md` — current version bumped to
+  `v0.7.1`.
+
+Rationale: PATCH — implements an already-active project-management watcher
+without changing `.lun` format law, spec lifecycle state, or cartridge runtime
+contracts.
+
+Verified:
+
+- `python3 -m py_compile scripts/cross_project_sync.py`
+- `python3 -m unittest scripts.tests.test_cross_project_sync`
+- `python3 scripts/cross_project_sync.py check --json`
+- `python3 scripts/cross_project_sync.py report --out /tmp/cross-project-sync.md`
+- before/after `git status --short` snapshots byte-identical in both repos.
+
 ## [v0.7.0] - 2026-08-17
 
 Pass: P6 — SPEC-014/SPEC-015 closeout + SPEC-016 watcher

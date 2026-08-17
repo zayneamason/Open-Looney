@@ -57,9 +57,9 @@ Out of scope:
 
 Resolve these before implementation. Defaults are recommended.
 
-1. **Manifest location:** `ProjectManager/cross_project_sync.yaml`
-   (recommended). It keeps v1 inside Open-Looney's project-management home and
-   avoids creating an ungoverned neutral root.
+1. **Manifest location:** `ProjectManager/cross_project_sync.json`.
+   It keeps v1 inside Open-Looney's project-management home, avoids creating an
+   ungoverned neutral root, and keeps the watcher standard-library only.
 2. **Report destination:** stdout by default; explicit `--out` may write
    anywhere the caller names. Do not auto-write under `Docs/Reports/`.
 3. **Scheduling:** manual only for v1.
@@ -79,11 +79,9 @@ record different decisions.
 
 Tasks:
 
-- Add `ProjectManager/cross_project_sync.yaml`.
+- Add `ProjectManager/cross_project_sync.json`.
 - Add `scripts/cross_project_sync.py`.
-- Add `tests/test_cross_project_sync.py` if the repo's current Python test
-  layout supports it; otherwise add a self-contained `scripts/` test runner
-  under `scripts/tests/`.
+- Add self-contained stdlib tests under `scripts/tests/`.
 - Confirm standard-library only: `argparse`, `dataclasses`, `json`, `pathlib`,
   `re`, `subprocess`, `tempfile`, `datetime`.
 
@@ -258,10 +256,8 @@ python3 scripts/cross_project_sync.py check --json
 python3 scripts/cross_project_sync.py report --out /tmp/cross-project-sync.md
 ```
 
-If a test framework is available:
-
 ```bash
-python3 -m pytest tests/test_cross_project_sync.py
+python3 -m unittest scripts.tests.test_cross_project_sync
 ```
 
 Stop point:
@@ -272,9 +268,9 @@ Stop point:
 
 New files:
 
-- `ProjectManager/cross_project_sync.yaml`
+- `ProjectManager/cross_project_sync.json`
 - `scripts/cross_project_sync.py`
-- `tests/test_cross_project_sync.py` or `scripts/tests/test_cross_project_sync.py`
+- `scripts/tests/test_cross_project_sync.py`
 
 Existing files to update:
 
@@ -301,18 +297,30 @@ Luna Engine, but Open-Looney v1 owns the script and manifest.
 
 ## Acceptance Checklist
 
-- [ ] SPEC-016 open questions resolved or accepted as v1 defaults.
-- [ ] Manifest added and parsed.
-- [ ] Snapshot includes both repos.
-- [ ] Native version disagreement detector implemented.
-- [ ] Cross-reference durability detector implemented.
-- [ ] Dirty-worktree context emitted.
-- [ ] Cross-boundary review candidate detector implemented conservatively.
-- [ ] JSON output implemented.
-- [ ] Markdown report output implemented.
-- [ ] No-mutation test passes.
-- [ ] Live read-only smoke shows identical before/after git status in both repos.
-- [ ] ProjectManager ledger updated with implementation result.
+- [x] SPEC-016 open questions resolved or accepted as v1 defaults.
+- [x] Manifest added and parsed.
+- [x] Snapshot includes both repos.
+- [x] Native version disagreement detector implemented.
+- [x] Cross-reference durability detector implemented.
+- [x] Dirty-worktree context emitted.
+- [x] Cross-boundary review candidate detector implemented conservatively.
+- [x] JSON output implemented.
+- [x] Markdown report output implemented.
+- [x] No-mutation test passes.
+- [x] Live read-only smoke shows identical before/after git status in both repos.
+- [x] ProjectManager ledger updated with implementation result.
+
+Implementation result:
+
+- Manifest format changed from YAML to JSON to preserve standard-library-only v1.
+- Verification passed with `python3 -m py_compile scripts/cross_project_sync.py`
+  and `python3 -m unittest scripts.tests.test_cross_project_sync`.
+- Live smoke wrote `/tmp/cross-project-sync.json` and
+  `/tmp/cross-project-sync.md`; both repos' before/after `git status --short`
+  snapshots were byte-identical.
+- Live findings were warn-level only: 349 findings total, including the expected
+  Engine wiki version disagreement, dirty-worktree context for both repos,
+  cross-reference durability warnings, and two cross-boundary review candidates.
 
 ## Human Gate
 
