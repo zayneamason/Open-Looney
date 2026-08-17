@@ -95,6 +95,21 @@ def manifest(path: Path, open_repo: Path, engine_repo: Path) -> Path:
     return out
 
 
+def policy_manifest(path: Path, open_repo: Path, engine_repo: Path) -> Path:
+    data = json.loads(manifest(path, open_repo, engine_repo).read_text(encoding="utf-8"))
+    data["projects"]["open_looney"]["reference_sources"] = [
+        {"glob": "TODO.md", "tier": "ledger", "finding_mode": "warn"},
+        {"glob": "02_Handoffs/*.md", "tier": "handoff", "finding_mode": "summary"},
+    ]
+    data["projects"]["luna_engine"]["reference_sources"] = [
+        {"glob": "TODO.md", "tier": "ledger", "finding_mode": "warn"},
+        {"glob": "Docs/Handoffs/**/*.md", "tier": "handoff", "finding_mode": "summary"},
+    ]
+    out = path / "policy_manifest.json"
+    out.write_text(json.dumps(data), encoding="utf-8")
+    return out
+
+
 class CrossProjectSyncTests(unittest.TestCase):
     def test_porcelain_modified_paths_preserve_first_character(self) -> None:
         modified, untracked = cps.parse_status_lines(" M 01_Specs/file.md\n M Docs/file.md\n?? scripts/\n")
@@ -157,6 +172,52 @@ class CrossProjectSyncTests(unittest.TestCase):
             report = cps.build_report(manifest(root, open_repo, engine_repo))
             self.assertTrue(any(item["subtype"] == "untracked_file" for item in report["findings"]))
 
+    def test_canonical_ledger_reference_remains_warning_under_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            open_repo = root / "open"
+            engine_repo = root / "engine"
+            init_repo(open_repo)
+            init_repo(engine_repo)
+            version_files(open_repo)
+            ledger(open_repo, "See `Docs/Reports/local.md`.\n")
+            version_files(engine_repo)
+            ledger(engine_repo)
+            write(engine_repo / "Docs/Reports/local.md", "# local\n")
+            commit_all(open_repo)
+            commit_all(engine_repo)
+            sh(engine_repo, "git", "rm", "--cached", "Docs/Reports/local.md")
+            report = cps.build_report(policy_manifest(root, open_repo, engine_repo))
+            self.assertTrue(any(item["subtype"] == "untracked_file" for item in report["findings"]))
+            finding = [item for item in report["findings"] if item["subtype"] == "untracked_file"][0]
+            self.assertEqual("ledger", finding["evidence"][0]["source_tier"])
+            self.assertEqual("warn", finding["evidence"][0]["finding_mode"])
+
+    def test_historical_handoff_reference_is_summary_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            open_repo = root / "open"
+            engine_repo = root / "engine"
+            init_repo(open_repo)
+            init_repo(engine_repo)
+            version_files(open_repo)
+            ledger(open_repo)
+            write(open_repo / "02_Handoffs/HANDOFF_old.md", "See `Docs/Missing.md`.\n")
+            version_files(engine_repo)
+            ledger(engine_repo)
+            commit_all(open_repo)
+            commit_all(engine_repo)
+            report = cps.build_report(policy_manifest(root, open_repo, engine_repo))
+            self.assertFalse(any(item.get("subtype") == "missing_file" for item in report["findings"]))
+            self.assertTrue(
+                any(
+                    item["source_tier"] == "handoff"
+                    and item["finding_mode"] == "summary"
+                    and item["status"] == "missing_file"
+                    for item in report["reference_summary"]
+                )
+            )
+
     def test_missing_spec_warns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -172,6 +233,25 @@ class CrossProjectSyncTests(unittest.TestCase):
             commit_all(engine_repo)
             report = cps.build_report(manifest(root, open_repo, engine_repo))
             self.assertTrue(any(item["subtype"] == "missing_spec" for item in report["findings"]))
+
+    def test_moved_spec_path_is_summary_not_warning(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            open_repo = root / "open"
+            engine_repo = root / "engine"
+            init_repo(open_repo)
+            init_repo(engine_repo)
+            version_files(open_repo)
+            ledger(open_repo, "Old path `01_Specs/active/SPEC-001_demo.md`.\n")
+            write(open_repo / "01_Specs/implemented/SPEC-001_demo.md", "# SPEC-001: Demo\n")
+            version_files(engine_repo)
+            ledger(engine_repo)
+            commit_all(open_repo)
+            commit_all(engine_repo)
+            report = cps.build_report(policy_manifest(root, open_repo, engine_repo))
+            self.assertFalse(any(item.get("subtype") == "moved_spec_path" for item in report["findings"]))
+            self.assertTrue(any(ref["status"] == "moved_spec_path" for ref in report["cross_references"]))
+            self.assertTrue(any(item["status"] == "moved_spec_path" for item in report["reference_summary"]))
 
     def test_dirty_worktree_is_context_not_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -216,6 +296,28 @@ class CrossProjectSyncTests(unittest.TestCase):
         refs = cps.extract_references(Path("/tmp/TODO.md"), "`/api/diagnostics/assemble-preview` and `feat/stage0-branch`.\n")
         self.assertEqual([], refs)
 
+    def test_script_command_args_are_stripped_from_path_reference(self) -> None:
+        refs = cps.extract_references(Path("/tmp/TODO.md"), "Run `scripts/run.py --server`.\n")
+        self.assertEqual("scripts/run.py", refs[0]["target"])
+
+    def test_local_artifact_from_handoff_is_summary_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            open_repo = root / "open"
+            engine_repo = root / "engine"
+            init_repo(open_repo)
+            init_repo(engine_repo)
+            version_files(open_repo)
+            ledger(open_repo)
+            write(open_repo / "02_Handoffs/HANDOFF_old.md", "Generated `frontend/dist/index.html`.\n")
+            version_files(engine_repo)
+            ledger(engine_repo)
+            commit_all(open_repo)
+            commit_all(engine_repo)
+            report = cps.build_report(policy_manifest(root, open_repo, engine_repo))
+            self.assertFalse(any(item.get("subtype") == "local_artifact" for item in report["findings"]))
+            self.assertTrue(any(item["status"] == "local_artifact" for item in report["reference_summary"]))
+
     def test_cross_boundary_candidate_and_suppression(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -256,9 +358,11 @@ class CrossProjectSyncTests(unittest.TestCase):
             self.assertIn("projects", report)
             self.assertIn("findings", report)
             self.assertIn("cross_references", report)
+            self.assertIn("reference_summary", report)
             self.assertFalse(report["mutation_performed"])
             rendered = cps.render_markdown(report)
             self.assertIn("# Cross-Project Sync Report", rendered)
+            self.assertIn("## Reference Summary", rendered)
             self.assertIn("No mutation performed: `false`", rendered)
 
     def test_no_mutation_commands_are_allowed(self) -> None:

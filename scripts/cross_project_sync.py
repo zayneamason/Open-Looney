@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "ProjectManager" / "cross_project_sync.json"
 SEMVER_RE = re.compile(r"v\d+\.\d+(?:\.\d+)?")
 SPEC_RE = re.compile(r"\bSPEC-(\d{3})\b")
+SPEC_PATH_RE = re.compile(r"SPEC-(\d{3})(?!\d)")
 COMMIT_RE = re.compile(r"(?<![0-9A-Fa-f])([0-9A-Fa-f]{7,40})(?![0-9A-Fa-f])")
 MD_LINK_RE = re.compile(r"\[[^\]\n]*\]\(([^)\n#]+)(?:#[^)\n]*)?\)")
 BACKTICK_RE = re.compile(r"`([^`\n]+)`")
@@ -55,6 +56,32 @@ KNOWN_RELATIVE_PREFIXES = (
     "src/",
     "tests/",
 )
+GENERATED_OR_LOCAL_PREFIXES = (
+    ".playwright-mcp/",
+    "Docs/Design/4cliff/",
+    "Docs/Reports/PROJECT_ORGANIZATION_REPORT_",
+    "Docs/Reports/REPORT_Luna_Project_Audit_",
+    "Docs/Reports/REPORT_Session_Closeout_",
+    "Docs/Reports/SessionPickups/SESSION_PICKUP_",
+    "Logs/",
+    "config/google_",
+    "frontend/dist",
+    "logs/",
+    "scripts/probes/data/",
+    "src/voice/piper_bin/",
+    "src/voice/piper_models/",
+)
+GENERATED_OR_LOCAL_SUFFIXES = (
+    ".bak",
+    ".db",
+    ".dmg",
+    ".log",
+    ".m4a",
+    ".mp4",
+    ".onnx",
+    ".pdf",
+    ".rtf",
+)
 
 
 class SyncError(RuntimeError):
@@ -66,13 +93,20 @@ class CommandPolicyError(SyncError):
 
 
 @dataclass(frozen=True)
+class ReferenceSource:
+    glob: str
+    tier: str
+    finding_mode: str
+
+
+@dataclass(frozen=True)
 class ProjectConfig:
     key: str
     display_name: str
     path: Path
     canonical_ledger: str
     spec_glob: str
-    reference_sources: tuple[str, ...]
+    reference_sources: tuple[ReferenceSource, ...]
     version_surfaces: dict[str, dict[str, str]]
     watched_terms: tuple[str, ...]
 
@@ -108,13 +142,29 @@ def load_manifest(path: Path) -> dict[str, Any]:
 def project_configs(manifest: dict[str, Any]) -> dict[str, ProjectConfig]:
     projects: dict[str, ProjectConfig] = {}
     for key, raw in manifest["projects"].items():
+        raw_sources = []
+        for entry in raw.get("reference_sources", []):
+            if isinstance(entry, str):
+                raw_sources.append(ReferenceSource(glob=entry, tier="default", finding_mode="warn"))
+            elif isinstance(entry, dict):
+                raw_sources.append(
+                    ReferenceSource(
+                        glob=str(entry["glob"]),
+                        tier=str(entry.get("tier") or "default"),
+                        finding_mode=str(entry.get("finding_mode") or "warn"),
+                    )
+                )
+            else:
+                raise SyncError(f"invalid reference source for {key}: {entry!r}")
+            if raw_sources[-1].finding_mode not in {"warn", "summary"}:
+                raise SyncError(f"invalid finding_mode for {key}: {raw_sources[-1].finding_mode}")
         projects[key] = ProjectConfig(
             key=key,
             display_name=str(raw.get("display_name") or key),
             path=Path(str(raw["path"])).expanduser().resolve(),
             canonical_ledger=str(raw["canonical_ledger"]),
             spec_glob=str(raw["spec_glob"]),
-            reference_sources=tuple(str(item) for item in raw.get("reference_sources", [])),
+            reference_sources=tuple(raw_sources),
             version_surfaces=dict(raw.get("version_surfaces", {})),
             watched_terms=tuple(str(item) for item in raw.get("watched_terms", [])),
         )
@@ -339,18 +389,25 @@ def detect_snapshot_findings(project: ProjectConfig, snapshot: dict[str, Any]) -
     return findings
 
 
-def source_files(project: ProjectConfig) -> list[Path]:
-    paths: set[Path] = set()
-    for pattern in project.reference_sources:
-        for match in glob.glob(str(project.path / pattern), recursive=True):
+def source_files(project: ProjectConfig) -> list[tuple[Path, ReferenceSource]]:
+    paths: dict[Path, ReferenceSource] = {}
+    for source in project.reference_sources:
+        for match in glob.glob(str(project.path / source.glob), recursive=True):
             path = Path(match)
-            if path.is_file():
-                paths.add(path)
-    return sorted(paths)
+            if path.is_file() and path not in paths:
+                paths[path] = source
+    return sorted(paths.items())
+
+
+def source_text_files(project: ProjectConfig) -> list[Path]:
+    return [path for path, _source in source_files(project)]
 
 
 def clean_ref(raw: str) -> str:
     value = raw.strip().strip(".,;:()[]{}<>\"'")
+    command_match = re.match(r"^(\S+\.(?:py|js|sh|md|json|yaml|yml|toml|txt))\s+--", value)
+    if command_match:
+        value = command_match.group(1)
     if ":" in value:
         before, after = value.rsplit(":", 1)
         if after.isdigit() and "/" in before:
@@ -405,6 +462,25 @@ def extract_references(path: Path, text: str) -> list[dict[str, Any]]:
             seen.add(key)
             refs.append({"kind": "commit", "target": target, "source": str(path), "line": text.count("\n", 0, match.start()) + 1})
     return refs
+
+
+def is_generated_or_local_artifact(target: str) -> bool:
+    normalized = target.lstrip("/")
+    if any(normalized.startswith(prefix) for prefix in GENERATED_OR_LOCAL_PREFIXES):
+        return True
+    return any(normalized.endswith(suffix) for suffix in GENERATED_OR_LOCAL_SUFFIXES)
+
+
+def find_spec_path(target: str, projects: dict[str, ProjectConfig]) -> tuple[str, str] | None:
+    match = SPEC_PATH_RE.search(target)
+    if not match:
+        return None
+    spec_id = f"SPEC-{match.group(1)}"
+    for project in projects.values():
+        for path in project.path.glob(project.spec_glob):
+            if spec_id in path.name:
+                return project.key, rel_to_project(path, project)
+    return None
 
 
 def rel_to_project(path: Path, project: ProjectConfig) -> str:
@@ -464,20 +540,24 @@ def resolve_path_ref(ref: dict[str, Any], source_project: ProjectConfig, project
                 "resolved_path": rel_path,
                 "status": status,
             }
-    return {**ref, "target_project": None, "resolved_path": target, "status": "missing_file"}
+    moved_spec = find_spec_path(target, projects)
+    if moved_spec:
+        project_key, rel_path = moved_spec
+        return {**ref, "target_project": project_key, "resolved_path": rel_path, "status": "moved_spec_path"}
+    status = "local_artifact" if is_generated_or_local_artifact(target) else "missing_file"
+    return {**ref, "target_project": None, "resolved_path": target, "status": status}
 
 
 def resolve_spec_ref(ref: dict[str, Any], projects: dict[str, ProjectConfig]) -> dict[str, Any]:
-    number = ref["target"].split("-", 1)[1]
-    for project in projects.values():
-        for path in project.path.glob(project.spec_glob):
-            if f"SPEC-{number}" in path.name:
-                return {
-                    **ref,
-                    "target_project": project.key,
-                    "resolved_path": rel_to_project(path, project),
-                    "status": "ok",
-                }
+    found = find_spec_path(ref["target"], projects)
+    if found:
+        project_key, rel_path = found
+        return {
+            **ref,
+            "target_project": project_key,
+            "resolved_path": rel_path,
+            "status": "ok",
+        }
     return {**ref, "target_project": None, "resolved_path": ref["target"], "status": "missing_spec"}
 
 
@@ -498,15 +578,57 @@ def resolve_commit_ref(ref: dict[str, Any], projects: dict[str, ProjectConfig]) 
     return {**ref, "target_project": None, "resolved_path": ref["target"], "status": "missing_commit"}
 
 
-def detect_cross_references(projects: dict[str, ProjectConfig]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def summarize_references(refs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    grouped: dict[tuple[str, str, str, str, str], dict[str, Any]] = {}
+    for ref in refs:
+        if ref["status"] == "ok":
+            continue
+        key = (
+            ref["source_project"],
+            ref.get("source_tier", "default"),
+            ref.get("finding_mode", "warn"),
+            ref["kind"],
+            ref["status"],
+        )
+        item = grouped.setdefault(
+            key,
+            {
+                "source_project": key[0],
+                "source_tier": key[1],
+                "finding_mode": key[2],
+                "kind": key[3],
+                "status": key[4],
+                "count": 0,
+                "sample_refs": [],
+            },
+        )
+        item["count"] += 1
+        if len(item["sample_refs"]) < 5:
+            item["sample_refs"].append(
+                {
+                    "target": ref["target"],
+                    "source": ref["source"],
+                    "line": ref["line"],
+                    "target_project": ref.get("target_project"),
+                }
+            )
+    return sorted(
+        grouped.values(),
+        key=lambda item: (item["source_project"], item["source_tier"], item["finding_mode"], item["kind"], item["status"]),
+    )
+
+
+def detect_cross_references(projects: dict[str, ProjectConfig]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     refs: list[dict[str, Any]] = []
     findings: list[dict[str, Any]] = []
     tracked = {key: tracked_files(project.path) if project.path.exists() else set() for key, project in projects.items()}
     for project in projects.values():
-        for source in source_files(project):
+        for source, source_config in source_files(project):
             text = read_text(source)
             for ref in extract_references(source, text):
                 ref["source_project"] = project.key
+                ref["source_tier"] = source_config.tier
+                ref["finding_mode"] = source_config.finding_mode
                 ref["source"] = rel_to_project(Path(ref["source"]), project)
                 if ref["kind"] == "path":
                     resolved = resolve_path_ref(ref, project, projects, tracked)
@@ -515,7 +637,11 @@ def detect_cross_references(projects: dict[str, ProjectConfig]) -> tuple[list[di
                 else:
                     resolved = resolve_commit_ref(ref, projects)
                 refs.append(resolved)
-                if resolved["status"] in {"missing_file", "untracked_file", "missing_spec", "missing_commit"}:
+                should_warn = (
+                    resolved.get("finding_mode") == "warn"
+                    and resolved["status"] in {"missing_file", "untracked_file", "missing_spec", "missing_commit", "local_artifact"}
+                )
+                if should_warn:
                     severity = "warn"
                     findings.append(
                         finding(
@@ -535,7 +661,7 @@ def detect_cross_references(projects: dict[str, ProjectConfig]) -> tuple[list[di
         if key not in seen:
             seen.add(key)
             unique_refs.append(ref)
-    return unique_refs, findings
+    return unique_refs, findings, summarize_references(unique_refs)
 
 
 def recent_changed_files(project: ProjectConfig, limit: int) -> set[str]:
@@ -547,7 +673,7 @@ def recent_changed_files(project: ProjectConfig, limit: int) -> set[str]:
 
 def combined_reference_text(project: ProjectConfig) -> str:
     chunks = []
-    for path in source_files(project):
+    for path in source_text_files(project):
         chunks.append(read_text(path))
     return "\n".join(chunks)
 
@@ -597,7 +723,7 @@ def build_report(manifest_path: Path) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     for key, project in projects.items():
         findings.extend(detect_snapshot_findings(project, snapshots[key]))
-    cross_refs, cross_ref_findings = detect_cross_references(projects)
+    cross_refs, cross_ref_findings, reference_summary = detect_cross_references(projects)
     findings.extend(cross_ref_findings)
     findings.extend(detect_cross_boundary_candidates(manifest, projects))
     findings.sort(key=lambda item: (-SEVERITY_ORDER[item["severity"]], item["id"], json.dumps(item["evidence"], sort_keys=True)))
@@ -608,6 +734,7 @@ def build_report(manifest_path: Path) -> dict[str, Any]:
         "projects": snapshots,
         "findings": findings,
         "cross_references": cross_refs,
+        "reference_summary": reference_summary,
         "mutation_performed": False,
     }
 
@@ -692,6 +819,32 @@ def render_markdown(report: dict[str, Any]) -> str:
         )
     if len(report["cross_references"]) > 200:
         lines.append(f"| ... | {len(report['cross_references']) - 200} additional refs omitted | ... | ... |")
+
+    lines.extend([
+        "",
+        "## Reference Summary",
+        "",
+        "| Project | Source tier | Mode | Ref kind | Status | Count | Samples |",
+        "|---|---|---|---|---|---|---|",
+    ])
+    if not report.get("reference_summary"):
+        lines.append("| none | none | none | none | none | 0 | none |")
+    for item in report.get("reference_summary", []):
+        samples = "<br>".join(
+            f"`{sample['target']}` from `{sample['source']}:{sample['line']}`"
+            for sample in item["sample_refs"]
+        )
+        lines.append(
+            "| {project} | {tier} | {mode} | {kind} | {status} | {count} | {samples} |".format(
+                project=item["source_project"],
+                tier=item["source_tier"],
+                mode=item["finding_mode"],
+                kind=item["kind"],
+                status=item["status"],
+                count=item["count"],
+                samples=samples or "none",
+            )
+        )
 
     lines.extend(["", f"No mutation performed: `{str(report['mutation_performed']).lower()}`", ""])
     return "\n".join(lines)

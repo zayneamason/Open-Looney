@@ -8,9 +8,21 @@
       "canonical_ledger": "ProjectManager/TODO_LUN_Development_2026-07-20.md",
       "spec_glob": "01_Specs/*/SPEC-*.md",
       "reference_sources": [
-        "ProjectManager/TODO_LUN_Development_2026-07-20.md",
-        "ProjectManager/Plans/*.md",
-        "02_Handoffs/*.md"
+        {
+          "glob": "ProjectManager/TODO_LUN_Development_2026-07-20.md",
+          "tier": "ledger",
+          "finding_mode": "warn"
+        },
+        {
+          "glob": "ProjectManager/Plans/PLAN_2026-08-17_spec-016_cross-project-sync-watcher.md",
+          "tier": "current_plan",
+          "finding_mode": "warn"
+        },
+        {
+          "glob": "02_Handoffs/*.md",
+          "tier": "handoff",
+          "finding_mode": "summary"
+        }
       ],
       "version_surfaces": {
         "wiki_versioning": {
@@ -58,10 +70,26 @@
       "canonical_ledger": "ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md",
       "spec_glob": "Docs/Design/Architecture/SPEC*.md",
       "reference_sources": [
-        "ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md",
-        "Docs/Handoffs/**/*.md",
-        "Docs/Reports/**/*.md",
-        "Docs/Plans/**/*.md"
+        {
+          "glob": "ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md",
+          "tier": "ledger",
+          "finding_mode": "warn"
+        },
+        {
+          "glob": "Docs/Handoffs/**/*.md",
+          "tier": "handoff",
+          "finding_mode": "summary"
+        },
+        {
+          "glob": "Docs/Reports/**/*.md",
+          "tier": "report",
+          "finding_mode": "summary"
+        },
+        {
+          "glob": "Docs/Plans/**/*.md",
+          "tier": "current_plan",
+          "finding_mode": "summary"
+        }
       ],
       "version_surfaces": {
         "wiki_versioning": {
