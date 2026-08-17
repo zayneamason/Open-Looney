@@ -103,6 +103,22 @@ Expected result:
 - No Open-Looney mutation to Engine.
 - A concrete Engine-owned edit list exists before any Engine commit is attempted.
 
+Result 2026-08-17:
+
+- Completed as read-only design. No Luna Engine files were edited.
+- Design report: `ProjectManager/Reports/REPORT_2026-08-17_spec-016_engine_warning_cleanup_design.md`.
+- Current Engine branch during inspection: `docs/session-pickup-ui-followups`; dirty state
+  included `config/frontend_config.json` plus unrelated untracked local files.
+- Dispositions:
+  - `track_evidence`: four governed Engine report/pickup files referenced by the canonical
+    ledger but currently untracked.
+  - `correct_reference`: `Docs/VoiceSystem/luna_voice_state_surface.html` moved to
+    `Docs/Design/uiUx/prototypes/luna_voice_state_surface.html`; `config/identity_bypass.json`
+    should point at the tracked quarantined sentinel or become non-path prose.
+  - `historical_note`: retired transcript scripts, ignored probe data, ignored `dist/`
+    build outputs, and the live DB checksum prefix.
+  - `defer`: exact Engine commit/edit sequencing until explicit approval to mutate Engine.
+
 ## Slice 3 — Engine-Owned Cleanup Pass
 
 Prerequisite:

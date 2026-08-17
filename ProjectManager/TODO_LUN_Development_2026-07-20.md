@@ -241,6 +241,14 @@ Research intake added 2026-07-21:
   `/tmp/cross-project-sync-open-looney-cleanup.md`; Open-Looney untracked artifact
   warnings dropped from `2` to `0`, `mutation_performed=false`, and before/after
   status snapshots for both repos were byte-identical.
+- [x] **SPEC-016 Engine warning cleanup design — completed 2026-08-17.**
+  Read-only Slice 2 classified each remaining Engine canonical-ledger warning without
+  mutating Luna Engine. Design report:
+  `ProjectManager/Reports/REPORT_2026-08-17_spec-016_engine_warning_cleanup_design.md`.
+  Recommended Engine-owned cleanup: track four governed report/pickup files, rewrite
+  ignored probe/build-output evidence as historical run/result prose, correct moved
+  `luna_voice_state_surface.html` and quarantined `identity_bypass` references, and
+  remove the live DB checksum-as-commit ambiguity.
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);
   prior: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`,
