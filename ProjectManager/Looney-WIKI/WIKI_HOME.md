@@ -30,11 +30,11 @@ Two layers, two different trust models:
 ## Current Status
 
 <!-- AUTOGEN:STATUS START -->
-**Current version:** `v0.6.1`
+**Current version:** `v0.7.0`
 
 | Specs (implemented) | Specs (accepted) | Specs (active) | Specs (rejected) | Format specs | Audits | Breakdowns |
 |---|---|---|---|---|---|---|
-| 14 | 0 | 0 | 0 | 3 | 6 | 2 |
+| 15 | 0 | 2 | 0 | 3 | 6 | 2 |
 <!-- AUTOGEN:STATUS END -->
 
 Policy and promotion criteria: [`WIKI_VERSIONING.md`](WIKI_VERSIONING.md).
@@ -73,6 +73,9 @@ Pass execution and gates: [`WIKI_PASS_TRACKER.md`](WIKI_PASS_TRACKER.md).
 | SPEC-011 | LUNM format-invariant DDL ratification | implemented | [SPEC-011_lunm-format-invariant-ddl.md](../../01_Specs/implemented/SPEC-011_lunm-format-invariant-ddl.md) |
 | SPEC-012 | LUNM entity unification | implemented | [SPEC-012_lunm-entity-unification.md](../../01_Specs/implemented/SPEC-012_lunm-entity-unification.md) |
 | SPEC-013 | Searchable Figures (Structured Payload Pattern — Figure Spine) | implemented | [SPEC-013_searchable-figures.md](../../01_Specs/implemented/SPEC-013_searchable-figures.md) |
+| SPEC-014 | Vision embeddings | implemented | [SPEC-014_vision-embeddings.md](../../01_Specs/implemented/SPEC-014_vision-embeddings.md) |
+| SPEC-015 | Retrieval score comparability across result kinds | active | [SPEC-015_retrieval-score-comparability.md](../../01_Specs/active/SPEC-015_retrieval-score-comparability.md) |
+| SPEC-016 | Read-only cross-project sync watcher | active | [SPEC-016_cross-project-sync-watcher.md](../../01_Specs/active/SPEC-016_cross-project-sync-watcher.md) |
 <!-- AUTOGEN:SPEC_INDEX END -->
 
 ## Format Specs

@@ -2,7 +2,7 @@
 doc_type: changelog
 status: active
 created: 2026-07-24
-updated: 2026-07-25
+updated: 2026-08-17
 tags:
   - projectmanager
   - wiki
@@ -13,6 +13,39 @@ tags:
 
 Reverse-chronological. Every entry states what changed and why the bump was that
 size. Policy: `WIKI_VERSIONING.md`.
+
+## [v0.7.0] - 2026-08-17
+
+Pass: P6 — SPEC-014/SPEC-015 closeout + SPEC-016 watcher
+Type: minor
+
+Changes:
+
+- `01_Specs/implemented/SPEC-014_vision-embeddings.md` — governed closeout from
+  the Engine merge that skipped normal PR-triggered bookkeeping; spec now lives
+  in `implemented/`.
+- `01_Specs/active/SPEC-015_retrieval-score-comparability.md` — active spec for
+  SPEC-014's named follow-up on incomparable result scores.
+- `01_Specs/active/SPEC-016_cross-project-sync-watcher.md` — new active spec for
+  a read-only watcher that detects Open-Looney / Luna Engine ledger, version,
+  cross-reference, git-baseline, dirty-state, and evidence-durability drift
+  without mutating either repo.
+- `ProjectManager/TODO_LUN_Development_2026-07-20.md` — ledger entry for
+  SPEC-016 and updated frontmatter date.
+- `ProjectManager/Looney-WIKI/WIKI_HOME.md` — regenerated mechanical index;
+  active spec count now includes SPEC-015 and SPEC-016.
+- `ProjectManager/Looney-WIKI/WIKI_VERSIONING.md` and
+  `ProjectManager/Looney-WIKI/WIKI_PASS_TRACKER.md` — current version bumped to
+  `v0.7.0`.
+
+Rationale: MINOR — new active spec plus lifecycle/contract-index catch-up for
+governed specs. No shipped `LUN-FORMAT` rule changed and no cartridge
+`user_version` moves.
+
+Verified:
+
+- `python3 scripts/wiki_home.py`
+- `python3 scripts/wiki_check.py`
 
 ## [v0.6.1] - 2026-07-25
 

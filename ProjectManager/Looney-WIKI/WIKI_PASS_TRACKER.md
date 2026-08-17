@@ -2,7 +2,7 @@
 doc_type: tracker
 status: active
 created: 2026-07-24
-updated: 2026-07-25
+updated: 2026-08-17
 tags:
   - projectmanager
   - wiki
@@ -28,7 +28,7 @@ Wiki version baseline:
 
 Wiki current version:
 
-- `v0.6.1`
+- `v0.7.0`
 
 Wiki target version:
 
@@ -45,6 +45,7 @@ Wiki target version:
 | P3 | `lun-format-family` breakdown | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.4.0]` |
 | P4 | SPEC-012 accepted | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.5.0]`; `02_Handoffs/HANDOFF_2026-07-24_spec-012-accepted.md` |
 | P5 | SPEC-013 searchable figures (spine + enrichment) | Claude | done | pass | `WIKI_CHANGELOG.md` `[v0.6.0]`; `02_Handoffs/HANDOFF_2026-07-25_spec-013-enrichment-arc.md` |
+| P6 | SPEC-014/SPEC-015 closeout + SPEC-016 watcher | Codex | done | pass | `WIKI_CHANGELOG.md` `[v0.7.0]`; `ProjectManager/TODO_LUN_Development_2026-07-20.md` |
 
 ## Gate Rule
 
@@ -53,6 +54,20 @@ the pass's closing commit. Check 6 enforces the converse mechanically: a row
 marked `done` with an empty `Gate` is itself a finding.
 
 ## Pass Log
+
+### P6 — SPEC-014/SPEC-015 closeout + SPEC-016 watcher
+
+Closed the governed-doc drift left after SPEC-014's delayed merge closeout and
+SPEC-015's active-spec promotion, then added SPEC-016 as the read-only
+cross-project sync watcher contract.
+
+This pass deliberately keeps version authority native to each project. The
+watcher can flag probable bump classes and ownership, but it cannot edit
+Open-Looney or Luna Engine version files, ledgers, changelogs, pass trackers, git
+state, live processes, or `.lun` / WAL / SHM files.
+
+The generated wiki home now reflects two active specs: SPEC-015 retrieval score
+comparability and SPEC-016 cross-project sync watcher.
 
 ### P0 — Baseline
 

@@ -2,7 +2,7 @@
 doc_type: ledger
 status: active
 created: 2026-07-20
-updated: 2026-08-15
+updated: 2026-08-17
 tags:
   - lun
   - cartridge
@@ -208,6 +208,13 @@ Research intake added 2026-07-21:
   (`…_research-searchable-figures.md:246`). Open only when that becomes true; if opened,
   it must not duplicate the existing survey or overload the `LUNM` name (see intake item
   under Looney Data Research Intake).
+- [ ] **SPEC-016 — read-only cross-project sync watcher. DRAFTED 2026-08-17, needs acceptance.**
+  Scope: a local watcher that inspects Open-Looney and Luna Engine ledgers, version
+  surfaces, cross-references, git baselines, and dirty/untracked evidence; emits findings
+  with owner/severity/suggested native bump; and explicitly never edits ledgers, specs,
+  version files, changelogs, pass trackers, git state, live processes, or `.lun`/WAL/SHM
+  files. File: `01_Specs/active/SPEC-016_cross-project-sync-watcher.md`. Plan:
+  `ProjectManager/Plans/PLAN_2026-08-17_spec-016_cross-project-sync-watcher.md`.
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);
   prior: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`,
