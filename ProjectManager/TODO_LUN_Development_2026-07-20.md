@@ -182,7 +182,7 @@ Research intake added 2026-07-21:
   ⚠ Vision-only search stays **rejected** as a sole strategy
   (`08_Journal/2026-07-24_research-searchable-figures.md:88`).
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_spec-014-vision-embeddings.md`.
-- [ ] **SPEC-015 — retrieval score comparability. DRAFTED 2026-08-15, needs acceptance.**
+- [x] **SPEC-015 — retrieval score comparability. IMPLEMENTED 2026-08-19.**
   Promotes SPEC-014 Named follow-up 1 into its own spec, as SPEC-014 said it required.
   A search response publishes one `score` key populated from two unrelated scales:
   extraction rows carry `abs(bm25)` (single digits), node rows carry `_rrf_fuse` output
@@ -191,21 +191,25 @@ Research intake added 2026-07-21:
   extraction rows structurally dominate every cross-collection search. Re-confirmed
   2026-08-15 on `cartridge.Dragon-Hatchling.v03` (5.47–13.29 vs a uniform 0.0082),
   consistent with SPEC-014's 2026-07-26 measurement on Meditations (5.1933 vs 0.0163).
-  Four options costed (extraction-as-leg / `rank_class` discriminator / partitioned
-  response shape / per-query min-max — the last **recommended against**, it converts a
-  visible scale mismatch into an invisible relevance inversion). Also records a latent
+  Four options costed (extraction-as-leg / B+ `rank_class` discriminator / partitioned
+  response shape / per-query min-max — B+ selected; min-max remains **recommended
+  against**, because it converts a visible scale mismatch into an invisible relevance inversion).
+  Also records a latent
   hazard: the `score > 0.01` leg filters at `:1161`, `:1603`, `:1998` sit *inside* the
   fused-score range, so any refactor moving one post-fusion silently empties hybrid
-  results. **5 open questions block acceptance.** Q1 (extraction-first policy vs
-  concatenation artefact) and Q3 (response shape vs score space) remain product calls.
+  results. Acceptance decisions locked B+ extraction-first behavior and additive
+  metadata; partitioned response shape remains deferred. Q1 (extraction-first policy
+  vs concatenation artefact) and Q3 (response shape vs score space) are resolved for
+  this slice.
   **Q2 answered 2026-08-19 (Engine live):** prompt assembly **does** consume these scores.
   Engine plist `LUNA_APERTURE_SCORE_NORMALIZE=1`; assembler Pass 2 max-scales mixed
   extraction BM25 (~5–13) with hybrid RRF (~0.008), so hybrid prose fails the chunk
   floor (default 0.30). Quote path (`lookup_section` / `sample_passage`) is score-clean.
-  Severity should rise from medium. Engine still must not implement the scoring
-  contract until this spec is accepted. Q4: `_v02_search` shares the concatenate;
-  `search_entity()` does not (YAML `documents` table). Q5 (`score > 0.01` post-fusion
-  hazard) still needs a comment. File: `01_Specs/active/SPEC-015_retrieval-score-comparability.md`.
+  Severity rose from medium to high. Q4: `_v02_search` shares the concatenate;
+  `search_entity()` does not (YAML `documents` table). Q5 is closed by keeping
+  the `score > 0.01` checks explicitly pre-fusion. Engine implementation and
+  focused verification landed in commit `ae3a3c6`; implementation notes are in
+  `01_Specs/implemented/SPEC-015_retrieval-score-comparability.md`.
 - [ ] Extraction-leg case-fold dedup (small, independent of SPEC-015): `Synaptic plasticity
   [concept]` and `synaptic plasticity [concept]` return as separate rows at an identical
   `13.2932`. Same family as the known `entities` id-space fragmentation — join by

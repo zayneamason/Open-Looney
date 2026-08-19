@@ -1,10 +1,10 @@
 # SPEC-015: Retrieval score comparability across result kinds
 
-**Status:** active
-**Severity:** medium
+**Status:** implemented
+**Severity:** high
 **Author:** Ahab
 **Created:** 2026-08-15
-**Last updated:** 2026-08-15
+**Last updated:** 2026-08-19
 **Affects format version:** none — reader/retrieval contract only, no schema change
 **Promoted from:** SPEC-014 Named follow-up 1
 (`01_Specs/implemented/SPEC-014_vision-embeddings.md:371-391`)
@@ -101,8 +101,10 @@ overlap by accident, and nothing marks the boundary.
 
 ## Proposed solution
 
-Not yet settled — see Open questions. Four candidates, with the trade-off that
-distinguishes each.
+Adopt **Option B+** for the first implementation: keep the flat response and
+legacy `score` field for compatibility, but add explicit score-domain metadata
+and fix known consumers so they never compare extraction BM25 and fused node
+RRF as one numeric domain.
 
 **A. Make extraction a fusion leg.** Feed extraction results into `_rrf_fuse`
 alongside keyword/semantic/vision instead of concatenating afterwards. Most
@@ -111,12 +113,19 @@ normalises. Cost: it abolishes guaranteed extraction-first ordering. If that
 ordering is deliberate policy, this is a product regression disguised as a
 scoring fix.
 
-**B. Add a discriminator, forbid cross-family sorting.** Emit an explicit
-`rank_class` (`"extraction"` / `"fused"`) on every row and fix
-`dataroom_tools.py:124` to sort within class. Cheapest and most honest about
-what the numbers are. Cost: every present and future consumer must respect the
-convention, and conventions are not enforceable — the failure mode returns
-silently the first time someone forgets.
+**B+. Add score-domain metadata, forbid cross-rank sorting.** Emit explicit
+metadata on every result row:
+
+- `rank_class`: `"extraction"` or `"node"`.
+- `score_basis`: `"fts5_bm25_abs"`, `"rrf_normalized"`, `"cosine"`, or
+  `"unknown"`.
+- `score_comparable_scope`: `"within_rank_class"`.
+
+Then update `dataroom_tools.py:124` and prompt-assembly aperture normalization
+so they respect `rank_class` before sorting, thresholding, or max-scaling.
+Extraction-first ordering remains the compatibility policy; the fix is to make
+the score domain explicit and stop downstream code from treating all `score`
+values as comparable.
 
 **C. Change the response shape.** Return `{"extractions": [...], "nodes": [...]}`
 rather than a flat list. Follows the house preference for making invalid states
@@ -138,11 +147,12 @@ no `user_version` moves.
 
 ### Behavioral changes
 
-Determined by the option chosen. In all cases the audit surface is the same and
-should be enumerated before implementation: `_v02_search`, `_v03_search`,
-`search()`, `search_entity()`, `similar()`, `dataroom_tools.py`, the
-`/api/nexus/*` routes, the MCP `aibrarian_*` wrappers, and any prompt-assembly
-consumer (see Open question 2).
+The implementation must touch `_v02_search`, `_v03_search`, the standard search
+path, `_rrf_fuse`, `dataroom_tools.py`, and prompt-assembly aperture
+normalization. `/api/nexus/search` and MCP `aibrarian_search` remain
+backward-compatible because they return or render the same flat rows with
+additive metadata. `search_entity()` is not in scope: it queries the YAML
+`documents` table and does not mix extraction rows with fused node rows.
 
 ### Migration path
 
@@ -153,18 +163,17 @@ options A and B are not.
 ## Validation rules
 
 ```python
-# Regression guard, required whichever option is chosen:
-# no single response may mix rank classes under one sortable key.
+# Regression guard:
+# mixed rank classes may coexist only when rows declare score-domain metadata.
 results = search(collection, query, "hybrid", limit=20)
-classes = {classify(r) for r in results}          # by search_type / rank_class
-assert len(classes) == 1 or response_is_partitioned(results)
+classes = {r["rank_class"] for r in results}
+assert classes <= {"extraction", "node"}
+assert all(r["score_comparable_scope"] == "within_rank_class" for r in results)
 
-# Scale sanity: within one class, no two rows may differ by >2 orders of
-# magnitude purely by family. Catches a regression to the current state.
-by_class = group(results)
-for rows in by_class.values():
-    if len(rows) > 1:
-        assert max(r.score for r in rows) / max(min(r.score for r in rows), 1e-9) < 100
+# Consumer guard:
+# no downstream consumer globally sorts or normalizes extraction and node rows
+# together on legacy `score`.
+assert not global_score_sort_across_rank_classes(results)
 ```
 
 A live-backend reproduction against a mounted cartridge is required before and
@@ -179,9 +188,11 @@ to green unit tests and surfaced only in whole-branch review and live probes.
 - **Cross-cartridge traversal:** directly implicated. The defect's largest blast
   radius is the multi-collection fan-out in `dataroom_tools.py`, which is the
   default path.
-- **Memory Matrix integration:** unknown until Open question 2 is answered. If
-  prompt assembly consumes these scores, the defect reaches what Luna actually
-  says, not merely what a tool returns.
+- **Memory Matrix integration:** prompt assembly does consume these scores when
+  `LUNA_APERTURE_SCORE_NORMALIZE=1`. Engine live evidence from 2026-08-19 showed
+  aperture Pass 2 max-scaling extraction BM25 scores with hybrid RRF scores, so
+  hybrid prose can fail the chunk floor solely because an extraction row set
+  `turn_max`.
 
 ## Alternatives considered
 
@@ -196,25 +207,19 @@ rather than the contract. The next consumer inherits the same trap.
 records that reconciling scale across result *kinds* "needs its own spec"
 because it touches every collection and every caller.
 
-## Open questions
+## Acceptance decisions
 
-These block acceptance.
-
-1. **Is extraction-first ordering deliberate product policy, or an artefact of
-   concatenation order?** This decides whether option A is available at all. If
-   deliberate, the spec must preserve ordering while fixing comparability, which
-   rules A out and points at B or C.
-2. **Does prompt assembly consume these scores, and does it threshold or
-   truncate on them?** A grep of the obvious call sites was inconclusive. If
-   assembly takes a top-N or applies a cutoff, this defect silently shapes Luna's
-   context window and the severity should rise from medium.
-3. **Response shape (C) or score space (A/B)?** C is the only option that makes
-   the failure unrepresentable, and is the only breaking one.
-4. **Do the sibling paths share the defect?** `search_entity()` and the `v0.2`
-   path were not measured. Assume yes until shown otherwise.
-5. **Is the `score > 0.01` constant safe to leave in place** once fused scores
-   are in scope, given the ranges overlap? At minimum it needs a comment naming
-   the hazard.
+1. **Extraction-first ordering is preserved for compatibility.** The first fix
+   must not make extraction a fusion leg.
+2. **Prompt assembly consumes these scores.** Severity is high because the defect
+   can shape Luna's context window, not only a tool result list.
+3. **Use B+ now, defer partitioned responses.** A partitioned v2 response may be
+   designed later, but this slice keeps the existing flat shape.
+4. **Sibling paths:** `_v02_search`, `_v03_search`, and the standard search path
+   all need score-domain metadata. `search_entity()` is clean for this defect.
+5. **The `score > 0.01` semantic liveness filters may remain only as pre-fusion
+   cosine filters.** They need comments or tests that prevent reuse as
+   post-fusion thresholds.
 
 ## Dependencies
 
@@ -237,9 +242,29 @@ These block acceptance.
 
 ## Implementation notes
 
-(Filled in when status moves to `implemented`)
+Implemented in Luna Engine commit `ae3a3c6` (`fix(retrieval): declare score
+domains across search consumers`) on 2026-08-19.
 
-- Commit/PR reference:
-- Implementation date:
-- Deviations from spec:
-- Follow-up issues created:
+- Added backward-compatible `rank_class`, `score_basis`, and
+  `score_comparable_scope` metadata to v0.2, v0.3, vision, standard, and RRF
+  search rows while preserving flat ordering, `search_type`, and legacy `score`.
+- Updated dataroom fan-out to preserve extraction-first grouping and sort only
+  within compatible rank classes.
+- Updated aperture normalization to compute `turn_max` from node rows only;
+  extraction rows remain renderable context and cannot suppress RRF chunks.
+- Added contract, API-shape, dataroom, RRF, v0.2/v0.3, and aperture regression
+  tests. Focused verification passed: 160 tests.
+- Live after-probe against `data/user/cartridges/Dragon-Hatchling.v03.lun`
+  preserved the observed legacy scores (`13.2932` extraction and `0.0082`
+  hybrid) while exposing the correct score domains on every row.
+
+Deviations and follow-ups: the flat B+ response remains intentionally
+non-breaking; partitioned response shape, extraction case-fold dedup, region
+nodes, SPEC-016 warning cleanup, cartridge rebuilds, and new ranking models
+remain out of scope.
+
+- Commit/PR reference: Luna Engine `ae3a3c6`; no PR created in this local closeout.
+- Implementation date: 2026-08-19.
+- Deviations from spec: none; B+ preserves the flat response and legacy fields.
+- Follow-up issues created: extraction case-fold dedup remains independent and
+  partitioned response shape is deferred.
