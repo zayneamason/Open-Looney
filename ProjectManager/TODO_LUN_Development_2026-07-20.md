@@ -2,7 +2,7 @@
 doc_type: ledger
 status: active
 created: 2026-07-20
-updated: 2026-08-17
+updated: 2026-08-19
 tags:
   - lun
   - cartridge
@@ -20,6 +20,10 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 `06_Prototypes/ReaderPrototype/SPEC.md`, `04_Audits/AUDIT_2026-05-22_meditations-v03.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
+
+Session note 2026-08-19: dual-ledger boundary review with Luna Engine (no roadmap
+collision; SPEC-015 Q2 answered — Engine aperture thresholds mixed `score`s live).
+Peer: Engine `ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md`.
 
 Session handoff 2026-08-15: `02_Handoffs/HANDOFF_2026-08-15_spec-014-merged-closeout.md`
 (SPEC-014 closeout — merged 2026-07-27 without a PR, so the ledger claimed
@@ -178,7 +182,7 @@ Research intake added 2026-07-21:
   ⚠ Vision-only search stays **rejected** as a sole strategy
   (`08_Journal/2026-07-24_research-searchable-figures.md:88`).
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_spec-014-vision-embeddings.md`.
-- [ ] **SPEC-015 — retrieval score comparability. DRAFTED 2026-08-15, needs acceptance.**
+- [x] **SPEC-015 — retrieval score comparability. IMPLEMENTED 2026-08-19.**
   Promotes SPEC-014 Named follow-up 1 into its own spec, as SPEC-014 said it required.
   A search response publishes one `score` key populated from two unrelated scales:
   extraction rows carry `abs(bm25)` (single digits), node rows carry `_rrf_fuse` output
@@ -187,14 +191,25 @@ Research intake added 2026-07-21:
   extraction rows structurally dominate every cross-collection search. Re-confirmed
   2026-08-15 on `cartridge.Dragon-Hatchling.v03` (5.47–13.29 vs a uniform 0.0082),
   consistent with SPEC-014's 2026-07-26 measurement on Meditations (5.1933 vs 0.0163).
-  Four options costed (extraction-as-leg / `rank_class` discriminator / partitioned
-  response shape / per-query min-max — the last **recommended against**, it converts a
-  visible scale mismatch into an invisible relevance inversion). Also records a latent
+  Four options costed (extraction-as-leg / B+ `rank_class` discriminator / partitioned
+  response shape / per-query min-max — B+ selected; min-max remains **recommended
+  against**, because it converts a visible scale mismatch into an invisible relevance inversion).
+  Also records a latent
   hazard: the `score > 0.01` leg filters at `:1161`, `:1603`, `:1998` sit *inside* the
   fused-score range, so any refactor moving one post-fusion silently empties hybrid
-  results. **5 open questions block acceptance**, chiefly whether extraction-first
-  ordering is deliberate policy and whether prompt assembly thresholds on these scores.
-  File: `01_Specs/active/SPEC-015_retrieval-score-comparability.md`.
+  results. Acceptance decisions locked B+ extraction-first behavior and additive
+  metadata; partitioned response shape remains deferred. Q1 (extraction-first policy
+  vs concatenation artefact) and Q3 (response shape vs score space) are resolved for
+  this slice.
+  **Q2 answered 2026-08-19 (Engine live):** prompt assembly **does** consume these scores.
+  Engine plist `LUNA_APERTURE_SCORE_NORMALIZE=1`; assembler Pass 2 max-scales mixed
+  extraction BM25 (~5–13) with hybrid RRF (~0.008), so hybrid prose fails the chunk
+  floor (default 0.30). Quote path (`lookup_section` / `sample_passage`) is score-clean.
+  Severity rose from medium to high. Q4: `_v02_search` shares the concatenate;
+  `search_entity()` does not (YAML `documents` table). Q5 is closed by keeping
+  the `score > 0.01` checks explicitly pre-fusion. Engine implementation and
+  focused verification landed in commit `ae3a3c6`; implementation notes are in
+  `01_Specs/implemented/SPEC-015_retrieval-score-comparability.md`.
 - [ ] Extraction-leg case-fold dedup (small, independent of SPEC-015): `Synaptic plasticity
   [concept]` and `synaptic plasticity [concept]` return as separate rows at an identical
   `13.2932`. Same family as the known `entities` id-space fragmentation — join by
@@ -221,6 +236,48 @@ Research intake added 2026-07-21:
   smoke wrote `/tmp/cross-project-sync.json` and `/tmp/cross-project-sync.md`,
   returned warn-level exit code `1`, reported `mutation_performed=false`, and left
   both repo `git status --short` snapshots byte-identical before/after.
+- [x] **SPEC-016 watcher noise reduction — completed 2026-08-17.**
+  Adopted the ledger-first source policy in `ProjectManager/cross_project_sync.json`:
+  canonical ledgers and the current SPEC-016 plan remain `warn`; historical handoffs,
+  reports, and broad Engine plan globs are preserved in `reference_summary` instead of
+  flooding normal findings. Current live baseline after commit `4ec6350`: 31 findings
+  total (`30 warn`, `1 info`), no `native_version_disagreement`, `mutation_performed=false`,
+  and byte-identical Open-Looney/Engine `git status --short` snapshots before/after smoke.
+  Remaining warnings are now intentionally concentrated in canonical-ledger evidence:
+  Engine ledger stale/missing commit or file references, Engine ledger untracked report/probe
+  evidence, Open-Looney ledger untracked local build artifacts, and two Open-Looney
+  cross-boundary review candidates. Baseline report:
+  `ProjectManager/Reports/REPORT_2026-08-17_spec-016_noise_reduction_baseline.md`.
+  Cleanup plan: `ProjectManager/Plans/PLAN_2026-08-17_spec-016_remaining-warning-cleanup.md`.
+- [x] **SPEC-016 Open-Looney warning cleanup — completed 2026-08-17.**
+  Rewrote the canonical ledger's local `.app`/`.dmg` build-output references as
+  historical build records instead of concrete generated artifact paths. Slice 1 smoke
+  wrote `/tmp/cross-project-sync-open-looney-cleanup.json` and
+  `/tmp/cross-project-sync-open-looney-cleanup.md`; Open-Looney untracked artifact
+  warnings dropped from `2` to `0`, `mutation_performed=false`, and before/after
+  status snapshots for both repos were byte-identical.
+- [x] **SPEC-016 Engine warning cleanup design — completed 2026-08-17.**
+  Read-only Slice 2 classified each remaining Engine canonical-ledger warning without
+  mutating Luna Engine. Design report:
+  `ProjectManager/Reports/REPORT_2026-08-17_spec-016_engine_warning_cleanup_design.md`.
+  Recommended Engine-owned cleanup: track four governed report/pickup files, rewrite
+  ignored probe/build-output evidence as historical run/result prose, correct moved
+  `luna_voice_state_surface.html` and quarantined `identity_bypass` references, and
+  remove the live DB checksum-as-commit ambiguity.
+- [x] **Cross-project boundary review (2026-08-19)** — this repo vs Luna Engine.
+  **No roadmap collision.** Split stands: Open-Looney owns `.lun` format/specs/Reader;
+  Engine owns runtime/MCP/UI/live DB. SPEC-016 watcher `check` this session: **0 fail /
+  24 warn / 1 info**; Engine wiki surfaces now agree at `v2.23.2`. Real coupling is
+  SPEC-015 `score` consumed by live Engine aperture (Q2 answered above), not Engine
+  L4.0 rings. Engine additive LUNC tables (`media_blobs`, `image_embeddings`,
+  `section_index`, `figure_index`) stay SPEC-013/014 / cognition additive — not a
+  `user_version` bump; `LUN-FORMAT_v0.3.md` still omits them. **Do not** treat
+  `10_Builder/` as live (stale v0.2 snapshot). **Do not** ask Engine to write sealed
+  LUNC at runtime. Future turf: Engine VK “expand into `.lun` conformance” must not
+  duplicate `lun fsck` / format invariants here. Remaining Engine watcher warns are
+  Engine-ledger hygiene (cleanup design already written). Watcher
+  `cross_boundary_review_candidate`s on SPEC-016 + SPEC-013 are discharged by this
+  Engine-peer note. Peer ledger: `_LunaEngine_BetaProject_V2.0_Root/ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md`.
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);
   prior: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`,
@@ -251,7 +308,11 @@ Research intake added 2026-07-21:
 - [x] Draft SPEC-009 (2026-07-21) — **rescoped**. Full DDL ratification was not attempted: the surface is 24 DDL-declaring files, not the 6 assumed, so SPEC-009 became *LUNM schema ownership and the table manifest* (single owner per table, static manifest, four-way classification, one conformance test). Per-family DDL ratification defers to SPEC-011+. Original scope note retained: **enlarged by SPEC-008's resolutions:** `schema.sql` declares 47 tables while the live matrix holds 89, so the audit must first inventory the 6+ DDL owners outside `luna/substrate/`. Inherits from Q5 — audit ad-hoc `conversation_turns` writers before ratifying any `sessions` FK; dispose of the vestigial `consciousness_snapshots`; reconcile the v0.3 spec's `nexus_refs` description against the engine's master-pointer-only behaviour for sealed cartridges.
 - [x] Draft SPEC-010 (2026-07-21) — *LUNM migration discipline*, centred on fail-loud tiered by SPEC-009 classification. 22 of the engine's 25 migrations wrap DDL in `except Exception` + `logger.debug`, including the one that creates `profile_config`, a format invariant. Original scope note retained: **narrowed:** Q4's bump *triggers* are settled in SPEC-008 § 4.1; SPEC-010 carries the *mechanics* — chiefly that a bump needs an explicit migration branch and must never edit the `user_version` literal, which would fork production matrices at the old value with no detector.
 - [x] LUNM Inspector MVP (2026-07-27): new read-only Tauri prototype at `06_Prototypes/LunmReaderPrototype/` with LUNM-only open contract, SPEC-008/SPEC-011 health checks, FI table inspection tabs, docs, and local validation (`cargo test` 9/9 green; `npm run build` green). It remains separate from the LUNC Reader, which still rejects LUNM.
-- [x] LUNM Inspector bundle/smoke pass (2026-07-27): debug `.app` bundle now builds app-only at `06_Prototypes/LunmReaderPrototype/src-tauri/target/debug/bundle/macos/lunm-reader.app`; GUI smoke launched the bundle, opened the live Engine LUNM read-only, and rendered real Memory/Conversations rows. `lsof` showed the main DB handle opened read-only by `lunm-reader`. DMG packaging is not part of the default MVP target.
+- [x] LUNM Inspector bundle/smoke pass (2026-07-27): debug `.app` bundle built app-only
+  from the LUNM Inspector Tauri target tree; generated bundle output is intentionally
+  local/untracked. GUI smoke launched the bundle, opened the live Engine LUNM read-only,
+  and rendered real Memory/Conversations rows. `lsof` showed the main DB handle opened
+  read-only by `lunm-reader`. DMG packaging is not part of the default MVP target.
 - [x] LUNM Inspector copied-matrix smoke (2026-07-27): added drag/drop and paste-path open affordances because the native file picker was impractical for `/private/tmp`; rebuilt the `.app` after a package clean so current frontend assets embedded correctly. Paste-path smoke opened `/private/tmp/lunm-reader-smoke/data/user/memory_matrix.lun`, Overview reported `0x4C554E4D` / `user_version 2` / `format 0.1`, and `lsof` confirmed `lunm-reader` held the `/private/tmp` matrix read-only.
 - [x] LUNM Inspector conversation usability pass (2026-07-27): Sessions now report computed `actual_turns` from `conversation_turns` instead of the stale `sessions.turns_count`; selecting a session renders chronological role/content turn cards so stored conversation text is directly readable.
 
@@ -268,8 +329,8 @@ Research intake added 2026-07-21:
 
 ## Distribution
 
-- [x] Optional: build a v0.3.x `.dmg` for the Reader now that u64-overflow, bare-name, verify-by-opening, click-through, M-01, SPEC-013 figure display, and semantic search fixes are baked into source. **Built 2026-07-27**: `06_Prototypes/ReaderPrototype/src-tauri/target/release/bundle/dmg/lun-reader_0.3.4_aarch64.dmg`.
-- [x] Reader `.dmg` build record (2026-07-27): source commit `c616de6` (code clean; docs dirty from this session), artifact `06_Prototypes/ReaderPrototype/src-tauri/target/release/bundle/dmg/lun-reader_0.3.4_aarch64.dmg`, SHA-256 `5b01b783027f5043e04c4e86bf4d059216f5f3ee428d9224e69866325ccaa0c5`, smoke `cargo test` 64/64 green, `npm run build` green, release binary/app 125M, installed `/Applications/lun-reader.app` binary SHA-256 matches bundled app (`a9e3bf217c60e7bf3cbb4e2e2f684046f5873b1c3e47d01bc211bfe7af786ec1`).
+- [x] Optional: build a v0.3.x `.dmg` for the Reader now that u64-overflow, bare-name, verify-by-opening, click-through, M-01, SPEC-013 figure display, and semantic search fixes are baked into source. **Built 2026-07-27** as generated local release output for Reader v0.3.4; build artifacts are intentionally untracked.
+- [x] Reader `.dmg` build record (2026-07-27): source commit `c616de6` (code clean; docs dirty from this session), Reader v0.3.4 aarch64 DMG SHA-256 `5b01b783027f5043e04c4e86bf4d059216f5f3ee428d9224e69866325ccaa0c5`, smoke `cargo test` 64/64 green, `npm run build` green, release binary/app 125M, installed `/Applications/lun-reader.app` binary SHA-256 matches bundled app (`a9e3bf217c60e7bf3cbb4e2e2f684046f5873b1c3e47d01bc211bfe7af786ec1`).
 
 ## Repo Hygiene
 
