@@ -2,7 +2,7 @@
 doc_type: ledger
 status: active
 created: 2026-07-20
-updated: 2026-08-17
+updated: 2026-08-19
 tags:
   - lun
   - cartridge
@@ -20,6 +20,10 @@ Current source of truth at creation: `08_Journal/2026-05-24.md`,
 `06_Prototypes/ReaderPrototype/SPEC.md`, `04_Audits/AUDIT_2026-05-22_meditations-v03.md`,
 and `01_Specs/implemented/SPEC-008_lunm-family-foundation.md` (promoted from `active/` on 2026-07-21;
 Engine-implemented 2026-07-24). SPEC-009 → `implemented/` 2026-07-24 (Engine PR #157 / `dd5c3060`).
+
+Session note 2026-08-19: dual-ledger boundary review with Luna Engine (no roadmap
+collision; SPEC-015 Q2 answered — Engine aperture thresholds mixed `score`s live).
+Peer: Engine `ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md`.
 
 Session handoff 2026-08-15: `02_Handoffs/HANDOFF_2026-08-15_spec-014-merged-closeout.md`
 (SPEC-014 closeout — merged 2026-07-27 without a PR, so the ledger claimed
@@ -192,9 +196,16 @@ Research intake added 2026-07-21:
   visible scale mismatch into an invisible relevance inversion). Also records a latent
   hazard: the `score > 0.01` leg filters at `:1161`, `:1603`, `:1998` sit *inside* the
   fused-score range, so any refactor moving one post-fusion silently empties hybrid
-  results. **5 open questions block acceptance**, chiefly whether extraction-first
-  ordering is deliberate policy and whether prompt assembly thresholds on these scores.
-  File: `01_Specs/active/SPEC-015_retrieval-score-comparability.md`.
+  results. **5 open questions block acceptance.** Q1 (extraction-first policy vs
+  concatenation artefact) and Q3 (response shape vs score space) remain product calls.
+  **Q2 answered 2026-08-19 (Engine live):** prompt assembly **does** consume these scores.
+  Engine plist `LUNA_APERTURE_SCORE_NORMALIZE=1`; assembler Pass 2 max-scales mixed
+  extraction BM25 (~5–13) with hybrid RRF (~0.008), so hybrid prose fails the chunk
+  floor (default 0.30). Quote path (`lookup_section` / `sample_passage`) is score-clean.
+  Severity should rise from medium. Engine still must not implement the scoring
+  contract until this spec is accepted. Q4: `_v02_search` shares the concatenate;
+  `search_entity()` does not (YAML `documents` table). Q5 (`score > 0.01` post-fusion
+  hazard) still needs a comment. File: `01_Specs/active/SPEC-015_retrieval-score-comparability.md`.
 - [ ] Extraction-leg case-fold dedup (small, independent of SPEC-015): `Synaptic plasticity
   [concept]` and `synaptic plasticity [concept]` return as separate rows at an identical
   `13.2932`. Same family as the known `entities` id-space fragmentation — join by
@@ -249,6 +260,20 @@ Research intake added 2026-07-21:
   ignored probe/build-output evidence as historical run/result prose, correct moved
   `luna_voice_state_surface.html` and quarantined `identity_bypass` references, and
   remove the live DB checksum-as-commit ambiguity.
+- [x] **Cross-project boundary review (2026-08-19)** — this repo vs Luna Engine.
+  **No roadmap collision.** Split stands: Open-Looney owns `.lun` format/specs/Reader;
+  Engine owns runtime/MCP/UI/live DB. SPEC-016 watcher `check` this session: **0 fail /
+  24 warn / 1 info**; Engine wiki surfaces now agree at `v2.23.2`. Real coupling is
+  SPEC-015 `score` consumed by live Engine aperture (Q2 answered above), not Engine
+  L4.0 rings. Engine additive LUNC tables (`media_blobs`, `image_embeddings`,
+  `section_index`, `figure_index`) stay SPEC-013/014 / cognition additive — not a
+  `user_version` bump; `LUN-FORMAT_v0.3.md` still omits them. **Do not** treat
+  `10_Builder/` as live (stale v0.2 snapshot). **Do not** ask Engine to write sealed
+  LUNC at runtime. Future turf: Engine VK “expand into `.lun` conformance” must not
+  duplicate `lun fsck` / format invariants here. Remaining Engine watcher warns are
+  Engine-ledger hygiene (cleanup design already written). Watcher
+  `cross_boundary_review_candidate`s on SPEC-016 + SPEC-013 are discharged by this
+  Engine-peer note. Peer ledger: `_LunaEngine_BetaProject_V2.0_Root/ProjectManager/TODO_Project_Organization_And_Cleanup_2026-07-10.md`.
 - File: `01_Specs/implemented/SPEC-013_searchable-figures.md`.
   Handoff: `02_Handoffs/HANDOFF_2026-07-26_reader-semantic-search-session.md` (latest);
   prior: `02_Handoffs/HANDOFF_2026-07-26_reader-figures-session.md`,
