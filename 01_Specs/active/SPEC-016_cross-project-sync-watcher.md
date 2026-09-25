@@ -168,9 +168,9 @@ project:
       - SPEC-015
       - GDAL / COG media-family RFC
   tracked_refs:
-    - path: 01_Specs/active/SPEC-015_retrieval-score-comparability.md
+    - path: 01_Specs/implemented/SPEC-015_retrieval-score-comparability.md
       kind: spec
-      status: active
+      status: implemented
 ```
 
 Snapshot collection is read-only and must use stable local commands or parsers:

@@ -74,7 +74,7 @@ Pass execution and gates: [`WIKI_PASS_TRACKER.md`](WIKI_PASS_TRACKER.md).
 | SPEC-012 | LUNM entity unification | implemented | [SPEC-012_lunm-entity-unification.md](../../01_Specs/implemented/SPEC-012_lunm-entity-unification.md) |
 | SPEC-013 | Searchable Figures (Structured Payload Pattern — Figure Spine) | implemented | [SPEC-013_searchable-figures.md](../../01_Specs/implemented/SPEC-013_searchable-figures.md) |
 | SPEC-014 | Vision embeddings | implemented | [SPEC-014_vision-embeddings.md](../../01_Specs/implemented/SPEC-014_vision-embeddings.md) |
-| SPEC-015 | Retrieval score comparability across result kinds | active | [SPEC-015_retrieval-score-comparability.md](../../01_Specs/active/SPEC-015_retrieval-score-comparability.md) |
+| SPEC-015 | Retrieval score comparability across result kinds | implemented | [SPEC-015_retrieval-score-comparability.md](../../01_Specs/implemented/SPEC-015_retrieval-score-comparability.md) |
 | SPEC-016 | Read-only cross-project sync watcher | active | [SPEC-016_cross-project-sync-watcher.md](../../01_Specs/active/SPEC-016_cross-project-sync-watcher.md) |
 <!-- AUTOGEN:SPEC_INDEX END -->
 

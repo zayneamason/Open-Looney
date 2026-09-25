@@ -58,8 +58,9 @@ Changes:
 - `01_Specs/implemented/SPEC-014_vision-embeddings.md` — governed closeout from
   the Engine merge that skipped normal PR-triggered bookkeeping; spec now lives
   in `implemented/`.
-- `01_Specs/active/SPEC-015_retrieval-score-comparability.md` — active spec for
-  SPEC-014's named follow-up on incomparable result scores.
+- `01_Specs/implemented/SPEC-015_retrieval-score-comparability.md` — SPEC-014's
+  named follow-up on incomparable result scores; implemented after the Engine
+  B+ closeout.
 - `01_Specs/active/SPEC-016_cross-project-sync-watcher.md` — new active spec for
   a read-only watcher that detects Open-Looney / Luna Engine ledger, version,
   cross-reference, git-baseline, dirty-state, and evidence-durability drift
